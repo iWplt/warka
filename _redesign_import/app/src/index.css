@@ -1,0 +1,234 @@
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Playfair+Display:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 42 24% 96%;
+    --foreground: 0 0% 17%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 17%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 17%;
+    --primary: 60 14% 30%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 42 18% 93%;
+    --secondary-foreground: 0 0% 17%;
+    --muted: 42 12% 90%;
+    --muted-foreground: 0 0% 42%;
+    --accent: 36 38% 52%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 36 12% 89%;
+    --input: 36 12% 89%;
+    --ring: 60 14% 30%;
+    --radius: 0.625rem;
+
+    --sidebar-background: 60 16% 25%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 60 14% 30%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 60 14% 35%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 60 10% 20%;
+    --sidebar-ring: 60 14% 30%;
+
+    --warka-primary: #5C5C47;
+    --warka-primary-dark: #4A4A38;
+    --warka-primary-light: #6E6E55;
+    --warka-bg: #F8F7F4;
+    --warka-bg-dark: #F0EDE6;
+    --warka-card: #FFFFFF;
+    --warka-text: #2C2C2C;
+    --warka-text-secondary: #6B6B6B;
+    --warka-text-muted: #9E9E9E;
+    --warka-border: #E8E6E1;
+    --warka-accent: #B08D57;
+    --warka-success: #4CAF50;
+    --warka-warning: #FF9800;
+    --warka-sidebar: #4A4A38;
+  }
+
+  .dark {
+    --background: 60 8% 12%;
+    --foreground: 42 20% 96%;
+    --card: 60 6% 16%;
+    --card-foreground: 42 20% 96%;
+    --popover: 60 6% 16%;
+    --popover-foreground: 42 20% 96%;
+    --primary: 60 12% 40%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 60 6% 20%;
+    --secondary-foreground: 42 20% 96%;
+    --muted: 60 6% 20%;
+    --muted-foreground: 42 10% 70%;
+    --accent: 36 38% 52%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 60 6% 20%;
+    --input: 60 6% 20%;
+    --ring: 60 12% 40%;
+    --sidebar-background: 60 8% 10%;
+    --sidebar-foreground: 42 20% 96%;
+    --sidebar-primary: 60 12% 40%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 60 6% 16%;
+    --sidebar-accent-foreground: 42 20% 96%;
+    --sidebar-border: 60 6% 16%;
+    --sidebar-ring: 60 12% 40%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Tajawal', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Tajawal', sans-serif;
+    font-weight: 700;
+  }
+
+  .font-display {
+    font-family: 'Playfair Display', serif;
+  }
+
+  .font-arabic {
+    font-family: 'Tajawal', sans-serif;
+  }
+}
+
+@layer utilities {
+  .warka-gradient {
+    background: linear-gradient(135deg, var(--warka-primary) 0%, var(--warka-primary-dark) 100%);
+  }
+
+  .warka-card-shadow {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  }
+
+  .warka-card-shadow-hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="ltr"] {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D1CFC8;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #B0ADA4;
+}
+
+/* Animation utilities */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.5s ease-out forwards;
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+/* Status badges */
+.status-badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.status-pending {
+  @apply bg-amber-50 text-amber-700 border border-amber-200;
+}
+
+.status-active {
+  @apply bg-emerald-50 text-emerald-700 border border-emerald-200;
+}
+
+.status-completed {
+  @apply bg-slate-50 text-slate-700 border border-slate-200;
+}
+
+.status-cancelled {
+  @apply bg-red-50 text-red-700 border border-red-200;
+}

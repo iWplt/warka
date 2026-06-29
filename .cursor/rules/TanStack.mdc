@@ -1,0 +1,126 @@
+---
+description: "TanStack Query/Table patterns for this Next.js 16 App Router project (not TanStack Start)."
+globs:
+  - "src/**/*.ts"
+  - "src/**/*.tsx"
+alwaysApply: false
+---
+
+# TanStack in this project (2026)
+
+> **Stack:** Next.js 16 + Server Actions + `@tanstack/react-query` v5 + `@tanstack/react-table` v8.  
+> This repo does **not** use TanStack Start. Use Server Actions in `src/server/actions/` instead of `createServerFn`.
+
+## 1. Server data (this codebase)
+
+- `*.schemas.ts` → Zod schemas (آمنة للعميل والخادم)
+- `*.server.ts` → كود قاعدة بيانات و logic خالص (server-only)
+- `*.functions.ts` → Server Functions wrappers (`createServerFn`)
+
+**ممنوع تمامًا:**
+- استيراد `@prisma/client` أو `drizzle-orm` أو `fs` أو `path` أو أي Server-only module في ملفات تحتوي على `"use client"`.
+
+## 2. قاعدة "use client" الصارمة
+
+أضف `"use client";` في السطر الأول **فقط** إذا كان الملف يستخدم:
+- React Hooks (useState, useEffect, ...)
+- Browser APIs (window, document, localStorage, ...)
+- State تفاعلي
+
+**ممنوع:** وضعها في Server Functions أو Loaders أو `*.server.ts`.
+
+## 3. أنماط createServerFn (الصيغة الرسمية 2026)
+
+```ts
+import { createServerFn } from '@tanstack/react-start'
+import { z } from 'zod'
+
+const updateUserSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(2),
+})
+
+export const updateUser = createServerFn({ method: 'POST' })
+  .inputValidator((data: unknown) => updateUserSchema.parse(data)) // ← inputValidator
+  .handler(async ({ data }) => {
+    return await updateUserInDb(data)
+  })
+```
+
+**Server-only & Client-only:**
+
+```ts
+import { createServerOnlyFn, createClientOnlyFn } from '@tanstack/react-start'
+
+export const getSecret = createServerOnlyFn(() => process.env.API_SECRET!)
+export const saveToLocal = createClientOnlyFn((key: string, value: string) => {
+  localStorage.setItem(key, value)
+})
+```
+
+## 4. Middleware (الصيغة الصحيحة)
+
+```ts
+import { createMiddleware } from '@tanstack/react-start'
+
+const authMiddleware = createMiddleware()
+  .middleware(/* other middleware */) // إذا وجد
+  .server(async ({ next, data }) => {
+    // auth logic
+    return next({ context: { user } })
+  })
+```
+
+**ثم استخدامها:**
+
+```ts
+export const updateUser = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
+  .inputValidator(...) 
+  .handler(...)
+```
+
+## 5. Route Configuration (الصحيح)
+
+```ts
+export const Route = createFileRoute('/dashboard')({
+  beforeLoad: async ({ context }) => {
+    if (!context.user) throw redirect({ to: '/login' })
+    return { user: context.user }
+  },
+  loader: ({ context }) => getDashboardDataFn({ userId: context.user.id }),
+  errorComponent: ({ error }) => <ErrorUI message={error.message} />,
+  pendingComponent: () => <LoadingSpinner />,
+  component: DashboardPage,
+})
+```
+
+**ممنوع:**
+
+- DB queries مباشرة داخل `loader`.
+- `process.env` في module scope.
+
+## 6. TanStack Query v5 (الصيغة الوحيدة المقبولة)
+
+```ts
+const { mutate } = useMutation({
+  mutationFn: updateUser,
+  onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
+})
+```
+
+## 7. TypeScript + Best Practices إضافية
+
+- **ممنوع:** `any` (استخدم `unknown` + type narrowing).
+- **ممنوع:** `@ts-ignore` بدون تعليق توثيقي.
+- استخدم `useServerFn(getSomeFn)` داخل الـ Components.
+- Mobile-First + Touch Targets (`min-h-[44px]`).
+- استخدم `<Link>` من `@tanstack/react-router`.
+
+## 8. قواعد Cursor AI الإضافية
+
+- أكمل الكود كاملاً (لا `// ...` أو `TODO`).
+- أدرج جميع الـ imports.
+- التزم بالهيكلة الثلاثية دائمًا.
+- استخدم أحدث API من الوثائق الرسمية (tanstack.com/start).
+
