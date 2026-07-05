@@ -24,7 +24,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { GRADUATION_PRODUCT_META } from "@/lib/constants/graduation-products";
 import { DEFAULT_STOREFRONT_PRICES } from "@/lib/constants/storefront-prices";
-import { LANDING_IMAGES } from "@/lib/constants/landing-images";
+import { LANDING_IMAGES, getLandingHeroImage } from "@/lib/constants/landing-images";
 import { SITE_CONTACT } from "@/lib/constants/site-contact";
 import { formatIqd } from "@/lib/format/currency";
 import {
@@ -61,6 +61,7 @@ type WarkaLandingProps = {
   bundles?: ProductBundle[];
   profile: Profile | null;
   dashboardPath?: string;
+  heroImageUrl?: string;
 };
 
 function buildPriceMap(prices: PriceCatalogItem[]): Map<string, PriceCatalogItem> {
@@ -84,7 +85,7 @@ function getFeaturedProductIndex(products: LandingProduct[]): number {
   return customIndex >= 0 ? customIndex : 0;
 }
 
-export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profile, dashboardPath }: WarkaLandingProps) {
+export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profile, dashboardPath, heroImageUrl }: WarkaLandingProps) {
   const t = useTranslations("landing");
   const tContact = useTranslations("landing.contact");
   const tProducts = useTranslations("landing.products");
@@ -204,6 +205,8 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
     t("marquee.items.support"),
   ];
 
+  const heroImage = heroImageUrl ?? LANDING_IMAGES.hero;
+
   return (
     <div className="min-h-screen bg-warka-bg font-arabic">
       <SeasonalBanner />
@@ -217,9 +220,26 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
           </svg>
         </div>
 
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-20">
-          <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12">
-            <div className="text-start lg:pe-4">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-12 lg:px-8 lg:py-20">
+          <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-2 lg:gap-12">
+            <div className="relative order-1 lg:order-2 lg:col-start-2 lg:row-start-1 lg:ps-4">
+              <div className="relative overflow-hidden rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.10)]">
+                <Image
+                  src={heroImage}
+                  alt={t("hero.imageAlt")}
+                  width={800}
+                  height={600}
+                  className="aspect-[16/10] h-auto w-full object-cover sm:aspect-[4/3] lg:aspect-auto"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                <div className="absolute inset-x-4 bottom-4 hidden rounded-xl bg-card/90 p-3 text-center backdrop-blur-sm sm:block">
+                  <p className="text-xs text-warka-text-secondary">{t("hero.floatingCaption")}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="order-2 text-start lg:order-1 lg:col-start-1 lg:row-start-1 lg:pe-4">
               <span className="mb-3 inline-flex rounded-full bg-warka-primary/10 px-3 py-1 text-xs font-semibold text-warka-primary">
                 {t("hero.kicker")}
               </span>
@@ -261,23 +281,6 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
                 <div className="text-center sm:text-start">
                   <div className="text-2xl font-bold text-warka-text">48h</div>
                   <div className="mt-1 text-xs text-warka-text-secondary">{t("hero.statDelivery")}</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="relative lg:ps-4">
-              <div className="relative overflow-hidden rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.10)]">
-                <Image
-                  src={LANDING_IMAGES.hero}
-                  alt={t("hero.imageAlt")}
-                  width={800}
-                  height={600}
-                  className="aspect-[4/3] h-auto w-full object-cover lg:aspect-auto"
-                  priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                <div className="absolute inset-x-4 bottom-4 hidden rounded-xl bg-card/90 p-3 text-center backdrop-blur-sm sm:block">
-                  <p className="text-xs text-warka-text-secondary">{t("hero.floatingCaption")}</p>
                 </div>
               </div>
             </div>

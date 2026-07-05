@@ -1,4 +1,5 @@
 import { getCurrentProfile, getRedirectForRole } from "@/lib/auth/guards";
+import { getLandingHeroImage } from "@/lib/constants/landing-images";
 import type { PriceCatalogItem } from "@/types/database";
 import { WarkaLanding } from "./warka-landing";
 
@@ -18,6 +19,7 @@ export async function GraduationLanding({ prices, catalogProducts, bundles }: Gr
       bundles={bundles}
       profile={profile}
       dashboardPath={profile ? getRedirectForRole(profile.role) : undefined}
+      heroImageUrl={getLandingHeroImage()}
     />
   );
 }
