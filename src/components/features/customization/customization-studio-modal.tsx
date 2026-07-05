@@ -82,53 +82,48 @@ export function CustomizationStudioModal({
           className={cn(
             "fixed z-[81] flex flex-col overflow-hidden border border-warka-border bg-card text-warka-text shadow-tint-lg outline-none",
             "inset-0 h-[100dvh] max-h-[100dvh] w-full max-w-none rounded-none",
-            "sm:inset-x-4 sm:top-[3dvh] sm:bottom-auto sm:h-auto sm:max-h-[94dvh] sm:w-[calc(100%-2rem)] sm:max-w-4xl sm:rounded-2xl sm:start-1/2 sm:-translate-x-1/2"
+            "sm:inset-auto sm:left-1/2 sm:top-[2dvh] sm:h-[96dvh] sm:max-h-[96dvh] sm:w-[min(calc(100vw-1.5rem),56rem)] sm:-translate-x-1/2 sm:rounded-2xl",
+            "lg:top-1/2 lg:h-[min(92dvh,720px)] lg:max-h-[min(92dvh,720px)] lg:-translate-y-1/2"
           )}
         >
-          <div className="flex shrink-0 items-center justify-between border-b border-warka-border/50 bg-warka-primary/5 px-4 py-3">
-            <div className="flex min-w-0 items-center gap-2.5">
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-warka-primary/15 text-warka-primary">
-                <Sparkles className="size-4" aria-hidden />
+          <div className="flex shrink-0 items-center justify-between border-b border-warka-border/50 bg-warka-primary/5 px-3 py-2.5 sm:px-4 sm:py-3">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-warka-primary/15 text-warka-primary sm:size-9">
+                <Sparkles className="size-3.5 sm:size-4" aria-hidden />
               </span>
               <div className="min-w-0">
-                <Dialog.Title className="truncate text-base font-bold text-warka-text">
-                  {isAr ? "استوديو التخصيص والتطريز" : "Customization & embroidery studio"}
+                <Dialog.Title className="truncate text-sm font-bold text-warka-text sm:text-base">
+                  {isAr ? "استوديو التخصيص" : "Customization studio"}
                 </Dialog.Title>
-                <p className="text-xs text-warka-text-muted">
-                  {isAr
-                    ? "المعاينة ثابتة فوق — عدّل كل الخيارات من مكان واحد"
-                    : "Preview stays on top — edit everything in one place"}
+                <p className="hidden text-xs text-warka-text-muted sm:block">
+                  {isAr ? "المعاينة والخيارات بمكان واحد" : "Preview and options in one place"}
                 </p>
               </div>
             </div>
             <Dialog.Close
-              className="flex size-10 shrink-0 touch-manipulation items-center justify-center rounded-full border border-warka-border/60 text-warka-text-muted transition-colors hover:border-warka-primary/40 hover:bg-warka-bg hover:text-warka-text"
+              className="flex size-9 shrink-0 touch-manipulation items-center justify-center rounded-full border border-warka-border/60 text-warka-text-muted transition-colors hover:border-warka-primary/40 hover:bg-warka-bg hover:text-warka-text sm:size-10"
               aria-label={isAr ? "إغلاق" : "Close"}
             >
               <X className="size-4" />
             </Dialog.Close>
           </div>
 
-          <div className="shrink-0 border-b border-warka-border/40 bg-warka-bg/40 px-3 py-3 sm:px-4">
-            <CustomizationVisualPreview
-              baseImage={baseImage}
-              productType={productType}
-              profile={profile}
-              customization={customization}
-              sashColorHex={sashColorHex}
-              fontFamily={selectedFont ?? "Cairo, sans-serif"}
-              locale={locale}
-              className="mx-auto max-w-md"
-            />
-            <p className="mt-2 text-center text-[11px] text-warka-text-muted">
-              {isAr
-                ? "تتغير المعاينة مباشرة عند اختيار الشكل أو النقشة أو النص"
-                : "Preview updates live when you change style, pattern, or text"}
-            </p>
-          </div>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
+            <div className="shrink-0 border-b border-warka-border/40 bg-warka-bg/30 px-3 py-2 sm:px-4 sm:py-3 lg:w-[min(42%,320px)] lg:shrink-0 lg:overflow-y-auto lg:border-b-0 lg:border-e">
+              <CustomizationVisualPreview
+                baseImage={baseImage}
+                productType={productType}
+                profile={profile}
+                customization={customization}
+                sashColorHex={sashColorHex}
+                fontFamily={selectedFont ?? "Cairo, sans-serif"}
+                locale={locale}
+                variant="studio"
+              />
+            </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 sm:px-5 [-webkit-overflow-scrolling:touch]">
-            <div className="space-y-4">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 sm:px-4 sm:py-4 [-webkit-overflow-scrolling:touch]">
+              <div className="space-y-4 pb-2">
               <ProductCustomizationEngine
                 profile={profile}
                 locale={locale}
@@ -170,11 +165,12 @@ export function CustomizationStudioModal({
                 onCustomReferenceChange={onCustomReferenceChange}
                 className="border-warka-border"
               />
+              </div>
             </div>
           </div>
 
-          <div className="shrink-0 border-t border-warka-border/50 bg-warka-bg/50 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-            <div className="mb-2 flex flex-wrap items-center justify-center gap-2 text-xs text-warka-text-muted">
+          <div className="shrink-0 border-t border-warka-border/50 bg-card px-3 py-2.5 pb-[max(0.65rem,env(safe-area-inset-bottom))] sm:px-4 sm:py-3">
+            <div className="mb-1.5 flex flex-wrap items-center justify-center gap-2 text-[11px] text-warka-text-muted sm:text-xs">
               <span>
                 {isAr ? `${filledZones} منطقة مخصصة` : `${filledZones} zones customized`}
               </span>
@@ -188,7 +184,7 @@ export function CustomizationStudioModal({
             <Button
               type="button"
               size="lg"
-              className="min-h-11 w-full touch-manipulation"
+              className="min-h-10 w-full touch-manipulation sm:min-h-11"
               onClick={() => onOpenChange(false)}
             >
               {isAr ? "تم — ارجع للطلب" : "Done — back to order"}

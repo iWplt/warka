@@ -204,14 +204,13 @@ export function ProductDetailView({
           {usesEngine && customizationProfile ? (
             <>
               <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-warka-bg shadow-card lg:hidden">
-                <CustomizationVisualPreview
-                  baseImage={activeImage}
-                  productType={product.product_type}
-                  profile={customizationProfile}
-                  customization={customization}
-                  sashColorHex={selectedVariant?.hex ?? null}
-                  fontFamily={selectedFont ?? "Cairo, sans-serif"}
-                  locale={locale === "ar" ? "ar" : "en"}
+                <Image
+                  src={activeImage}
+                  alt={name}
+                  fill
+                  className="object-cover"
+                  sizes="100vw"
+                  priority
                 />
               </div>
               <div className="hidden lg:block lg:sticky lg:top-20">

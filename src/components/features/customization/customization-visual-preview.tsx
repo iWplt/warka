@@ -19,6 +19,8 @@ type CustomizationVisualPreviewProps = {
   fontFamily?: string;
   locale: "ar" | "en";
   className?: string;
+  /** Smaller preview for modals — keeps controls visible on mobile */
+  variant?: "default" | "studio";
 };
 
 export function CustomizationVisualPreview({
@@ -30,8 +32,10 @@ export function CustomizationVisualPreview({
   fontFamily = "Cairo, sans-serif",
   locale,
   className,
+  variant = "default",
 }: CustomizationVisualPreviewProps) {
   const isAr = locale === "ar";
+  const isStudio = variant === "studio";
   const [fullscreen, setFullscreen] = useState(false);
 
   const activeStyle = profile.styles.find((s) => s.id === customization.style_id);
@@ -74,12 +78,22 @@ export function CustomizationVisualPreview({
   }, [customization, profile, productType, sashColorHex]);
 
   const previewBody = (
-    <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-media-bg shadow-inner">
+    <div
+      className={cn(
+        "relative w-full overflow-hidden rounded-2xl bg-media-bg shadow-inner",
+        isStudio
+          ? "mx-auto max-h-[min(26dvh,200px)] aspect-[5/4] sm:max-h-[min(32dvh,260px)] lg:max-h-none lg:aspect-[4/5]"
+          : "aspect-[4/5]"
+      )}
+    >
       <Image
         src={displayBase}
         alt={isAr ? "معاينة المنتج" : "Product preview"}
         fill
-        className="object-cover transition-opacity duration-300"
+        className={cn(
+          "transition-opacity duration-300",
+          isStudio ? "object-contain p-1" : "object-cover"
+        )}
         sizes="(max-width: 768px) 100vw, 400px"
         priority
         unoptimized={displayBase.startsWith("data:")}
@@ -147,22 +161,41 @@ export function CustomizationVisualPreview({
   return (
     <>
       <div className={cn("space-y-2", className)}>
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm font-bold text-warka-text">
-            {isAr ? "معاينة اللون والتطريز" : "Color & embroidery preview"}
-          </p>
-          <button
-            type="button"
-            onClick={() => setFullscreen(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-warka-border bg-card px-2.5 py-1.5 text-xs font-medium text-warka-primary hover:bg-warka-bg"
-          >
-            <Expand className="size-3.5" />
-            {isAr ? "تكبير" : "Expand"}
-          </button>
-        </div>
+        {!isStudio && (
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-bold text-warka-text">
+              {isAr ? "معاينة اللون والتطريز" : "Color & embroidery preview"}
+            </p>
+            <button
+              type="button"
+              onClick={() => setFullscreen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-warka-border bg-card px-2.5 py-1.5 text-xs font-medium text-warka-primary hover:bg-warka-bg"
+            >
+              <Expand className="size-3.5" />
+              {isAr ? "تكبير" : "Expand"}
+            </button>
+          </div>
+        )}
+
+        {isStudio && (
+          <div className="flex items-center justify-between gap-2 px-0.5">
+            <p className="text-xs font-semibold text-warka-text">
+              {isAr ? "معاينة مباشرة" : "Live preview"}
+            </p>
+            <button
+              type="button"
+              onClick={() => setFullscreen(true)}
+              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-warka-primary hover:bg-warka-bg"
+            >
+              <Expand className="size-3" />
+              {isAr ? "تكبير" : "Expand"}
+            </button>
+          </div>
+        )}
 
         {previewBody}
 
+        {!isStudio && (
         <div className="flex flex-wrap items-center gap-2 text-xs text-warka-text-secondary">
           <Palette className="size-3.5 shrink-0 text-warka-primary" />
           {activeStyle && (
@@ -177,6 +210,7 @@ export function CustomizationVisualPreview({
             </span>
           )}
         </div>
+        )}
       </div>
 
       <OptionPreviewModal
