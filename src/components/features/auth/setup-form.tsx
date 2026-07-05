@@ -26,17 +26,17 @@ export function SetupForm() {
         </Link>
       </div>
 
-      <div className="rounded-2xl bg-white p-6 shadow-card sm:p-8">
+      <div className="rounded-2xl bg-card p-6 shadow-card sm:p-8">
         <h1 className="mb-1 text-center text-xl font-bold text-warka-text">{t("setupTitle")}</h1>
         <p className="mb-6 text-center text-sm text-warka-text-secondary">{t("setupSubtitle")}</p>
 
         {error === "invalid" && (
-          <p className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <p className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
             {t("setupError")}
           </p>
         )}
         {error === "profile" && (
-          <p className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <p className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
             {t("setupProfileError")}
           </p>
         )}

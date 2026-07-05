@@ -57,7 +57,7 @@ export function DesignUploadPanel({
   };
 
   return (
-    <div className="mt-4 space-y-4 rounded-xl border border-glass-border bg-white/5 p-4">
+    <div className="mt-4 space-y-4 rounded-xl border border-glass-border bg-foreground/5 p-4">
       <p className="text-sm text-muted-foreground">{t("uploadHint")}</p>
       {templateConfig ? (
         <div ref={canvasRef}>

@@ -293,7 +293,7 @@ export function ProductVariantsPanel({ product }: ProductVariantsPanelProps) {
             <Palette className="size-4 text-warka-primary" />
             <h3 className="text-sm font-bold text-warka-text">{t("colorSectionTitle")}</h3>
           </div>
-          <span className="rounded-full bg-white px-2.5 py-0.5 text-xs font-medium text-warka-text-muted">
+          <span className="rounded-full bg-card px-2.5 py-0.5 text-xs font-medium text-warka-text-muted">
             {t("colorsCount", { count: variants.length })}
           </span>
         </div>
@@ -314,10 +314,10 @@ export function ProductVariantsPanel({ product }: ProductVariantsPanelProps) {
                   className={cn(
                     "relative flex flex-col items-center gap-2 rounded-[14px] border-2 px-3 py-3 text-center transition-all",
                     active && selected
-                      ? "border-warka-primary bg-white shadow-card ring-2 ring-warka-primary/20"
+                      ? "border-warka-primary bg-card shadow-card ring-2 ring-warka-primary/20"
                       : active
-                        ? "border-warka-primary/60 bg-white"
-                        : "border-dashed border-warka-border bg-white/60 hover:border-warka-primary/40"
+                        ? "border-warka-primary/60 bg-card"
+                        : "border-dashed border-warka-border bg-card/60 hover:border-warka-primary/40"
                   )}
                 >
                   {active && (
@@ -326,7 +326,7 @@ export function ProductVariantsPanel({ product }: ProductVariantsPanelProps) {
                     </span>
                   )}
                   <span
-                    className="size-10 rounded-full border-2 border-white shadow-sm ring-1 ring-warka-border"
+                    className="size-10 rounded-full border-2 border-card shadow-sm ring-1 ring-warka-border"
                     style={{ backgroundColor: preset.hex }}
                   />
                   <span className="text-xs font-semibold text-warka-text">{preset.label}</span>
@@ -341,13 +341,13 @@ export function ProductVariantsPanel({ product }: ProductVariantsPanelProps) {
             <button
               type="button"
               onClick={() => setShowAddCustom(true)}
-              className="inline-flex items-center gap-2 rounded-[10px] border-2 border-dashed border-warka-primary/50 bg-white px-4 py-2.5 text-sm font-semibold text-warka-primary transition-colors hover:border-warka-primary hover:bg-warka-primary/5"
+              className="inline-flex items-center gap-2 rounded-[10px] border-2 border-dashed border-warka-primary/50 bg-card px-4 py-2.5 text-sm font-semibold text-warka-primary transition-colors hover:border-warka-primary hover:bg-warka-primary/5"
             >
               <Plus className="size-4" />
               {t("addCustomColor")}
             </button>
           ) : (
-            <div className="rounded-[14px] border border-warka-border bg-white p-4">
+            <div className="rounded-[14px] border border-warka-border bg-card p-4">
               <p className="mb-3 text-xs font-semibold text-warka-text">{t("addCustomColor")}</p>
               <div className="grid gap-3 sm:grid-cols-3">
                 <div>
@@ -395,7 +395,7 @@ export function ProductVariantsPanel({ product }: ProductVariantsPanelProps) {
                 <button
                   type="button"
                   onClick={() => setShowAddCustom(false)}
-                  className="rounded-[10px] border border-warka-border bg-white px-4 py-2 text-sm font-medium text-warka-text"
+                  className="rounded-[10px] border border-warka-border bg-card px-4 py-2 text-sm font-medium text-warka-text"
                 >
                   {t("cancel")}
                 </button>
@@ -405,14 +405,14 @@ export function ProductVariantsPanel({ product }: ProductVariantsPanelProps) {
         </div>
 
         {variants.length === 0 ? (
-          <p className="rounded-[10px] border border-dashed border-warka-border bg-white px-4 py-6 text-center text-sm text-warka-text-muted">
+          <p className="rounded-[10px] border border-dashed border-warka-border bg-card px-4 py-6 text-center text-sm text-warka-text-muted">
             {t("noColorsYet")}
           </p>
         ) : (
           <>
             <div>
               <p className="mb-2 text-xs font-semibold text-warka-text">{t("activeColors")}</p>
-              <div className="flex max-h-40 flex-wrap gap-2 overflow-y-auto rounded-[10px] border border-warka-border bg-white p-2">
+              <div className="flex max-h-40 flex-wrap gap-2 overflow-y-auto rounded-[10px] border border-warka-border bg-card p-2">
                 {variants.map((variant) => (
                   <div key={variant.key} className="flex items-center gap-0.5">
                     <button
@@ -450,7 +450,7 @@ export function ProductVariantsPanel({ product }: ProductVariantsPanelProps) {
             </div>
 
             {activeVariant && (
-              <div className="rounded-[14px] border border-warka-border bg-white p-4">
+              <div className="rounded-[14px] border border-warka-border bg-card p-4">
                 <p className="mb-3 text-xs font-semibold text-warka-text">
                   {t("editingColor", { name: activeVariant.label_ar })}
                 </p>
@@ -498,7 +498,7 @@ export function ProductVariantsPanel({ product }: ProductVariantsPanelProps) {
         )}
       </section>
 
-      <section className="space-y-3 rounded-[14px] border border-warka-border bg-white p-4">
+      <section className="space-y-3 rounded-[14px] border border-warka-border bg-card p-4">
         <div className="flex items-center gap-2">
           <Layers className="size-4 text-warka-primary" />
           <h3 className="text-sm font-bold text-warka-text">{t("fabricSectionTitle")}</h3>
@@ -615,7 +615,7 @@ export function ProductVariantsPanel({ product }: ProductVariantsPanelProps) {
                         "inline-flex items-center gap-1.5 rounded-[10px] px-2.5 py-1 text-xs",
                         activeColorKey === v.key
                           ? "bg-warka-primary text-white"
-                          : "border border-warka-border bg-white"
+                          : "border border-warka-border bg-card"
                       )}
                     >
                       <span

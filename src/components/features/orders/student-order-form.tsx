@@ -119,7 +119,7 @@ export function StudentOrderForm({ prices, profile }: StudentOrderFormProps) {
   }
 
   const summaryBlock = (
-    <div className="overflow-hidden rounded-2xl bg-white shadow-card">
+    <div className="overflow-hidden rounded-2xl bg-card shadow-card">
       <div className="relative aspect-[4/5] w-full bg-warka-bg">
         {selectedMeta && (
           <Image
@@ -175,7 +175,7 @@ export function StudentOrderForm({ prices, profile }: StudentOrderFormProps) {
                     "rounded-xl border-2 p-4 text-start transition-all",
                     active
                       ? "border-warka-primary bg-warka-primary/5"
-                      : "border-warka-border bg-white hover:border-warka-primary/40"
+                      : "border-warka-border bg-card hover:border-warka-primary/40"
                   )}
                 >
                   <p className="font-semibold text-warka-text">{productT(meta.productType)}</p>
@@ -188,7 +188,7 @@ export function StudentOrderForm({ prices, profile }: StudentOrderFormProps) {
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white p-5 shadow-card">
+        <div className="rounded-2xl bg-card p-5 shadow-card">
           <Label className="text-sm font-semibold text-warka-text">{orderT("quantity")}</Label>
           <div className="mt-3 flex items-center gap-3">
             <button
@@ -220,7 +220,7 @@ export function StudentOrderForm({ prices, profile }: StudentOrderFormProps) {
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white p-5 shadow-card">
+        <div className="rounded-2xl bg-card p-5 shadow-card">
           <Label htmlFor="order-notes" className="text-sm font-semibold text-warka-text">
             {t("orders.specialNotes")}
           </Label>
@@ -234,7 +234,7 @@ export function StudentOrderForm({ prices, profile }: StudentOrderFormProps) {
           />
         </div>
 
-        <div className="rounded-2xl bg-white p-5 shadow-card">
+        <div className="rounded-2xl bg-card p-5 shadow-card">
           <Label className="text-sm font-semibold text-warka-text">{t("orders.uploadLogo")}</Label>
           <p className="mt-1 text-xs text-warka-text-muted">{orderT("logoOptional")}</p>
           <input
@@ -276,7 +276,7 @@ export function StudentOrderForm({ prices, profile }: StudentOrderFormProps) {
       <div className="space-y-6 lg:sticky lg:top-20 lg:self-start">{summaryBlock}</div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-warka-border bg-white/95 p-4 backdrop-blur-sm lg:hidden">
+      <div className="fixed inset-x-0 bottom-above-mobile-nav z-30 border-t border-warka-border bg-card/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm lg:hidden md:bottom-0">
         <div className="mx-auto flex max-w-lg items-center justify-between gap-4">
           <div>
             <p className="text-xs text-warka-text-muted">{t("common.total")}</p>

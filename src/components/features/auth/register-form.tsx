@@ -67,7 +67,7 @@ function RegisterAlerts() {
             : t("registerError");
 
   return (
-    <p className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">
+    <p className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm font-medium text-destructive">
       {message}
     </p>
   );
@@ -169,7 +169,7 @@ export function RegisterForm() {
         </Link>
       </div>
 
-      <div className="rounded-2xl bg-white p-6 shadow-card sm:p-8">
+      <div className="rounded-2xl bg-card p-6 shadow-card sm:p-8">
         <div className="mb-6 flex items-start justify-between">
           <div className="text-center sm:text-right">
             <h1 className="mb-1 text-xl font-bold text-warka-text">{t("registerTitle")}</h1>
@@ -191,7 +191,7 @@ export function RegisterForm() {
                   "flex size-8 items-center justify-center rounded-full text-xs font-bold transition-colors",
                   index <= step
                     ? "bg-warka-primary text-white"
-                    : "border-2 border-warka-border bg-white text-warka-text-muted"
+                    : "border-2 border-warka-border bg-card text-warka-text-muted"
                 )}
               >
                 {index < step ? <Check className="h-4 w-4" /> : index + 1}

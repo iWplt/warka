@@ -29,7 +29,7 @@ export function RegisterSuccessView() {
 
   if (!valid) {
     return (
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-card">
+      <div className="w-full max-w-md rounded-2xl bg-card p-8 text-center shadow-card">
         <p className="text-warka-text-secondary">{t("invalidAccessCode")}</p>
         <Link href={`/${locale}/register`} className="mt-4 inline-block text-warka-primary hover:underline">
           {t("register")}
@@ -39,7 +39,7 @@ export function RegisterSuccessView() {
   }
 
   return (
-    <div className="w-full max-w-lg rounded-2xl bg-white p-8 shadow-card">
+    <div className="w-full max-w-lg rounded-2xl bg-card p-8 shadow-card">
       <div className="mb-6 text-center">
         <Image src={WARKA_LOGO_PATH} alt="WARKA" width={56} height={56} className="mx-auto h-14 w-14" />
         <CheckCircle2 className="mx-auto mt-4 size-10 text-warka-primary" />

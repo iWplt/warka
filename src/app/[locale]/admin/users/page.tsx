@@ -8,9 +8,10 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminUsersPage() {
   const t = await getTranslations("nav");
-  const [students, representatives] = await Promise.all([
+  const [students, representatives, embroideryStaff] = await Promise.all([
     getUsersByRole("student"),
     getUsersByRole("representative"),
+    getUsersByRole("embroidery"),
   ]);
 
   return (
@@ -19,6 +20,7 @@ export default async function AdminUsersPage() {
       <UsersManagement
         students={students}
         representatives={representatives}
+        embroideryStaff={embroideryStaff}
         localOnly={isLocalAuthEnabled()}
       />
     </div>

@@ -16,6 +16,7 @@ type OrderRow = {
   type: OrderType;
   total: number;
   created_at: string;
+  student_modified_at?: string | null;
   profiles?: { full_name: string; phone: string } | null;
 };
 
@@ -35,12 +36,19 @@ export function OrdersTable({ orders, basePath, hideStudentColumn = false }: Ord
       accessorKey: "order_number",
       header: t("orders.orderNumber"),
       cell: ({ row }) => (
-        <Link
-          href={`${basePath}/${row.original.id}`}
-          className="font-medium text-primary hover:underline"
-        >
-          {row.original.order_number}
-        </Link>
+        <div className="flex flex-col gap-1">
+          <Link
+            href={`${basePath}/${row.original.id}`}
+            className="font-medium text-primary hover:underline"
+          >
+            {row.original.order_number}
+          </Link>
+          {"student_modified_at" in row.original && row.original.student_modified_at && (
+            <span className="w-fit rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+              {locale === "ar" ? "معدّل" : "Edited"}
+            </span>
+          )}
+        </div>
       ),
     },
     ...(hideStudentColumn

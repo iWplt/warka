@@ -1,37 +1,33 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { getPriceCatalog } from "@/server/actions/payments";
 import { getProductsCatalog } from "@/server/actions/products";
+import { getActiveFonts } from "@/server/actions/fonts";
 import { getCurrentProfile } from "@/lib/auth/guards";
 import { CheckoutShell } from "@/components/features/checkout/checkout-shell";
-import type { ProductType } from "@/types/database";
 
 type CheckoutPageProps = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ product?: string; catalog?: string }>;
+  searchParams: Promise<{ catalog?: string }>;
 };
-
-const VALID_PRODUCTS = new Set<ProductType>(["sash", "cap", "gown", "suit", "custom"]);
 
 export default async function CheckoutPage({ params, searchParams }: CheckoutPageProps) {
   const { locale } = await params;
-  const { product: productParam, catalog: catalogParam } = await searchParams;
+  const { catalog: catalogParam } = await searchParams;
   const profile = await getCurrentProfile();
 
   if (!profile) {
-    redirect(`/${locale}/login`);
+    const returnPath = catalogParam
+      ? `/${locale}/checkout?catalog=${catalogParam}`
+      : `/${locale}/checkout`;
+    redirect(`/${locale}/login?redirect=${encodeURIComponent(returnPath)}`);
   }
 
   if (profile.role !== "student" && profile.role !== "representative") {
     redirect(`/${locale}/unauthorized`);
   }
 
-  const [prices, catalog] = await Promise.all([getPriceCatalog(), getProductsCatalog()]);
-  const initialProduct =
-    productParam && VALID_PRODUCTS.has(productParam as ProductType)
-      ? (productParam as ProductType)
-      : undefined;
-
+  const catalog = await getProductsCatalog();
+  const fonts = await getActiveFonts();
   const catalogProducts = catalog.map((p) => ({
     id: p.id,
     product_type: p.product_type,
@@ -39,18 +35,17 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
     name_en: p.name_en,
     price: Number(p.price),
     image: p.image,
-    category_name_ar: p.category?.name_ar,
-    category_name_en: p.category?.name_en,
+    fabric_options: p.fabric_options ?? [],
+    embroidery_positions: p.embroidery_positions ?? [],
   }));
 
   return (
     <Suspense fallback={null}>
       <CheckoutShell
-        prices={prices}
         profile={profile}
-        initialProduct={initialProduct}
         initialCatalogProductId={catalogParam}
         catalogProducts={catalogProducts}
+        fonts={fonts}
       />
     </Suspense>
   );

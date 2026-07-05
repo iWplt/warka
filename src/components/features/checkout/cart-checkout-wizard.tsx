@@ -18,6 +18,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WarkaCard, WarkaCardTitle } from "@/components/ui/warka-card";
 import { createOrder } from "@/server/actions/orders";
+import {
+  PaymentMethodsStep,
+  type PaymentMethodId,
+} from "@/components/payment/payment-methods-step";
+import { COD_FEE_IQD, IRAQI_GOVERNORATES } from "@/lib/constants/iraq-market";
 import { formatIqd } from "@/lib/format/currency";
 import { getSizeOptions, productNeedsSize } from "@/lib/cart/sizes";
 import { validateImageFile } from "@/lib/upload/validate";
@@ -33,6 +38,7 @@ const STEPS = [
   { ar: "التخصيص", en: "Customize" },
   { ar: "البيانات", en: "Details" },
   { ar: "المراجعة", en: "Review" },
+  { ar: "الدفع", en: "Payment" },
   { ar: "التأكيد", en: "Confirm" },
 ] as const;
 
@@ -60,7 +66,15 @@ export function CartCheckoutWizard({ profile }: CartCheckoutWizardProps) {
       ? String(profile.graduation_year)
       : String(new Date().getFullYear()),
   });
+  const [deliveryData, setDeliveryData] = useState({
+    governorate: IRAQI_GOVERNORATES[0].en,
+    area: "",
+    phone: profile.phone ?? "",
+    preferred_date: "",
+  });
   const [orderNotes, setOrderNotes] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodId>("cod");
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
 
   useEffect(() => {
     if (items.length === 0) {
@@ -101,23 +115,55 @@ export function CartCheckoutWizard({ profile }: CartCheckoutWizardProps) {
       toast.error(t("sizeRequired"));
       return;
     }
-    if (step === 2 && !studentData.full_name.trim()) {
-      toast.error(locale === "ar" ? "أدخل الاسم الكامل" : "Enter full name");
-      return;
+    if (step === 2) {
+      if (!studentData.full_name.trim()) {
+        toast.error(locale === "ar" ? "أدخل الاسم الكامل" : "Enter full name");
+        return;
+      }
+      if (!deliveryData.governorate) {
+        toast.error(locale === "ar" ? "اختر المحافظة" : "Select governorate");
+        return;
+      }
+      if (!deliveryData.area.trim()) {
+        toast.error(locale === "ar" ? "أدخل المنطقة / الحي" : "Enter area / district");
+        return;
+      }
+      if (!deliveryData.phone.trim() || deliveryData.phone.trim().length < 7) {
+        toast.error(locale === "ar" ? "أدخل رقم هاتف صحيح" : "Enter a valid phone number");
+        return;
+      }
     }
-    setStep((s) => Math.min(4, s + 1));
+    setStep((s) => Math.min(5, s + 1));
   };
+
+  const totalWithCod =
+    paymentMethod === "cod" ? total + COD_FEE_IQD : total;
 
   const handleSubmit = async () => {
     if (items.length === 0) return;
     setLoading(true);
     try {
+      const gov = IRAQI_GOVERNORATES.find((g) => g.en === deliveryData.governorate);
+      const govLabel = locale === "ar" ? gov?.ar : gov?.en;
+      const deliveryNote = [
+        locale === "ar" ? `المحافظة: ${govLabel}` : `Governorate: ${govLabel}`,
+        locale === "ar" ? `المنطقة: ${deliveryData.area.trim()}` : `Area: ${deliveryData.area.trim()}`,
+        locale === "ar" ? `هاتف التوصيل: ${deliveryData.phone.trim()}` : `Delivery phone: ${deliveryData.phone.trim()}`,
+        deliveryData.preferred_date
+          ? locale === "ar"
+            ? `تاريخ التسليم المطلوب (ميلادي): ${deliveryData.preferred_date}`
+            : `Preferred delivery (Gregorian): ${deliveryData.preferred_date}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" | ");
+
       const order = await createOrder({
         type: "individual",
-        notes: orderNotes.trim() || undefined,
+        notes: [deliveryNote, orderNotes.trim() || null].filter(Boolean).join("\n"),
         student_profile: {
           full_name: studentData.full_name.trim() || undefined,
-          phone: studentData.phone.trim() || undefined,
+          phone: deliveryData.phone.trim() || studentData.phone.trim() || undefined,
           college: studentData.college.trim() || undefined,
           department: studentData.department.trim() || undefined,
           graduation_year: studentData.graduation_year
@@ -229,62 +275,148 @@ export function CartCheckoutWizard({ profile }: CartCheckoutWizardProps) {
       )}
 
       {step === 2 && (
-        <WarkaCard className="space-y-4">
-          <WarkaCardTitle>{authT("registerTitle")}</WarkaCardTitle>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <Label>{authT("fullName")}</Label>
-              <Input
-                value={studentData.full_name}
-                onChange={(e) => setStudentData({ ...studentData, full_name: e.target.value })}
-              />
+        <div className="space-y-4">
+          <WarkaCard className="space-y-4">
+            <WarkaCardTitle>{authT("registerTitle")}</WarkaCardTitle>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <Label className="text-warka-text">{authT("fullName")}</Label>
+                <Input
+                  value={studentData.full_name}
+                  onChange={(e) => setStudentData({ ...studentData, full_name: e.target.value })}
+                  className="mt-1 border-warka-border"
+                />
+              </div>
+              <div>
+                <Label className="text-warka-text">{authT("college")}</Label>
+                <Input
+                  value={studentData.college}
+                  onChange={(e) => setStudentData({ ...studentData, college: e.target.value })}
+                  className="mt-1 border-warka-border"
+                />
+              </div>
+              <div>
+                <Label className="text-warka-text">{authT("department")}</Label>
+                <Input
+                  value={studentData.department}
+                  onChange={(e) => setStudentData({ ...studentData, department: e.target.value })}
+                  className="mt-1 border-warka-border"
+                />
+              </div>
+              <div>
+                <Label className="text-warka-text">{authT("graduationYear")}</Label>
+                <Input
+                  value={studentData.graduation_year}
+                  onChange={(e) =>
+                    setStudentData({ ...studentData, graduation_year: e.target.value })
+                  }
+                  className="mt-1 border-warka-border"
+                />
+              </div>
+            </div>
+          </WarkaCard>
+
+          <WarkaCard className="space-y-4">
+            <WarkaCardTitle>
+              {locale === "ar" ? "عنوان التوصيل" : "Delivery address"}
+            </WarkaCardTitle>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label className="text-warka-text">
+                  {locale === "ar" ? "المحافظة *" : "Governorate *"}
+                </Label>
+                <select
+                  required
+                  value={deliveryData.governorate}
+                  onChange={(e) =>
+                    setDeliveryData({ ...deliveryData, governorate: e.target.value })
+                  }
+                  className="mt-1 w-full rounded-md border border-warka-border bg-card px-3 py-2.5 text-sm text-warka-text focus:outline-none focus:ring-2 focus:ring-warka-primary"
+                >
+                  {IRAQI_GOVERNORATES.map((g) => (
+                    <option key={g.en} value={g.en}>
+                      {locale === "ar" ? g.ar : g.en}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Label className="text-warka-text">
+                  {locale === "ar" ? "المنطقة / الحي *" : "Area / district *"}
+                </Label>
+                <Input
+                  required
+                  value={deliveryData.area}
+                  onChange={(e) => setDeliveryData({ ...deliveryData, area: e.target.value })}
+                  placeholder={locale === "ar" ? "مثال: الكرادة، الجامعة" : "e.g. Karrada, University"}
+                  className="mt-1 border-warka-border"
+                />
+              </div>
+              <div>
+                <Label className="text-warka-text">
+                  {locale === "ar" ? "رقم الهاتف *" : "Phone number *"}
+                </Label>
+                <Input
+                  type="tel"
+                  required
+                  dir="ltr"
+                  value={deliveryData.phone}
+                  onChange={(e) => setDeliveryData({ ...deliveryData, phone: e.target.value })}
+                  placeholder="07XX XXX XXXX"
+                  className="mt-1 border-warka-border text-left"
+                />
+              </div>
+              <div>
+                <Label className="text-warka-text">
+                  {locale === "ar" ? "تاريخ التسليم المطلوب (ميلادي)" : "Preferred delivery (Gregorian)"}
+                </Label>
+                <Input
+                  type="date"
+                  value={deliveryData.preferred_date}
+                  onChange={(e) =>
+                    setDeliveryData({ ...deliveryData, preferred_date: e.target.value })
+                  }
+                  className="mt-1 border-warka-border"
+                />
+              </div>
             </div>
             <div>
-              <Label>{authT("phone")}</Label>
-              <Input
-                value={studentData.phone}
-                onChange={(e) => setStudentData({ ...studentData, phone: e.target.value })}
+              <Label className="text-warka-text">{t("orderNotes")}</Label>
+              <textarea
+                value={orderNotes}
+                onChange={(e) => setOrderNotes(e.target.value)}
+                rows={3}
+                className="mt-1 w-full rounded-xl border border-warka-border bg-card px-3 py-2 text-sm text-warka-text"
               />
             </div>
-            <div>
-              <Label>{authT("college")}</Label>
-              <Input
-                value={studentData.college}
-                onChange={(e) => setStudentData({ ...studentData, college: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>{authT("department")}</Label>
-              <Input
-                value={studentData.department}
-                onChange={(e) => setStudentData({ ...studentData, department: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>{authT("graduationYear")}</Label>
-              <Input
-                value={studentData.graduation_year}
-                onChange={(e) =>
-                  setStudentData({ ...studentData, graduation_year: e.target.value })
-                }
-              />
-            </div>
-          </div>
-          <div>
-            <Label>{t("orderNotes")}</Label>
-            <textarea
-              value={orderNotes}
-              onChange={(e) => setOrderNotes(e.target.value)}
-              rows={3}
-              className="mt-1 w-full rounded-xl border border-warka-border px-3 py-2 text-sm"
-            />
-          </div>
-        </WarkaCard>
+          </WarkaCard>
+        </div>
       )}
 
       {step === 3 && (
         <WarkaCard className="space-y-4">
           <WarkaCardTitle>{t("reviewTitle")}</WarkaCardTitle>
+          <div className="rounded-xl border border-warka-border bg-warka-bg/30 p-3 text-sm">
+            <p className="font-semibold text-warka-text">
+              {locale === "ar" ? "التوصيل" : "Delivery"}
+            </p>
+            <p className="mt-1 text-warka-text-secondary">
+              {(() => {
+                const gov = IRAQI_GOVERNORATES.find((g) => g.en === deliveryData.governorate);
+                const govLabel = locale === "ar" ? gov?.ar : gov?.en;
+                return `${govLabel} — ${deliveryData.area}`;
+              })()}
+            </p>
+            <p className="text-warka-text-secondary" dir="ltr">
+              {deliveryData.phone}
+            </p>
+            {deliveryData.preferred_date && (
+              <p className="text-warka-text-secondary">
+                {locale === "ar" ? "التسليم: " : "Delivery: "}
+                {deliveryData.preferred_date}
+              </p>
+            )}
+          </div>
           {items.map((line) => (
             <ReviewLine key={line.id} line={line} locale={locale} />
           ))}
@@ -298,13 +430,34 @@ export function CartCheckoutWizard({ profile }: CartCheckoutWizardProps) {
       )}
 
       {step === 4 && (
+        <PaymentMethodsStep
+          locale={locale === "ar" ? "ar" : "en"}
+          selectedMethod={paymentMethod}
+          onSelect={setPaymentMethod}
+          onPaid={() => setPaymentConfirmed(true)}
+          total={totalWithCod}
+        />
+      )}
+
+      {step === 5 && (
         <WarkaCard className="space-y-4 text-center">
           <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-warka-primary/10">
             <Package className="size-8 text-warka-primary" />
           </div>
           <WarkaCardTitle>{t("confirmTitle")}</WarkaCardTitle>
           <p className="text-sm text-warka-text-secondary">{t("confirmHint")}</p>
-          <p className="text-2xl font-bold text-warka-primary">{formatIqd(total, locale)}</p>
+          <p className="text-2xl font-bold text-warka-primary">
+            {formatIqd(totalWithCod, locale)}
+          </p>
+          <p className="text-sm text-warka-text-secondary">
+            {locale === "ar" ? "طريقة الدفع:" : "Payment:"}{" "}
+            {paymentMethod === "cod"
+              ? locale === "ar"
+                ? "الدفع عند الاستلام"
+                : "Cash on delivery"
+              : paymentMethod}
+            {paymentConfirmed ? " ✓" : ""}
+          </p>
           <p className="text-sm text-warka-text-secondary">
             {t("itemCount", { count: items.reduce((n, i) => n + i.quantity, 0) })}
           </p>
@@ -321,7 +474,7 @@ export function CartCheckoutWizard({ profile }: CartCheckoutWizardProps) {
           {step === 1 ? t("backToCart") : t("back")}
         </button>
 
-        {step < 4 ? (
+        {step < 5 ? (
           <button
             type="button"
             onClick={goNext}
@@ -393,7 +546,7 @@ function CustomizeLineCard({
   return (
     <WarkaCard>
       <div className="flex gap-4">
-        <div className="relative hidden size-24 shrink-0 overflow-hidden rounded-xl bg-[#F5F4F0] sm:block">
+        <div className="relative hidden size-24 shrink-0 overflow-hidden rounded-xl bg-warka-bg sm:block">
           <Image src={line.image} alt={name} fill className="object-cover" sizes="96px" />
         </div>
         <div className="min-w-0 flex-1 space-y-4">
@@ -441,7 +594,7 @@ function CustomizeLineCard({
               onChange={(e) => onNotes(e.target.value)}
               rows={2}
               placeholder={t("lineNotesPlaceholder")}
-              className="mt-1 w-full rounded-xl border border-warka-border px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-xl border border-warka-border bg-card px-3 py-2 text-sm text-warka-text"
             />
           </div>
 

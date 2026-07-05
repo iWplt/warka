@@ -4,18 +4,36 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import ExcelJS from "exceljs";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import {
   PermissionError,
   requireRole,
 } from "@/lib/auth/guards";
 import { logActivity } from "@/server/actions/notifications";
+import { getBatchDefaultsSettings, getProductFieldPermissions } from "@/server/actions/settings";
+import {
+  buildBatchLockedSnapshot,
+  buildStudentFieldsSnapshot,
+} from "@/lib/orders/product-field-permissions";
+import { suggestSizeFromGuide } from "@/lib/settings/size-guide";
+import { getSizeGuideEntries } from "@/server/actions/settings";
+import {
+  applyBatchDefaultsToStudent,
+  assertBatchFieldUpdatesAllowed,
+  mergeBatchFieldPolicy,
+} from "@/lib/batches/field-lock";
+import {
+  provisionBatchStudentAccount,
+  regenerateBatchStudentCredentials as regenerateCredentials,
+} from "@/lib/batches/provision-student";
+import { deriveStudentPassword } from "@/lib/auth/access-code";
 import { validateExcelBase64 } from "@/lib/upload/validate";
 import type { Batch, BatchStatus, ProductType, Profile } from "@/types/database";
+import type { BatchSettings } from "@/lib/settings/types";
 
 export type ExcelImportResult = {
   imported: number;
   skipped: number;
+  accountsCreated: number;
   errors: Array<{ row: number; message: string }>;
 };
 
@@ -70,14 +88,49 @@ const studentSchema = z.object({
   size: z.preprocess(emptyToUndefined, z.string().optional()),
   sash_color: z.preprocess(emptyToUndefined, z.string().optional()),
   cap_type: z.preprocess(emptyToUndefined, z.string().optional()),
+  fabric_type: z.preprocess(emptyToUndefined, z.string().optional()),
+  font_family: z.preprocess(emptyToUndefined, z.string().optional()),
   custom_text: z.preprocess(emptyToUndefined, z.string().optional()),
   notes: z.preprocess(emptyToUndefined, z.string().optional()),
+  height_cm: z.coerce.number().int().positive().optional(),
+  weight_kg: z.coerce.number().int().positive().optional(),
 });
 
-const studentAccountSchema = z.object({
-  batch_student_id: z.string().uuid(),
-  email: z.string().email(),
-  password: z.string().min(6),
+const updateStudentSchema = studentSchema
+  .omit({ batch_id: true })
+  .partial()
+  .extend({
+    batch_id: z.string().uuid(),
+    student_id: z.string().uuid(),
+  });
+
+const sizePolicySchema = z.object({
+  product_type: z.enum(["sash", "cap", "gown", "suit", "custom"]),
+  mode: z.enum([
+    "one_size",
+    "fixed_list",
+    "estimate",
+    "fixed_and_estimate",
+    "custom",
+    "fixed_and_custom",
+  ]),
+  one_size_label_ar: z.string(),
+  one_size_label_en: z.string(),
+  allow_estimate: z.boolean(),
+  allow_custom_measurements: z.boolean(),
+});
+
+const batchSettingsSchema = z.object({
+  batch_id: z.string().uuid(),
+  settings: z.object({
+    locked_fields: z.array(z.string()).optional(),
+    editable_fields: z.array(z.string()).optional(),
+    defaults: z.record(z.unknown()).optional(),
+    size_policies: z
+      .record(z.enum(["sash", "cap", "gown", "suit", "custom"]), sizePolicySchema)
+      .optional()
+      .nullable(),
+  }),
 });
 
 async function getBatchOrThrow(batchId: string): Promise<Batch> {
@@ -92,6 +145,18 @@ async function getBatchOrThrow(batchId: string): Promise<Batch> {
 
   if (error || !batch) throw new Error("Batch not found");
   return batch as Batch;
+}
+
+async function getBatchFieldPolicyForBatch(batch: Batch) {
+  const platformDefaults = await getBatchDefaultsSettings();
+  return mergeBatchFieldPolicy(platformDefaults, (batch.settings ?? {}) as BatchSettings);
+}
+
+export async function getBatchFieldPolicy(batchId: string) {
+  const profile = await requireRole(["admin", "representative"]);
+  const batch = await getBatchOrThrow(batchId);
+  await assertCanManageBatch(batch, profile);
+  return getBatchFieldPolicyForBatch(batch);
 }
 
 async function assertCanManageBatch(batch: Batch, profile: Profile) {
@@ -177,11 +242,23 @@ export async function getBatchStudents(batchId: string) {
   return data ?? [];
 }
 
-export async function addBatchStudent(input: z.infer<typeof studentSchema>) {
+export async function addBatchStudent(
+  input: z.infer<typeof studentSchema> & { create_account?: boolean }
+) {
   const profile = await requireRole(["admin", "representative"]);
-  const data = studentSchema.parse(input);
+  const { create_account, ...rest } = input;
+  let data = studentSchema.parse(rest);
   const batch = await getBatchOrThrow(data.batch_id);
   await assertCanManageBatch(batch, profile);
+
+  const policy = await getBatchFieldPolicyForBatch(batch);
+  data = applyBatchDefaultsToStudent(policy, data) as typeof data;
+
+  if (data.height_cm && data.weight_kg && !data.size) {
+    const guide = await getSizeGuideEntries("gown");
+    const suggested = suggestSizeFromGuide(guide, data.height_cm, data.weight_kg, "gown");
+    if (suggested) data = { ...data, size: suggested.size_code };
+  }
 
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase not configured");
@@ -193,16 +270,102 @@ export async function addBatchStudent(input: z.infer<typeof studentSchema>) {
     .single();
 
   if (error) throw new Error(error.message);
+
+  if (create_account) {
+    const account = await provisionBatchStudentAccount(student, batch);
+    await supabase
+      .from("batch_students")
+      .update({ student_id: account.userId })
+      .eq("id", student.id);
+  }
+
   revalidatePath(`/representative/batches/${data.batch_id}`);
   revalidatePath(`/admin/batches/${data.batch_id}`);
   return student;
 }
 
-export async function createBatchStudentAccount(
-  input: z.infer<typeof studentAccountSchema>
-) {
-  const profile = await requireRole(["representative"]);
-  const data = studentAccountSchema.parse(input);
+export async function updateBatchStudent(input: z.infer<typeof updateStudentSchema>) {
+  const profile = await requireRole(["admin", "representative"]);
+  const data = updateStudentSchema.parse(input);
+  const batch = await getBatchOrThrow(data.batch_id);
+  await assertCanManageBatch(batch, profile);
+
+  const policy = await getBatchFieldPolicyForBatch(batch);
+  const { batch_id, student_id, ...patch } = data;
+  assertBatchFieldUpdatesAllowed(
+    policy,
+    patch,
+    profile.role === "admin" ? "admin" : "representative"
+  );
+
+  if (patch.height_cm && patch.weight_kg && !patch.size) {
+    const guide = await getSizeGuideEntries("gown");
+    const suggested = suggestSizeFromGuide(
+      guide,
+      patch.height_cm,
+      patch.weight_kg,
+      "gown"
+    );
+    if (suggested) patch.size = suggested.size_code;
+  }
+
+  const supabase = await createClient();
+  if (!supabase) throw new Error("Supabase not configured");
+
+  const { error } = await supabase
+    .from("batch_students")
+    .update(patch)
+    .eq("id", student_id)
+    .eq("batch_id", batch_id);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/representative/batches/${batch_id}`);
+  revalidatePath(`/admin/batches/${batch_id}`);
+  return { success: true };
+}
+
+export async function updateBatchSettingsAction(input: z.infer<typeof batchSettingsSchema>) {
+  const profile = await requireRole(["admin", "representative"]);
+  const data = batchSettingsSchema.parse(input);
+  const batch = await getBatchOrThrow(data.batch_id);
+  await assertCanManageBatch(batch, profile);
+
+  if (profile.role === "representative" && data.settings.locked_fields) {
+    throw new PermissionError("Only admin can change locked batch fields");
+  }
+
+  const supabase = await createClient();
+  if (!supabase) throw new Error("Supabase not configured");
+
+  const mergedSettings: BatchSettings = {
+    ...((batch.settings ?? {}) as BatchSettings),
+    ...data.settings,
+  };
+
+  if ("size_policies" in data.settings) {
+    if (data.settings.size_policies == null) {
+      delete mergedSettings.size_policies;
+    } else {
+      mergedSettings.size_policies = data.settings.size_policies;
+    }
+  }
+
+  const { error } = await supabase
+    .from("batches")
+    .update({ settings: mergedSettings, updated_at: new Date().toISOString() })
+    .eq("id", data.batch_id);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/admin/batches/${data.batch_id}`);
+  revalidatePath(`/representative/batches/${data.batch_id}`);
+  return { success: true };
+}
+
+export async function createBatchStudentAccount(input: { batch_student_id: string }) {
+  const profile = await requireRole(["admin", "representative"]);
+  const batchStudentId = z.string().uuid().parse(input.batch_student_id);
 
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase not configured");
@@ -210,77 +373,31 @@ export async function createBatchStudentAccount(
   const { data: batchStudent, error: studentError } = await supabase
     .from("batch_students")
     .select("*, batches(*)")
-    .eq("id", data.batch_student_id)
+    .eq("id", batchStudentId)
     .single();
 
   if (studentError || !batchStudent) {
     throw new Error("Student not found in batch");
   }
 
-  if (batchStudent.student_id) {
-    throw new Error("This student already has a login account");
-  }
-
   const batch = batchStudent.batches as Batch;
   await assertCanManageBatch(batch, profile);
 
-  const admin = createAdminClient();
-  if (!admin) {
-    throw new Error("Supabase admin credentials are required to create accounts");
-  }
-
-  const { data: authData, error: authError } = await admin.auth.admin.createUser({
-    email: data.email,
-    password: data.password,
-    email_confirm: true,
-    user_metadata: { full_name: batchStudent.full_name },
-  });
-
-  if (authError) {
-    if (
-      authError.message.includes("already been registered") ||
-      authError.message.includes("already exists")
-    ) {
-      throw new Error("This email is already registered");
-    }
-    throw new Error(authError.message || "Failed to create account");
-  }
-
-  const userId = authData.user?.id;
-  if (!userId) throw new Error("Account was not created");
-
-  const { error: profileError } = await admin.from("profiles").upsert(
-    {
-      id: userId,
-      role: "student",
-      full_name: batchStudent.full_name,
-      phone: batchStudent.phone,
-      college: batch.college,
-      department: batch.department,
-      graduation_year: batch.graduation_year,
-      is_active: true,
-      locale: "ar",
-    },
-    { onConflict: "id" }
-  );
-
-  if (profileError) {
-    throw new Error(profileError.message || "Failed to save student profile");
-  }
+  const account = await provisionBatchStudentAccount(batchStudent, batch);
 
   const { error: linkError } = await supabase
     .from("batch_students")
-    .update({ student_id: userId })
-    .eq("id", data.batch_student_id);
+    .update({ student_id: account.userId })
+    .eq("id", batchStudentId);
 
   if (linkError) {
     throw new Error(linkError.message || "Failed to link student account");
   }
 
   try {
-    await logActivity(profile.id, "create_student_account", "profile", userId, {
+    await logActivity(profile.id, "create_student_account", "profile", account.userId, {
       batch_id: batch.id,
-      batch_student_id: data.batch_student_id,
+      batch_student_id: batchStudentId,
     });
   } catch {
     // non-blocking
@@ -288,7 +405,83 @@ export async function createBatchStudentAccount(
 
   revalidatePath(`/representative/batches/${batch.id}`);
   revalidatePath(`/admin/batches/${batch.id}`);
-  return { id: userId, email: data.email };
+  return {
+    id: account.userId,
+    accessCode: account.accessCode,
+    password: account.password,
+  };
+}
+
+export async function regenerateBatchStudentCredentials(batchStudentId: string) {
+  const profile = await requireRole(["admin", "representative"]);
+  const id = z.string().uuid().parse(batchStudentId);
+
+  const supabase = await createClient();
+  if (!supabase) throw new Error("Supabase not configured");
+
+  const { data: batchStudent } = await supabase
+    .from("batch_students")
+    .select("*, batches(*)")
+    .eq("id", id)
+    .single();
+
+  if (!batchStudent?.student_id) {
+    throw new Error("Student has no account to regenerate");
+  }
+
+  const batch = batchStudent.batches as Batch;
+  await assertCanManageBatch(batch, profile);
+
+  const account = await regenerateCredentials(
+    batchStudent.student_id,
+    batchStudent,
+    batch
+  );
+
+  try {
+    await logActivity(profile.id, "regenerate_student_credentials", "profile", account.userId, {
+      batch_id: batch.id,
+      batch_student_id: id,
+    });
+  } catch {
+    // non-blocking
+  }
+
+  revalidatePath(`/representative/batches/${batch.id}`);
+  revalidatePath(`/admin/batches/${batch.id}`);
+  return {
+    accessCode: account.accessCode,
+    password: account.password,
+  };
+}
+
+export async function bulkCreateBatchAccounts(batchId: string) {
+  const profile = await requireRole(["admin", "representative"]);
+  const batch = await getBatchOrThrow(batchId);
+  await assertCanManageBatch(batch, profile);
+
+  const supabase = await createClient();
+  if (!supabase) throw new Error("Supabase not configured");
+
+  const { data: students } = await supabase
+    .from("batch_students")
+    .select("*")
+    .eq("batch_id", batchId)
+    .is("student_id", null);
+
+  let created = 0;
+  for (const student of students ?? []) {
+    const account = await provisionBatchStudentAccount(student, batch);
+    await supabase
+      .from("batch_students")
+      .update({ student_id: account.userId })
+      .eq("id", student.id);
+    created += 1;
+  }
+
+  revalidatePath(`/representative/batches/${batchId}`);
+  revalidatePath(`/admin/batches/${batchId}`);
+  return { created };
 }
 
 export async function removeBatchStudent(studentId: string, batchId: string) {
@@ -324,19 +517,73 @@ export async function downloadBatchImportTemplate() {
   sheet.columns = [
     { header: "Full Name", key: "full_name", width: 28 },
     { header: "Phone", key: "phone", width: 16 },
-    { header: "Size", key: "size", width: 10 },
-    { header: "Sash Color", key: "sash_color", width: 14 },
-    { header: "Cap Type", key: "cap_type", width: 14 },
-    { header: "Custom Text", key: "custom_text", width: 24 },
+    { header: "Height (cm)", key: "height_cm", width: 14 },
+    { header: "Weight (kg)", key: "weight_kg", width: 14 },
   ];
   sheet.addRow({
     full_name: "Ahmed Ali",
     phone: "07701234567",
-    size: "M",
-    sash_color: "Gold",
-    cap_type: "Standard",
-    custom_text: "Computer Science 2026",
+    height_cm: 175,
+    weight_kg: 72,
   });
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  return Buffer.from(buffer).toString("base64");
+}
+
+function parseOptionalInt(value: string | undefined): number | undefined {
+  if (!value?.trim()) return undefined;
+  const n = Number.parseInt(value.replace(/[^\d]/g, ""), 10);
+  return Number.isFinite(n) && n > 0 ? n : undefined;
+}
+
+export async function exportBatchCredentialsExcel(batchId: string) {
+  const profile = await requireRole(["admin", "representative"]);
+  const batch = await getBatchOrThrow(batchId);
+  await assertCanManageBatch(batch, profile);
+
+  const supabase = await createClient();
+  if (!supabase) throw new Error("Supabase not configured");
+
+  const { data: students } = await supabase
+    .from("batch_students")
+    .select("full_name, phone, student_id")
+    .eq("batch_id", batchId)
+    .not("student_id", "is", null)
+    .order("full_name");
+
+  const userIds = (students ?? []).map((s) => s.student_id).filter(Boolean) as string[];
+  const accessByUser = new Map<string, string>();
+
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, access_code")
+      .in("id", userIds);
+    for (const p of profiles ?? []) {
+      if (p.access_code) accessByUser.set(p.id, p.access_code);
+    }
+  }
+
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Credentials");
+  sheet.columns = [
+    { header: "Student Name", key: "full_name", width: 28 },
+    { header: "Username (Access Code)", key: "username", width: 22 },
+    { header: "Password", key: "password", width: 28 },
+    { header: "Phone", key: "phone", width: 16 },
+  ];
+
+  for (const row of students ?? []) {
+    const accessCode = row.student_id ? accessByUser.get(row.student_id) : null;
+    if (!accessCode) continue;
+    sheet.addRow({
+      full_name: row.full_name,
+      username: accessCode,
+      password: deriveStudentPassword(accessCode),
+      phone: row.phone ?? "",
+    });
+  }
 
   const buffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(buffer).toString("base64");
@@ -349,10 +596,17 @@ export async function importStudentsFromExcel(
   const profile = await requireRole(["admin", "representative"]);
   const batch = await getBatchOrThrow(batchId);
   await assertCanManageBatch(batch, profile);
+  const policy = await getBatchFieldPolicyForBatch(batch);
+  const sizeGuide = await getSizeGuideEntries("gown");
 
   const excelCheck = validateExcelBase64(base64File);
   if (!excelCheck.ok) {
-    return { imported: 0, skipped: 0, errors: [{ row: 0, message: excelCheck.error }] };
+    return {
+      imported: 0,
+      skipped: 0,
+      accountsCreated: 0,
+      errors: [{ row: 0, message: excelCheck.error }],
+    };
   }
 
   const supabase = await createClient();
@@ -382,7 +636,7 @@ export async function importStudentsFromExcel(
   const sheet = workbook.worksheets[0];
   if (!sheet) throw new Error("Excel file has no worksheets");
 
-  const students: z.infer<typeof studentSchema>[] = [];
+  const pending: z.infer<typeof studentSchema>[] = [];
   const errors: ExcelImportResult["errors"] = [];
   let skipped = 0;
 
@@ -396,6 +650,8 @@ export async function importStudentsFromExcel(
     }
 
     const phone = row.getCell(2).text?.trim() || undefined;
+    const heightCm = parseOptionalInt(row.getCell(3).text?.trim());
+    const weightKg = parseOptionalInt(row.getCell(4).text?.trim());
     const normalizedName = fullName.toLowerCase();
 
     if (existingNames.has(normalizedName)) {
@@ -409,16 +665,22 @@ export async function importStudentsFromExcel(
       return;
     }
 
-    const parsed = studentSchema.safeParse({
+    let size: string | undefined;
+    if (heightCm && weightKg) {
+      const suggested = suggestSizeFromGuide(sizeGuide, heightCm, weightKg, "gown");
+      size = suggested?.size_code;
+    }
+
+    const rowData = applyBatchDefaultsToStudent(policy, {
       batch_id: batchId,
       full_name: fullName,
       phone,
-      size: row.getCell(3).text?.trim() || undefined,
-      sash_color: row.getCell(4).text?.trim() || undefined,
-      cap_type: row.getCell(5).text?.trim() || undefined,
-      custom_text: row.getCell(6).text?.trim() || undefined,
-    });
+      height_cm: heightCm,
+      weight_kg: weightKg,
+      size,
+    }) as z.infer<typeof studentSchema>;
 
+    const parsed = studentSchema.safeParse(rowData);
     if (!parsed.success) {
       skipped += 1;
       errors.push({ row: rowNumber, message: "Invalid row data" });
@@ -427,19 +689,52 @@ export async function importStudentsFromExcel(
 
     existingNames.add(normalizedName);
     if (phone) existingPhones.add(phone);
-    students.push(parsed.data);
+    pending.push(parsed.data);
   });
 
-  if (students.length === 0) {
-    return { imported: 0, skipped, errors };
+  if (pending.length === 0) {
+    return { imported: 0, skipped, accountsCreated: 0, errors };
   }
 
-  const { error } = await supabase.from("batch_students").insert(students);
-  if (error) throw new Error(error.message);
+  let imported = 0;
+  let accountsCreated = 0;
+
+  for (const studentData of pending) {
+    const { data: inserted, error } = await supabase
+      .from("batch_students")
+      .insert(studentData)
+      .select()
+      .single();
+
+    if (error || !inserted) {
+      skipped += 1;
+      errors.push({ row: 0, message: error?.message ?? "Insert failed" });
+      continue;
+    }
+
+    imported += 1;
+
+    try {
+      const account = await provisionBatchStudentAccount(inserted, batch);
+      await supabase
+        .from("batch_students")
+        .update({ student_id: account.userId })
+        .eq("id", inserted.id);
+      accountsCreated += 1;
+    } catch (err) {
+      errors.push({
+        row: 0,
+        message:
+          err instanceof Error
+            ? `Account for ${studentData.full_name}: ${err.message}`
+            : `Account for ${studentData.full_name} failed`,
+      });
+    }
+  }
 
   revalidatePath(`/representative/batches/${batchId}`);
   revalidatePath(`/admin/batches/${batchId}`);
-  return { imported: students.length, skipped, errors };
+  return { imported, skipped, accountsCreated, errors };
 }
 
 export async function confirmBatch(batchId: string) {
@@ -465,8 +760,15 @@ export async function confirmBatch(batchId: string) {
   return { success: true };
 }
 
-export async function createGroupOrder(batchId: string, productTypes: ProductType[]) {
-  const profile = await requireRole(["representative"]);
+export async function createGroupOrder(
+  batchId: string,
+  productTypes: ProductType[],
+  options?: {
+    notes?: string;
+    referenceImageDataUrl?: string;
+  }
+) {
+  const profile = await requireRole(["admin", "representative"]);
   const batch = await getBatchOrThrow(batchId);
   await assertCanManageBatch(batch, profile);
 
@@ -477,16 +779,15 @@ export async function createGroupOrder(batchId: string, productTypes: ProductTyp
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase not configured");
 
-  const { data: existingOrder } = await supabase
-    .from("orders")
+  const { data: existingOrders } = await supabase
+    .from("batch_students")
     .select("id")
     .eq("batch_id", batchId)
-    .eq("type", "group")
-    .neq("status", "cancelled")
-    .maybeSingle();
+    .not("order_id", "is", null)
+    .limit(1);
 
-  if (existingOrder) {
-    throw new Error("A group order already exists for this batch");
+  if (existingOrders?.length) {
+    throw new Error("Group orders already exist for this batch");
   }
 
   const { data: students } = await supabase
@@ -503,35 +804,80 @@ export async function createGroupOrder(batchId: string, productTypes: ProductTyp
     )
   ) as Record<ProductType, number>;
 
-  const items = students.flatMap((student) =>
-    productTypes.map((productType) => ({
-      product_type: productType,
-      size: student.size ?? undefined,
-      sash_color: student.sash_color ?? undefined,
-      cap_type: student.cap_type ?? undefined,
-      custom_text: student.custom_text ?? undefined,
-      special_notes: student.full_name,
-      unit_price: priceMap[productType],
-    }))
-  );
+  const permissionsMap = (await getProductFieldPermissions()) as Record<
+    ProductType,
+    import("@/lib/orders/product-field-permissions").ProductFieldPermissions
+  >;
 
-  const order = await createOrder({
-    type: "group",
-    batch_id: batchId,
-    items,
-    notes: `Group order for ${batch.name} (${students.length} students)`,
-  });
+  const orderNotes = [
+    `Group order for ${batch.name} (${students.length} students)`,
+    options?.notes?.trim() || null,
+  ];
 
-  await supabase
-    .from("batch_students")
-    .update({ order_id: order.id })
-    .eq("batch_id", batchId)
-    .eq("confirmed", true);
+  if (options?.referenceImageDataUrl) {
+    const { uploadDataUrl } = await import("@/lib/supabase/storage");
+    const path = `group-orders/${batchId}/${Date.now()}-reference.png`;
+    const uploaded = await uploadDataUrl(
+      supabase,
+      "designs",
+      path,
+      options.referenceImageDataUrl,
+      { upsert: true }
+    );
+    if (uploaded.publicUrl) {
+      orderNotes.push(`مرجع تصميم / Design reference: ${uploaded.publicUrl}`);
+    }
+  }
+
+  const notes = orderNotes.filter(Boolean).join("\n\n");
+  let firstOrder: { id: string } | null = null;
+  let createdCount = 0;
+
+  for (const student of students) {
+    const source = { ...student } as Record<string, unknown>;
+    const items = productTypes.map((productType) => {
+      const perms = permissionsMap[productType];
+      const locked = buildBatchLockedSnapshot(productType, perms, source);
+      const studentSnap = buildStudentFieldsSnapshot(productType, perms, source);
+
+      return {
+        product_type: productType,
+        size: student.size ?? undefined,
+        sash_color: (locked.sash_color as string) ?? student.sash_color ?? undefined,
+        cap_type: (locked.cap_type as string) ?? student.cap_type ?? undefined,
+        fabric_type: (locked.fabric_type as string) ?? student.fabric_type ?? undefined,
+        font_family: (studentSnap.font_family as string) ?? student.font_family ?? undefined,
+        custom_text: (studentSnap.custom_text as string) ?? student.custom_text ?? undefined,
+        batch_locked_fields: locked,
+        student_fields: studentSnap,
+        unit_price: priceMap[productType],
+      };
+    });
+
+    const order = await createOrder({
+      type: "group",
+      batch_id: batchId,
+      student_id: student.student_id ?? undefined,
+      items,
+      notes,
+    });
+
+    await supabase
+      .from("batch_students")
+      .update({ order_id: order.id })
+      .eq("id", student.id);
+
+    if (!firstOrder) firstOrder = order;
+    createdCount += 1;
+  }
 
   revalidatePath("/representative/orders");
+  revalidatePath("/admin/orders");
   revalidatePath(`/representative/batches/${batchId}`);
+  revalidatePath(`/admin/batches/${batchId}`);
   revalidatePath("/representative/tracking");
-  return order;
+
+  return { ...firstOrder!, created_count: createdCount, batch_id: batchId };
 }
 
 function resolvePaymentStatus(

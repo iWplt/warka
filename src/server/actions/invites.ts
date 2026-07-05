@@ -75,7 +75,38 @@ export async function revokeRepInviteCode(id: string) {
   revalidatePath("/admin/invites");
 }
 
-export async function validateRepInviteCode(rawCode: string): Promise<{
+type InviteRow = RepresentativeInviteCode;
+
+function validateInviteRow(invite: InviteRow | null, email?: string): {
+  valid: boolean;
+  error?: string;
+  inviteId?: string;
+} {
+  if (!invite || !invite.is_active) {
+    return { valid: false, error: "invalid" };
+  }
+
+  if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
+    return { valid: false, error: "expired" };
+  }
+
+  if (invite.used_count >= invite.max_uses) {
+    return { valid: false, error: "used" };
+  }
+
+  if (invite.assigned_email && email) {
+    if (invite.assigned_email.toLowerCase() !== email.trim().toLowerCase()) {
+      return { valid: false, error: "email_mismatch" };
+    }
+  }
+
+  return { valid: true, inviteId: invite.id };
+}
+
+export async function validateRepInviteCode(
+  rawCode: string,
+  email?: string
+): Promise<{
   valid: boolean;
   error?: string;
   inviteId?: string;
@@ -90,21 +121,88 @@ export async function validateRepInviteCode(rawCode: string): Promise<{
     .eq("code", code)
     .maybeSingle();
 
-  if (!invite || !invite.is_active) {
-    return { valid: false, error: "invalid" };
-  }
-
-  if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
-    return { valid: false, error: "expired" };
-  }
-
-  if (invite.used_count >= invite.max_uses) {
-    return { valid: false, error: "used" };
-  }
-
-  return { valid: true, inviteId: invite.id };
+  return validateInviteRow(invite as InviteRow | null, email);
 }
 
+/** Atomically reserves a slot on the invite before account creation. */
+export async function reserveRepInviteCode(
+  rawCode: string,
+  email: string
+): Promise<{ success: boolean; inviteId?: string; error?: string }> {
+  const code = normalizeAccessCode(rawCode);
+  const admin = createAdminClient();
+  if (!admin) return { success: false, error: "config" };
+
+  const { data: invite } = await admin
+    .from("representative_invite_codes")
+    .select("*")
+    .eq("code", code)
+    .maybeSingle();
+
+  const check = validateInviteRow(invite as InviteRow | null, email);
+  if (!check.valid || !check.inviteId || !invite) {
+    return { success: false, error: check.error ?? "invalid" };
+  }
+
+  const nextCount = invite.used_count + 1;
+  const { data: updated, error } = await admin
+    .from("representative_invite_codes")
+    .update({
+      used_count: nextCount,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", invite.id)
+    .eq("used_count", invite.used_count)
+    .eq("is_active", true)
+    .select("id")
+    .maybeSingle();
+
+  if (error || !updated) {
+    return { success: false, error: "used" };
+  }
+
+  return { success: true, inviteId: invite.id };
+}
+
+/** Rolls back a reservation when signup fails after reserve. */
+export async function releaseRepInviteCode(inviteId: string): Promise<void> {
+  const admin = createAdminClient();
+  if (!admin) return;
+
+  const { data: invite } = await admin
+    .from("representative_invite_codes")
+    .select("used_count")
+    .eq("id", inviteId)
+    .maybeSingle();
+
+  if (!invite || invite.used_count <= 0) return;
+
+  await admin
+    .from("representative_invite_codes")
+    .update({
+      used_count: Math.max(0, invite.used_count - 1),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", inviteId);
+}
+
+/** Links the reserved invite to the newly created profile. */
+export async function finalizeRepInviteCode(inviteId: string, userId: string): Promise<void> {
+  const admin = createAdminClient();
+  if (!admin) throw new Error("Supabase not configured");
+
+  const { error } = await admin
+    .from("representative_invite_codes")
+    .update({
+      used_by: userId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", inviteId);
+
+  if (error) throw new Error(error.message);
+}
+
+/** @deprecated Use reserveRepInviteCode + finalizeRepInviteCode instead */
 export async function consumeRepInviteCode(inviteId: string, userId: string, email: string) {
   const admin = createAdminClient();
   if (!admin) throw new Error("Supabase not configured");
@@ -117,18 +215,11 @@ export async function consumeRepInviteCode(inviteId: string, userId: string, ema
 
   if (!invite) throw new Error("Invite not found");
 
-  if (invite.assigned_email && invite.assigned_email.toLowerCase() !== email.toLowerCase()) {
-    throw new Error("This invite is reserved for a different email");
-  }
+  const check = validateInviteRow(invite as InviteRow, email);
+  if (!check.valid) throw new Error(check.error ?? "Invalid invite");
 
-  const { error } = await admin
-    .from("representative_invite_codes")
-    .update({
-      used_count: invite.used_count + 1,
-      used_by: userId,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", inviteId);
+  const reserved = await reserveRepInviteCode(invite.code, email);
+  if (!reserved.success) throw new Error(reserved.error ?? "Could not consume invite");
 
-  if (error) throw new Error(error.message);
+  await finalizeRepInviteCode(inviteId, userId);
 }

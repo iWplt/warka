@@ -10,6 +10,7 @@ import { getDashboardPath } from "@/lib/auth/permissions";
 import type { Profile } from "@/types/database";
 import { signOut } from "@/server/actions/auth";
 import { LanguageSwitcher } from "@/components/layouts/language-switcher";
+import { SmartSearch } from "@/components/ux/smart-search";
 import { CartBadge } from "@/components/features/cart/cart-badge";
 import { CART_PULSE_EVENT } from "@/lib/cart/cart-pulse";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
@@ -27,7 +28,7 @@ export function SiteHeader({ profile }: SiteHeaderProps) {
   const tCommon = useTranslations("common");
   const locale = useLocale();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [smartSearchOpen, setSmartSearchOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [cartPulsing, setCartPulsing] = useState(false);
   const reducedMotion = useReducedMotion();
@@ -63,6 +64,7 @@ export function SiteHeader({ profile }: SiteHeaderProps) {
   const navLinks = [
     { href: "/#home", label: t("home") },
     { href: "/products", label: t("products") },
+    { href: "/bulk-order", label: locale === "ar" ? "طلب جماعي" : "Bulk order" },
     { href: "/#how-it-works", label: t("howItWorks") },
     { href: "/#contact", label: t("contact") },
   ];
@@ -77,7 +79,14 @@ export function SiteHeader({ profile }: SiteHeaderProps) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid h-16 grid-cols-[1fr_auto] items-center gap-3 md:grid-cols-[auto_1fr_auto] md:gap-4">
           <Link href="/" className="flex shrink-0 items-center gap-2 justify-self-start">
-            <Image src={WARKA_LOGO_PATH} alt="WARKA" width={40} height={40} className="h-10 w-10 shrink-0" priority />
+            <Image
+              src={WARKA_LOGO_PATH}
+              alt="WARKA"
+              width={40}
+              height={40}
+              className="h-10 w-10 shrink-0"
+              priority
+            />
             <div className="hidden min-w-0 flex-col sm:flex">
               <span className="font-display text-xl font-bold tracking-wide text-warka-text">WARKA</span>
               <span className="-mt-1 truncate text-[10px] text-warka-text-muted">{tagline}</span>
@@ -99,15 +108,22 @@ export function SiteHeader({ profile }: SiteHeaderProps) {
           <div className="flex items-center justify-end gap-0.5 sm:gap-1 justify-self-end">
             <button
               type="button"
-              onClick={() => setSearchOpen((open) => !open)}
+              onClick={() => setSmartSearchOpen(true)}
               className={cn(headerIconClass, "hidden sm:inline-flex")}
               aria-label={tCommon("search")}
             >
               <Search className="h-5 w-5" />
             </button>
 
+            <SmartSearch
+              open={smartSearchOpen}
+              onOpenChange={setSmartSearchOpen}
+              locale={locale === "ar" ? "ar" : "en"}
+            />
+
             <Link
               href={cartHref}
+              prefetch
               className={cn(
                 headerIconClass,
                 cartPulsing && !reducedMotion && "scale-110 transition-transform duration-300"
@@ -138,7 +154,7 @@ export function SiteHeader({ profile }: SiteHeaderProps) {
                       onClick={() => setUserMenuOpen(false)}
                       aria-label="Close menu"
                     />
-                    <div className="absolute end-0 z-50 mt-2 w-48 overflow-hidden rounded-xl border border-warka-border bg-white font-arabic shadow-card">
+                    <div className="absolute end-0 z-50 mt-2 w-48 overflow-hidden rounded-xl border border-warka-border bg-card font-arabic shadow-card">
                       <div className="border-b border-warka-border px-3 py-2 text-sm font-medium text-warka-text">
                         {profile.full_name}
                       </div>
@@ -166,7 +182,7 @@ export function SiteHeader({ profile }: SiteHeaderProps) {
             ) : (
               <Link
                 href="/login"
-                className="hidden h-10 items-center rounded-lg bg-warka-primary px-4 text-sm font-medium text-white transition-colors hover:bg-warka-primary-dark sm:inline-flex"
+                className="hidden h-10 shrink-0 items-center whitespace-nowrap rounded-lg bg-warka-primary px-5 text-sm font-medium text-white transition-colors hover:bg-warka-primary-dark sm:inline-flex"
               >
                 {tCommon("login")}
               </Link>
@@ -183,20 +199,6 @@ export function SiteHeader({ profile }: SiteHeaderProps) {
             </button>
           </div>
         </div>
-
-        {searchOpen && (
-          <div className="animate-fade-in pb-3">
-            <div className="relative">
-              <Search className="absolute top-1/2 end-3 h-4 w-4 -translate-y-1/2 text-warka-text-muted" />
-              <input
-                type="search"
-                placeholder={locale === "ar" ? "ابحث عن منتج..." : "Search products..."}
-                className="w-full rounded-lg border border-warka-border bg-warka-bg py-2.5 pe-10 ps-4 text-sm text-warka-text focus:border-warka-primary focus:ring-2 focus:ring-warka-primary/20 focus:outline-none"
-                autoFocus
-              />
-            </div>
-          </div>
-        )}
       </div>
 
       {mobileMenuOpen && (
@@ -208,7 +210,7 @@ export function SiteHeader({ profile }: SiteHeaderProps) {
             aria-label="Close menu"
           />
           <nav
-            className="fixed inset-x-0 top-16 z-[61] max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-warka-border bg-white shadow-lg md:hidden"
+            className="fixed inset-x-0 top-16 z-[61] max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-warka-border bg-card shadow-lg md:hidden"
             aria-label="Mobile"
           >
             <div className="space-y-1 px-4 py-3">
@@ -225,7 +227,7 @@ export function SiteHeader({ profile }: SiteHeaderProps) {
               <button
                 type="button"
                 onClick={() => {
-                  setSearchOpen(true);
+                  setSmartSearchOpen(true);
                   closeMobileMenu();
                 }}
                 className="flex min-h-[44px] w-full items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium text-warka-text-secondary transition-colors hover:bg-warka-bg hover:text-warka-text sm:hidden"

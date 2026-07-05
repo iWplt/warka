@@ -7,15 +7,31 @@ import { Button } from "@/components/ui/button";
 import { OrderTimeline } from "@/components/features/orders/order-timeline";
 import { StudentOrderProgress } from "@/components/features/orders/student-order-progress";
 import { StudentPaymentSummary } from "@/components/features/orders/student-payment-summary";
+import { ProductionPhotosPanel } from "@/components/features/orders/production-photos-panel";
+import type { ProductionPhotoView } from "@/server/actions/production-photos";
 import { DesignApprovalPanel } from "@/components/features/design/design-approval-panel";
 import { DesignUploadPanel } from "@/components/features/design/design-upload-panel";
 import { ArchiveOrderButton } from "@/components/features/orders/archive-order-button";
+import { OrderCustomerSummary } from "@/components/features/orders/order-customer-summary";
+import { OrderItemsDetailPanel } from "@/components/features/orders/order-items-detail-panel";
+import { OrderStudentEditLog } from "@/components/features/orders/order-student-edit-log";
 import { LivePreview } from "@/components/features/design/live-preview";
+import { Lock, Pencil, CheckCircle2 } from "lucide-react";
+import { Link } from "@/i18n/routing";
+import {
+  canStudentEditOrder,
+  isOrderConfirmed,
+  orderLockMessage,
+} from "@/lib/orders/state-machine";
 import {
   updateOrderStatus,
   addOrderNote,
   cancelOrderByStudent,
+  unlockOrderForAdmin,
 } from "@/server/actions/orders";
+import type { OrderItemMedia } from "@/lib/orders/order-item-details";
+import type { OrderDetailStudent } from "@/lib/orders/parse-order-notes";
+import type { TemplateConfig } from "@/types/database";
 import type {
   Order,
   OrderItem,
@@ -24,13 +40,21 @@ import type {
   Payment,
   DesignTemplate,
 } from "@/types/database";
-import type { TemplateConfig } from "@/types/database";
 import { useState } from "react";
+import { useLocale } from "next-intl";
 
 const STATUSES = [
   "pending_review", "designing", "awaiting_approval", "needs_modification",
   "ready_for_printing", "printing", "printed", "ready_for_delivery", "delivered", "cancelled",
 ] as const;
+
+type EditLogEntry = {
+  id: string;
+  action: string;
+  created_at: string;
+  metadata: Record<string, unknown> | null;
+  profiles?: { full_name: string } | null;
+};
 
 type OrderDetailData = {
   order: Order;
@@ -38,6 +62,9 @@ type OrderDetailData = {
   history: OrderStatusHistory[];
   design: DesignSubmission | null;
   payments: Payment[];
+  student?: OrderDetailStudent | null;
+  itemMedia?: Record<string, OrderItemMedia>;
+  editLogs?: EditLogEntry[];
 };
 
 type OrderDetailViewProps = {
@@ -45,6 +72,8 @@ type OrderDetailViewProps = {
   canManage?: boolean;
   isStudentView?: boolean;
   designTemplate?: DesignTemplate | null;
+  productionPhotos?: ProductionPhotoView[];
+  canUploadProductionPhotos?: boolean;
 };
 
 export function OrderDetailView({
@@ -52,14 +81,16 @@ export function OrderDetailView({
   canManage = false,
   isStudentView = false,
   designTemplate = null,
+  productionPhotos = [],
+  canUploadProductionPhotos = false,
 }: OrderDetailViewProps) {
   const t = useTranslations();
+  const locale = useLocale() as "ar" | "en";
   const statusT = useTranslations("orderStatus");
-  const productT = useTranslations("productType");
   const studentT = useTranslations("studentOrder");
   const router = useRouter();
   const [note, setNote] = useState("");
-  const { order, items, history, design, payments } = data;
+  const { order, items, history, design, payments, student = null, itemMedia = {}, editLogs = [] } = data;
 
   const handleStatus = async (status: string) => {
     try {
@@ -81,6 +112,16 @@ export function OrderDetailView({
     }
   };
 
+  const handleUnlock = async () => {
+    try {
+      await unlockOrderForAdmin(order.id);
+      toast.success(t("common.success"));
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("common.error"));
+    }
+  };
+
   const handleNote = async () => {
     if (!note.trim()) return;
     await addOrderNote(order.id, note);
@@ -91,7 +132,10 @@ export function OrderDetailView({
 
   const canCancel =
     isStudentView &&
+    canStudentEditOrder(order) &&
     ["new", "pending_review", "needs_modification", "awaiting_approval"].includes(order.status);
+
+  const orderLocked = isStudentView && isOrderConfirmed(order);
 
   const templateConfig = designTemplate?.template_config as TemplateConfig | undefined;
   const customizationValues = (design?.customizations ?? {}) as Record<string, string>;
@@ -100,14 +144,84 @@ export function OrderDetailView({
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="space-y-6 lg:col-span-2">
         {isStudentView && (
+          <p className="text-sm text-muted-foreground">
+            {locale === "ar"
+              ? "تفاصيل طلبك الكاملة — راجع كل المنتجات والتطريز قبل التعديل."
+              : "Your full order details — review products and embroidery before editing."}
+          </p>
+        )}
+
+        {orderLocked && (
+          <div className="flex items-start gap-3 rounded-2xl border border-accent/30 bg-accent/10 p-4 text-sm">
+            <Lock className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
+            <p>{orderLockMessage(locale)}</p>
+          </div>
+        )}
+
+        {isStudentView && productionPhotos.length > 0 && (
+          <div className="rounded-2xl border border-primary/30 bg-primary/10 p-4 text-sm">
+            <p className="font-semibold text-primary">
+              {locale === "ar" ? "تم الانتهاء من منتجك!" : "Your product is ready!"}
+            </p>
+            <p className="mt-1 text-muted-foreground">
+              {locale === "ar"
+                ? "شاهد صور المنتج الفعلي أدناه قبل الاستلام."
+                : "View your finished product photos below before pickup."}
+            </p>
+          </div>
+        )}
+
+        {(productionPhotos.length > 0 || canUploadProductionPhotos) && (
+          <ProductionPhotosPanel
+            orderId={order.id}
+            photos={productionPhotos}
+            canUpload={canUploadProductionPhotos}
+            canDelete={canManage}
+          />
+        )}
+
+        <OrderCustomerSummary
+          order={order}
+          student={student}
+          showShopNotes={canManage}
+        />
+
+        <OrderItemsDetailPanel order={order} items={items} itemMedia={itemMedia} />
+
+        {isStudentView && (
+          <StudentPaymentSummary total={Number(order.total)} payments={payments} />
+        )}
+
+        {isStudentView && canStudentEditOrder(order) && (
+          <div className="rounded-2xl border-2 border-warka-primary/30 bg-warka-primary/5 p-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h2 className="flex items-center gap-2 font-semibold text-warka-text">
+                  <CheckCircle2 className="size-5 text-warka-primary" />
+                  {locale === "ar" ? "راضٍ عن التفاصيل؟" : "Happy with the details?"}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {locale === "ar"
+                    ? "عدّل الزخرفة والخطوط والتطريز — الإعدادات المقفولة من الممثل أو الإدارة تبقى كما هي."
+                    : "Edit decoration, fonts, and embroidery — batch-locked settings stay unchanged."}
+                </p>
+              </div>
+              <Link
+                href={`/student/orders/${order.id}/edit`}
+                className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-warka-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-warka-primary-dark"
+              >
+                <Pencil className="size-4" />
+                {locale === "ar" ? "تعديل الطلب" : "Edit order"}
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {isStudentView && (
           <section className="rounded-2xl border border-glass-border glass p-6">
             <h2 className="mb-4 font-semibold">{studentT("progressTitle")}</h2>
             <StudentOrderProgress status={order.status} />
           </section>
-        )}
-
-        {isStudentView && (
-          <StudentPaymentSummary total={Number(order.total)} payments={payments} />
         )}
 
         {!isStudentView && (
@@ -127,17 +241,7 @@ export function OrderDetailView({
           </div>
         )}
 
-        <div className="rounded-2xl glass p-6">
-          <h2 className="mb-4 font-semibold">{t("orders.itemsTitle")}</h2>
-          <ul className="space-y-2">
-            {items.map((item) => (
-              <li key={item.id} className="flex justify-between rounded-lg bg-white/5 p-3 text-sm">
-                <span>{productT(item.product_type)}</span>
-                <span>{Number(item.unit_price).toLocaleString()} IQD</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {canManage && editLogs.length > 0 && <OrderStudentEditLog entries={editLogs} />}
 
         {design && (
           <div className="rounded-2xl glass p-6">
@@ -183,6 +287,17 @@ export function OrderDetailView({
           </div>
         )}
 
+        {canManage && order.is_locked && (
+          <div className="rounded-2xl border border-accent/30 glass p-6">
+            <p className="mb-3 text-sm text-muted-foreground">
+              {locale === "ar" ? "الطلب مقفل بعد دفع العربون" : "Order locked after deposit payment"}
+            </p>
+            <Button onClick={handleUnlock} variant="secondary" size="sm">
+              {locale === "ar" ? "فتح الطلب للتعديل" : "Unlock for student edits"}
+            </Button>
+          </div>
+        )}
+
         {canManage && (
           <div className="rounded-2xl glass p-6">
             <h2 className="mb-4 font-semibold">{t("orders.changeStatus")}</h2>
@@ -203,7 +318,7 @@ export function OrderDetailView({
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder={t("orders.addNote")}
-                className="flex-1 rounded-xl border border-glass-border bg-white/5 px-4 py-2 text-sm"
+                className="flex-1 rounded-xl border border-glass-border bg-foreground/5 px-4 py-2 text-sm"
               />
               <Button onClick={handleNote} variant="secondary">{t("common.save")}</Button>
             </div>

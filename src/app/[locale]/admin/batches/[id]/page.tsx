@@ -19,10 +19,11 @@ export default async function AdminBatchDetailPage({
   const students = await getBatchStudents(id);
 
   return (
-    <BatchDetailView
-      batch={batch}
-      students={students}
-      allowCreateAccounts={false}
-    />
+      <BatchDetailView
+        batch={batch}
+        students={students}
+        allowCreateAccounts
+        isAdmin
+      />
   );
 }

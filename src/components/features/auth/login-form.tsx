@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Link } from "@/i18n/routing";
+import { Link, useRouter, usePathname } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { GraduationCap, Mail } from "lucide-react";
 import { signIn } from "@/server/actions/auth";
@@ -20,7 +20,7 @@ type LoginFormProps = {
 function Alert({ children, variant }: { children: React.ReactNode; variant: "error" | "info" }) {
   const styles =
     variant === "error"
-      ? "border-red-200 bg-red-50 text-red-700"
+      ? "border-destructive/30 bg-destructive/10 text-destructive"
       : "border-warka-primary/20 bg-warka-primary/10 text-warka-primary";
   return <p className={`mb-4 rounded-lg border p-3 text-sm font-medium ${styles}`}>{children}</p>;
 }
@@ -28,10 +28,32 @@ function Alert({ children, variant }: { children: React.ReactNode; variant: "err
 export function LoginForm({ localMode = false }: LoginFormProps) {
   const t = useTranslations("auth");
   const locale = useLocale();
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const error = searchParams.get("error");
+  const [mounted, setMounted] = useState(false);
+  const error = mounted ? searchParams.get("error") : null;
+  const redirect = mounted ? searchParams.get("redirect") : null;
+  const message = mounted ? searchParams.get("message") : null;
   const tagline = locale === "ar" ? WARKA_TAGLINE_AR : WARKA_TAGLINE_EN;
   const [mode, setMode] = useState<"student" | "email">("student");
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const clearAuthErrors = () => {
+    if (!searchParams.get("error")) return;
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("error");
+    const query = next.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname);
+  };
+
+  const switchMode = (nextMode: "student" | "email") => {
+    setMode(nextMode);
+    clearAuthErrors();
+  };
 
   return (
     <div className="w-full max-w-md">
@@ -45,7 +67,7 @@ export function LoginForm({ localMode = false }: LoginFormProps) {
         </Link>
       </div>
 
-      <div className="rounded-2xl bg-white p-6 shadow-card sm:p-8">
+      <div className="rounded-2xl bg-card p-6 shadow-card sm:p-8">
         <div className="mb-6 flex items-start justify-between">
           <div className="text-center sm:text-right">
             <h1 className="mb-1 text-xl font-bold text-warka-text">{t("loginTitle")}</h1>
@@ -62,10 +84,10 @@ export function LoginForm({ localMode = false }: LoginFormProps) {
         {error === "phone-mismatch" && <Alert variant="error">{t("phoneMismatch")}</Alert>}
         {error === "config" && <Alert variant="error">{t("configError")}</Alert>}
         {error === "profile" && <Alert variant="error">{t("profileError")}</Alert>}
-        {searchParams.get("message") === "confirm-email" && (
+        {message === "confirm-email" && (
           <Alert variant="info">{t("confirmEmail")}</Alert>
         )}
-        {searchParams.get("message") === "admin-ready" && (
+        {message === "admin-ready" && (
           <Alert variant="info">{t("adminReady")}</Alert>
         )}
 
@@ -73,10 +95,10 @@ export function LoginForm({ localMode = false }: LoginFormProps) {
           <div className="mb-5 grid grid-cols-2 gap-2 rounded-xl bg-warka-surface p-1">
             <button
               type="button"
-              onClick={() => setMode("student")}
+              onClick={() => switchMode("student")}
               className={cn(
                 "flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors",
-                mode === "student" ? "bg-white text-warka-primary shadow-sm" : "text-warka-text-secondary"
+                mode === "student" ? "bg-card text-warka-primary shadow-sm" : "text-warka-text-secondary"
               )}
             >
               <GraduationCap className="size-4" />
@@ -84,10 +106,10 @@ export function LoginForm({ localMode = false }: LoginFormProps) {
             </button>
             <button
               type="button"
-              onClick={() => setMode("email")}
+              onClick={() => switchMode("email")}
               className={cn(
                 "flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors",
-                mode === "email" ? "bg-white text-warka-primary shadow-sm" : "text-warka-text-secondary"
+                mode === "email" ? "bg-card text-warka-primary shadow-sm" : "text-warka-text-secondary"
               )}
             >
               <Mail className="size-4" />
@@ -98,6 +120,7 @@ export function LoginForm({ localMode = false }: LoginFormProps) {
 
         <form action={signIn} className="space-y-4">
           <input type="hidden" name="locale" value={locale} />
+          {redirect ? <input type="hidden" name="redirect" value={redirect} /> : null}
           <input type="hidden" name="loginMode" value={localMode ? "email" : mode === "student" ? "student-code" : "email"} />
 
           {!localMode && mode === "student" ? (

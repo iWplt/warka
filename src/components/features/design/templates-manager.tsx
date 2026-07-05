@@ -84,7 +84,7 @@ export function TemplatesManager({ templates }: TemplatesManagerProps) {
             name="name"
             placeholder={t("templateName")}
             required
-            className="rounded-xl border border-glass-border bg-white/5 px-4 py-2"
+            className="rounded-xl border border-glass-border bg-foreground/5 px-4 py-2"
           />
           <Select name="product_type" defaultValue="sash">
             <option value="sash">{productT("sash")}</option>
@@ -95,7 +95,7 @@ export function TemplatesManager({ templates }: TemplatesManagerProps) {
           <input
             name="preview_url"
             placeholder={t("previewUrl")}
-            className="sm:col-span-2 rounded-xl border border-glass-border bg-white/5 px-4 py-2"
+            className="sm:col-span-2 rounded-xl border border-glass-border bg-foreground/5 px-4 py-2"
           />
           <Button type="submit" variant="accent" className="sm:col-span-2">
             {t("saveTemplate")}

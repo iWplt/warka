@@ -4,9 +4,13 @@ import Image from "next/image";
 import { Minus, Plus, ShoppingBag, Trash2, ArrowLeft, Sparkles, Palette } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/routing";
+import { toast } from "sonner";
 import { useCartStore } from "@/stores/cart-store";
+import { useDeliveryStore } from "@/stores/delivery-store";
 import { formatIqd } from "@/lib/format/currency";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DeliveryDetailsForm } from "@/components/features/delivery/delivery-details-form";
+import { isDeliveryComplete } from "@/lib/delivery/format-delivery-note";
 import { cn } from "@/lib/utils";
 
 export function CartPageClient() {
@@ -62,7 +66,7 @@ export function CartPageClient() {
                 {t("itemCount", { count })}
               </p>
             </div>
-            <div className="hidden rounded-2xl border border-warka-border bg-white px-5 py-3 shadow-card md:block">
+            <div className="hidden rounded-2xl border border-warka-border bg-card px-5 py-3 shadow-card md:block">
               <p className="text-xs text-warka-text-muted">{t("subtotal")}</p>
               <p className="text-xl font-bold text-warka-primary">{formatIqd(total, locale)}</p>
             </div>
@@ -71,7 +75,11 @@ export function CartPageClient() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+        <section className="mb-8">
+          <DeliveryDetailsForm locale={locale === "ar" ? "ar" : "en"} />
+        </section>
+
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
           <div className="space-y-4">
             {items.map((line, index) => {
               const name = locale === "ar" ? line.name_ar : line.name_en;
@@ -80,11 +88,11 @@ export function CartPageClient() {
               return (
                 <article
                   key={line.id}
-                  className="group overflow-hidden rounded-2xl border border-warka-border bg-white shadow-card transition-shadow hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
+                  className="group overflow-hidden rounded-2xl border border-warka-border bg-card shadow-card transition-shadow hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
                   style={{ animationDelay: `${index * 60}ms` }}
                 >
                   <div className="flex flex-col gap-4 p-4 sm:flex-row sm:p-5">
-                    <div className="relative mx-auto aspect-[4/5] w-full max-w-[140px] shrink-0 overflow-hidden rounded-xl bg-[#F5F4F0] sm:mx-0">
+                    <div className="relative mx-auto aspect-[4/5] w-full max-w-[140px] shrink-0 overflow-hidden rounded-xl bg-media-bg sm:mx-0">
                       <Image
                         src={line.image}
                         alt={name}
@@ -109,7 +117,7 @@ export function CartPageClient() {
                         <button
                           type="button"
                           onClick={() => removeItem(line.id)}
-                          className="rounded-lg p-2 text-warka-text-muted transition-colors hover:bg-red-50 hover:text-red-600"
+                          className="rounded-lg p-2 text-warka-text-muted transition-colors hover:bg-destructive/10 hover:text-destructive"
                           aria-label={t("remove")}
                         >
                           <Trash2 className="size-4" />
@@ -141,7 +149,7 @@ export function CartPageClient() {
                             type="button"
                             disabled={line.quantity <= 1}
                             onClick={() => updateQuantity(line.id, line.quantity - 1)}
-                            className="flex size-9 items-center justify-center rounded-lg text-warka-text hover:bg-white disabled:opacity-40"
+                            className="flex size-9 items-center justify-center rounded-lg text-warka-text hover:bg-card disabled:opacity-40"
                           >
                             <Minus className="size-4" />
                           </button>
@@ -152,7 +160,7 @@ export function CartPageClient() {
                             type="button"
                             disabled={line.quantity >= 99}
                             onClick={() => updateQuantity(line.id, line.quantity + 1)}
-                            className="flex size-9 items-center justify-center rounded-lg text-warka-text hover:bg-white disabled:opacity-40"
+                            className="flex size-9 items-center justify-center rounded-lg text-warka-text hover:bg-card disabled:opacity-40"
                           >
                             <Plus className="size-4" />
                           </button>
@@ -176,7 +184,7 @@ export function CartPageClient() {
           </div>
 
           <aside className="lg:sticky lg:top-24 lg:self-start">
-            <div className="overflow-hidden rounded-2xl border border-warka-border bg-white shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
+            <div className="overflow-hidden rounded-2xl border border-warka-border bg-card shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
               <div className="border-b border-warka-border bg-gradient-to-br from-warka-primary/10 to-transparent px-6 py-5">
                 <h2 className="text-lg font-bold text-warka-text">{t("orderSummary")}</h2>
                 <p className="mt-1 text-xs text-warka-text-secondary">{t("summaryHint")}</p>
@@ -202,9 +210,19 @@ export function CartPageClient() {
               <div className="border-t border-warka-border bg-warka-bg/40 p-6">
                 <button
                   type="button"
-                  onClick={() => router.push("/checkout?from=cart")}
+                  onClick={() => {
+                    if (!isDeliveryComplete(useDeliveryStore.getState().details)) {
+                      toast.error(
+                        locale === "ar"
+                          ? "أكمل عنوان التوصيل قبل المتابعة"
+                          : "Complete delivery address before checkout"
+                      );
+                      return;
+                    }
+                    router.push("/checkout?from=cart");
+                  }}
                   className={cn(
-                    "w-full rounded-xl bg-warka-primary py-3.5 text-sm font-semibold text-white",
+                    "w-full min-h-12 rounded-xl bg-warka-primary px-4 py-3.5 text-sm font-semibold text-white",
                     "shadow-[0_4px_14px_rgba(0,0,0,0.15)] transition-all hover:bg-warka-primary-dark hover:shadow-[0_6px_20px_rgba(0,0,0,0.18)]"
                   )}
                 >
@@ -219,7 +237,7 @@ export function CartPageClient() {
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-16 z-40 border-t border-warka-border bg-white/95 p-4 backdrop-blur-md md:hidden">
+      <div className="fixed inset-x-0 bottom-16 z-40 border-t border-warka-border bg-card/95 p-4 backdrop-blur-md md:hidden">
         <div className="flex items-center gap-4">
           <div className="min-w-0 flex-1">
             <p className="text-xs text-warka-text-muted">{t("total")}</p>
@@ -227,8 +245,18 @@ export function CartPageClient() {
           </div>
           <button
             type="button"
-            onClick={() => router.push("/checkout?from=cart")}
-            className="shrink-0 rounded-xl bg-warka-primary px-6 py-3 text-sm font-semibold text-white"
+            onClick={() => {
+              if (!isDeliveryComplete(useDeliveryStore.getState().details)) {
+                toast.error(
+                  locale === "ar"
+                    ? "أكمل عنوان التوصيل قبل المتابعة"
+                    : "Complete delivery address before checkout"
+                );
+                return;
+              }
+              router.push("/checkout?from=cart");
+            }}
+            className="min-h-12 shrink-0 rounded-xl bg-warka-primary px-6 py-3 text-sm font-semibold text-white whitespace-nowrap"
           >
             {t("checkout")}
           </button>

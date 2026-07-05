@@ -113,7 +113,7 @@ export function ImageCropUpload({
     <div className={cn("space-y-3", className)}>
       {label && <p className="text-sm font-medium text-warka-text">{label}</p>}
       {guidelines && (
-        <p className="rounded-xl border-2 border-warka-border bg-white px-3 py-2.5 text-sm leading-relaxed text-warka-text-secondary">
+        <p className="rounded-xl border-2 border-warka-border bg-card px-3 py-2.5 text-sm leading-relaxed text-warka-text-secondary">
           {guidelines}
         </p>
       )}
@@ -171,7 +171,7 @@ export function ImageCropUpload({
 
       {open && image && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-4 shadow-xl">
+          <div className="w-full max-w-lg rounded-2xl bg-card p-4 shadow-xl">
             <h3 className="mb-3 text-lg font-semibold text-warka-text">قص وتعديل الصورة</h3>
             <div
               ref={containerRef}
@@ -197,7 +197,7 @@ export function ImageCropUpload({
                 draggable={false}
               />
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <div className="size-[85%] rounded-lg border-2 border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]" />
+                <div className="size-[85%] rounded-lg border-2 border-card shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]" />
               </div>
             </div>
 

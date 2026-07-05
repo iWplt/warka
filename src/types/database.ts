@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "employee" | "representative" | "student";
+export type UserRole = "admin" | "employee" | "representative" | "student" | "embroidery";
 
 export type OrderType = "individual" | "group";
 
@@ -39,6 +39,7 @@ export type NotificationType =
   | "printing_started"
   | "ready_for_delivery"
   | "payment_received"
+  | "production_ready"
   | "general";
 
 export type PermissionKey =
@@ -149,6 +150,11 @@ export type Order = {
   archived: boolean;
   qr_code_path: string | null;
   design_id: string | null;
+  deposit_required: number;
+  deposit_paid_at: string | null;
+  is_locked: boolean;
+  student_modified_at?: string | null;
+  student_modified_count?: number;
   created_at: string;
   updated_at: string;
 };
@@ -157,6 +163,7 @@ export type OrderItem = {
   id: string;
   order_id: string;
   product_type: ProductType;
+  catalog_product_id: string | null;
   size: string | null;
   sash_color: string | null;
   fabric_type: string | null;
@@ -165,6 +172,17 @@ export type OrderItem = {
   special_notes: string | null;
   font_family: string | null;
   logo_url: string | null;
+  embroidery_position: string | null;
+  embroidery_style: string | null;
+  thread_color: string | null;
+  back_shape: string | null;
+  cap_side_notes: string | null;
+  cap_top_notes: string | null;
+  embroidery_image_path: string | null;
+  cap_side_embroidery_path: string | null;
+  cap_top_embroidery_path: string | null;
+  batch_locked_fields?: Record<string, string>;
+  student_fields?: Record<string, string>;
   template_id: string | null;
   unit_price: number;
   created_at: string;
@@ -179,6 +197,7 @@ export type Batch = {
   representative_id: string | null;
   status: BatchStatus;
   notes: string | null;
+  settings: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 };
@@ -191,6 +210,10 @@ export type BatchStudent = {
   size: string | null;
   sash_color: string | null;
   cap_type: string | null;
+  fabric_type: string | null;
+  font_family: string | null;
+  height_cm: number | null;
+  weight_kg: number | null;
   custom_text: string | null;
   notes: string | null;
   payment_status: PaymentStatus;
@@ -309,6 +332,14 @@ export type ProductFabricOption = {
   image?: string | null;
 };
 
+export type EmbroideryPosition = {
+  key: string;
+  label_ar: string;
+  label_en: string;
+  sort_order: number;
+  is_active: boolean;
+};
+
 export type Product = {
   id: string;
   product_type: ProductType;
@@ -326,11 +357,38 @@ export type Product = {
   color_variants: ProductColorVariant[];
   fabric_options: ProductFabricOption[];
   features: string[];
+  embroidery_positions?: EmbroideryPosition[];
   sort_order: number;
   active: boolean;
   created_at: string;
   updated_at: string;
   category?: ProductCategory | null;
+};
+
+export type ProductBundleItem = {
+  id: string;
+  bundle_id: string;
+  product_id: string;
+  quantity: number;
+  sort_order: number;
+  product?: Product | null;
+};
+
+export type ProductBundle = {
+  id: string;
+  slug: string;
+  name_ar: string;
+  name_en: string;
+  description_ar: string | null;
+  description_en: string | null;
+  image: string | null;
+  image_path: string | null;
+  discount_percent: number;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  items?: ProductBundleItem[];
 };
 
 export type StudentAddress = {
@@ -339,8 +397,13 @@ export type StudentAddress = {
   label: string;
   address_line: string;
   city: string | null;
+  governorate: string | null;
+  area: string | null;
   phone: string | null;
   college: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  location_url: string | null;
   is_default: boolean;
   created_at: string;
   updated_at: string;
@@ -392,5 +455,36 @@ export type OrderStatusHistory = {
   to_status: OrderStatus;
   changed_by: string | null;
   notes: string | null;
+  created_at: string;
+};
+
+export type OrderProductionPhoto = {
+  id: string;
+  order_id: string;
+  order_item_id: string | null;
+  image_path: string;
+  caption: string | null;
+  uploaded_by: string | null;
+  created_at: string;
+};
+
+export type MessageTemplate = {
+  id: string;
+  event_type: string;
+  template_ar: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type NotificationLog = {
+  id: string;
+  order_id: string | null;
+  student_id: string | null;
+  channel: string;
+  event_type: string;
+  message_body: string;
+  status: string;
+  sent_at: string | null;
   created_at: string;
 };

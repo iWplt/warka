@@ -58,22 +58,22 @@ export function AdminDashboardView({ data }: AdminDashboardViewProps) {
       <StatsCards items={statItems} />
 
       <div className="grid gap-6 xl:grid-cols-3">
-        <div className="rounded-2xl bg-white p-5 shadow-card xl:col-span-2">
+        <div className="rounded-2xl bg-card p-5 shadow-card xl:col-span-2">
           <h2 className="mb-4 text-base font-bold text-warka-text">{t("ordersByStatus")}</h2>
           <OrdersStatusChart data={chartData} emptyLabel={t("noChartData")} />
         </div>
-        <div className="rounded-2xl bg-white p-5 shadow-card">
+        <div className="rounded-2xl bg-card p-5 shadow-card">
           <h2 className="mb-4 text-base font-bold text-warka-text">{t("paymentOverview")}</h2>
           <PaymentOverviewChart data={paymentData} emptyLabel={t("noChartData")} />
         </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <div className="rounded-2xl bg-white p-5 shadow-card">
+        <div className="rounded-2xl bg-card p-5 shadow-card">
           <h2 className="mb-4 text-base font-bold text-warka-text">{t("recentOrders")}</h2>
           <RecentOrders orders={data.recentOrders} emptyLabel={t("noRecentOrders")} />
         </div>
-        <div className="rounded-2xl bg-white p-5 shadow-card">
+        <div className="rounded-2xl bg-card p-5 shadow-card">
           <h2 className="mb-4 text-base font-bold text-warka-text">{t("readyForDelivery")}</h2>
           <RecentOrders orders={data.readyForDelivery} emptyLabel={t("noDeliveryQueue")} />
         </div>

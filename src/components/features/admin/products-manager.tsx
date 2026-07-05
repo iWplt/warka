@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { ImageCropUpload } from "@/components/ui/image-crop-upload";
 import { ProductVariantsPanel } from "@/components/features/admin/product-variants-panel";
+import { EmbroideryPositionsAdmin } from "@/components/features/admin/embroidery-positions-admin";
 import { formatIqd } from "@/lib/format/currency";
 import { cn } from "@/lib/utils";
 
@@ -180,7 +181,7 @@ export function ProductsManager({ products, categories }: ProductsManagerProps) 
               "rounded-full px-4 py-2 text-sm font-medium transition-colors",
               activeSection === category.slug
                 ? "bg-warka-primary text-white shadow-sm"
-                : "border-2 border-warka-border bg-white text-warka-text shadow-sm hover:border-warka-primary/50"
+                : "border-2 border-warka-border bg-card text-warka-text shadow-sm hover:border-warka-primary/50"
             )}
           >
             {locale === "ar" ? category.name_ar : category.name_en}
@@ -271,7 +272,7 @@ export function ProductsManager({ products, categories }: ProductsManagerProps) 
                   <button
                     type="button"
                     onClick={() => setAddingCategory(null)}
-                    className="rounded-xl border-2 border-warka-border bg-white px-4 py-2 text-sm font-medium text-warka-text"
+                    className="rounded-xl border-2 border-warka-border bg-card px-4 py-2 text-sm font-medium text-warka-text"
                   >
                     {t("cancel")}
                   </button>
@@ -325,6 +326,7 @@ export function ProductsManager({ products, categories }: ProductsManagerProps) 
                     />
 
                     <ProductVariantsPanel product={product} />
+                    <EmbroideryPositionsAdmin product={product} />
 
                     <form
                       onSubmit={(e) => {

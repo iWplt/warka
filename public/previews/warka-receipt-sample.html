@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WARKA Receipt Preview</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      background: #e8e4dc;
+      padding: 24px;
+      color: #2a2a2a;
+    }
+    .receipt {
+      max-width: 720px;
+      margin: 0 auto;
+      background: #f7f4ed;
+      border: 1px solid #e3ddd0;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      overflow: hidden;
+    }
+    .header {
+      padding: 28px 32px 20px;
+      border-bottom: 4px solid #4a5a3a;
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .brand {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: #2f3b27;
+      letter-spacing: 0.04em;
+    }
+    .brand-sub {
+      margin-top: 4px;
+      font-size: 12px;
+      color: #5c6247;
+    }
+    .invoice-title {
+      text-align: left;
+      direction: ltr;
+    }
+    .invoice-title h1 {
+      font-size: 20px;
+      color: #2a2a2a;
+    }
+    .invoice-title p {
+      margin-top: 4px;
+      font-size: 11px;
+      color: #4a5a3a;
+      font-family: monospace;
+    }
+    .info-box {
+      margin: 20px 32px;
+      padding: 16px 20px;
+      background: #efeae0;
+      border: 1px solid #e3ddd0;
+      border-radius: 8px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 24px;
+      font-size: 13px;
+    }
+    .info-box .label { color: #666; font-size: 11px; }
+    .info-box .value { font-weight: 600; margin-top: 2px; }
+    .info-box .sub-address { margin-top: 4px; font-size: 12px; font-weight: 500; color: #555; }
+    table {
+      width: calc(100% - 64px);
+      margin: 0 32px 20px;
+      border-collapse: collapse;
+      font-size: 13px;
+      direction: ltr;
+      text-align: left;
+    }
+    thead th {
+      background: #2f3b27;
+      color: #f7f4ed;
+      padding: 10px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    tbody td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e3ddd0;
+    }
+    tbody tr:nth-child(even) td { background: #efeae0; }
+    tbody tr:nth-child(odd) td { background: #fff; }
+    .price { font-weight: 700; text-align: right; }
+    .totals {
+      margin: 0 32px 24px;
+      padding-top: 12px;
+      border-top: 1px solid #e3ddd0;
+      direction: ltr;
+      text-align: right;
+      font-size: 14px;
+    }
+    .totals .row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 48px;
+      padding: 4px 0;
+      color: #555;
+    }
+    .totals .grand {
+      margin-top: 8px;
+      font-size: 20px;
+      font-weight: 700;
+      color: #2f3b27;
+    }
+    .footer-section {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 24px;
+      margin: 0 32px 28px;
+      align-items: start;
+    }
+    .qr-box {
+      border: 1px solid #e3ddd0;
+      border-radius: 8px;
+      background: #fff;
+      padding: 12px;
+      text-align: center;
+    }
+    .qr-placeholder {
+      width: 130px;
+      height: 130px;
+      margin: 8px auto;
+      background: repeating-conic-gradient(#2f3b27 0% 25%, #f7f4ed 0% 50%) 50% / 20px 20px;
+      border: 2px solid #c7bcaf;
+    }
+    .qr-box p { font-size: 10px; color: #5c6247; }
+    .footer-text { font-size: 12px; color: #555; line-height: 1.7; }
+    .footer-text .delivery-note { margin-top: 12px; }
+    .banner {
+      background: #2f3b27;
+      color: #f7f4ed;
+      text-align: center;
+      padding: 12px;
+      font-size: 11px;
+    }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .receipt { box-shadow: none; border: none; max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="receipt">
+    <div class="header">
+      <div class="header-top">
+        <div>
+          <div class="brand">WARKA</div>
+          <div class="brand-sub">Graduation Printing Store - Iraq</div>
+        </div>
+        <div class="invoice-title">
+          <h1>Invoice / <span dir="rtl">فاتورة</span></h1>
+          <p>#WRK-2026-00482</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <div>
+        <div class="label">Student / الطالب</div>
+        <div class="value">أحمد السلط</div>
+      </div>
+      <div>
+        <div class="label">Date / التاريخ (Gregorian)</div>
+        <div class="value" dir="ltr">29 June 2026</div>
+      </div>
+      <div>
+        <div class="label">Phone / الهاتف</div>
+        <div class="value" dir="ltr">0770 123 4567</div>
+      </div>
+      <div>
+        <div class="label">Delivery / التوصيل</div>
+        <div class="value">بغداد - الكرادة</div>
+        <div class="value sub-address">شارع السعدون - بناية 12</div>
+      </div>
+      <div>
+        <div class="label">Status / الحالة</div>
+        <div class="value">قيد الطباعة</div>
+      </div>
+      <div>
+        <div class="label">Payment / الدفع</div>
+        <div class="value">COD / دفع عند الاستلام</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Product / المنتج</th>
+          <th>Size / القياس</th>
+          <th>Color / اللون</th>
+          <th>Fabric / القماش</th>
+          <th>Price / السعر</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Graduation Gown / روب تخرج</td>
+          <td>L</td>
+          <td>Black / أسود</td>
+          <td>Premium / فاخر</td>
+          <td class="price">45,000</td>
+        </tr>
+        <tr>
+          <td>Graduation Cap / قبعة تخرج</td>
+          <td>M</td>
+          <td>Black / أسود</td>
+          <td>Standard / عادي</td>
+          <td class="price">12,000</td>
+        </tr>
+        <tr>
+          <td>Graduation Sash / وشاح تخرج</td>
+          <td>Standard</td>
+          <td>Gold / ذهبي</td>
+          <td>Standard / عادي</td>
+          <td class="price">8,000</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="totals">
+      <div class="row"><span>Subtotal / المجموع الفرعي</span><span>65,000 IQD</span></div>
+      <div class="row"><span>COD delivery fee / رسوم التوصيل</span><span>5,000 IQD</span></div>
+      <div class="row grand"><span>Total / الإجمالي</span><span>70,000 IQD</span></div>
+    </div>
+
+    <div class="footer-section">
+      <div class="qr-box">
+        <p>Scan to track / امسح للتتبع</p>
+        <div class="qr-placeholder" aria-hidden="true"></div>
+      </div>
+      <div class="footer-text">
+        <p><strong>شكراً لاختيارك WARKA</strong></p>
+        <p>Thank you for choosing WARKA</p>
+        <p class="delivery-note">Expected delivery: 3-5 business days (Gregorian calendar)</p>
+        <p>WhatsApp: +964 770 000 0000</p>
+        <p>warka.iq</p>
+      </div>
+    </div>
+
+    <div class="banner">WARKA Receipt Preview - Sample only (not a real invoice)</div>
+  </div>
+</body>
+</html>

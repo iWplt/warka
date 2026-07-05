@@ -1,4 +1,5 @@
 import type {
+  EmbroideryPosition,
   Product,
   ProductColorVariant,
   ProductFabricOption,
@@ -172,6 +173,31 @@ export function getProductCardImage(product: Product, fallback: string): string 
   return variants[0]?.images[0] ?? product.image ?? fallback;
 }
 
+export function parseEmbroideryPositions(raw: unknown): EmbroideryPosition[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const row = item as Record<string, unknown>;
+      const key = String(row.key ?? "").trim();
+      const label_ar = String(row.label_ar ?? "").trim();
+      if (!key || !label_ar) return null;
+      return {
+        key,
+        label_ar,
+        label_en: String(row.label_en ?? label_ar).trim() || label_ar,
+        sort_order: Number(row.sort_order ?? 0),
+        is_active: row.is_active !== false,
+      };
+    })
+    .filter((v): v is EmbroideryPosition => v !== null)
+    .sort((a, b) => a.sort_order - b.sort_order);
+}
+
+export function resolveEmbroideryPositions(raw: unknown): EmbroideryPosition[] {
+  return parseEmbroideryPositions(raw).filter((p) => p.is_active);
+}
+
 export type ProductDetailDto = {
   id: string;
   product_type: ProductType;
@@ -186,6 +212,7 @@ export type ProductDetailDto = {
   colors: string[];
   color_variants: ProductColorVariant[];
   fabric_options: ProductFabricOption[];
+  embroidery_positions: EmbroideryPosition[];
   active: boolean;
 };
 
@@ -200,6 +227,7 @@ export function toProductDetailDto(
     gallery: product.gallery,
   });
   const fabric_options = resolveFabricOptions(product.fabric_options ?? []);
+  const embroidery_positions = resolveEmbroideryPositions(product.embroidery_positions ?? []);
   const firstVariant = color_variants[0];
   const image =
     firstVariant?.images[0] ?? product.image ?? fallbackImage(product.product_type);
@@ -231,6 +259,7 @@ export function toProductDetailDto(
     colors: color_variants.map((v) => v.label_ar),
     color_variants,
     fabric_options,
+    embroidery_positions,
     active: product.active,
   };
 }

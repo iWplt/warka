@@ -5,6 +5,7 @@ export const ROLE_DASHBOARD_PATHS: Record<UserRole, string> = {
   employee: "/employee",
   representative: "/representative",
   student: "/student",
+  embroidery: "/embroidery",
 };
 
 export function getDashboardPath(role: UserRole): string {
@@ -18,5 +19,6 @@ export function canAccessRoute(role: UserRole, pathname: string): boolean {
     return true;
   }
   if (role === "student" && pathname.startsWith("/student")) return true;
+  if (role === "embroidery" && pathname.startsWith("/embroidery")) return true;
   return false;
 }

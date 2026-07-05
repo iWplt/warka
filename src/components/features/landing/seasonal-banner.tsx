@@ -36,7 +36,7 @@ export function SeasonalBanner() {
     <div
       role="status"
       className={cn(
-        "relative border-b border-warka-accent/20 bg-warka-accent/15 px-4 py-2.5 text-center",
+        "relative border-b border-warka-primary/20 bg-warka-primary/10 px-4 py-2.5 text-center",
         !reducedMotion && "animate-fade-in"
       )}
     >

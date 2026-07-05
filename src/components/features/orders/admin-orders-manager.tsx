@@ -75,7 +75,7 @@ export function AdminOrdersManager({
           className={`rounded-xl px-4 py-2 text-sm font-medium ${
             !showArchived
               ? "bg-primary text-primary-foreground"
-              : "bg-white/5 text-muted-foreground hover:bg-white/10"
+              : "bg-foreground/5 text-muted-foreground hover:bg-warka-bg/10"
           }`}
         >
           {t("activeOrders")}
@@ -85,7 +85,7 @@ export function AdminOrdersManager({
           className={`rounded-xl px-4 py-2 text-sm font-medium ${
             showArchived
               ? "bg-primary text-primary-foreground"
-              : "bg-white/5 text-muted-foreground hover:bg-white/10"
+              : "bg-foreground/5 text-muted-foreground hover:bg-warka-bg/10"
           }`}
         >
           {t("archivedOrders")}

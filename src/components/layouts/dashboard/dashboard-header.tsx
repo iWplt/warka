@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { LogOut, Menu, Search, PanelLeftClose, PanelLeft } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { LanguageSwitcher } from "@/components/layouts/language-switcher";
@@ -18,16 +19,22 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
   const t = useTranslations();
   const locale = useLocale();
   const { sidebarCollapsed, toggleSidebar, toggleMobileSidebar } = useUiStore();
+  const [mounted, setMounted] = useState(false);
 
-  const initials = profile.full_name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const initials = mounted
+    ? profile.full_name
+        .split(" ")
+        .map((part) => part[0])
+        .join("")
+        .slice(0, 2)
+    : "";
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between gap-4 border-b border-warka-border bg-white/95 px-4 backdrop-blur-sm lg:px-6">
+    <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between gap-4 border-b border-warka-border bg-card/95 px-4 backdrop-blur-sm lg:px-6">
       <div className="flex min-w-0 items-center gap-2">
         <Button
           type="button"

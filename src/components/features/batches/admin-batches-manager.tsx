@@ -51,7 +51,7 @@ export function AdminBatchesManager({
   };
 
   const inputClass =
-    "w-full rounded-xl border border-glass-border bg-white/5 px-4 py-2 text-sm";
+    "w-full rounded-xl border border-glass-border bg-foreground/5 px-4 py-2 text-sm";
 
   return (
     <div className="space-y-6">
@@ -101,7 +101,7 @@ export function AdminBatchesManager({
           <Link
             key={batch.id}
             href={`${basePath}/${batch.id}`}
-            className="flex items-center justify-between rounded-2xl glass p-4 transition hover:bg-white/5"
+            className="flex items-center justify-between rounded-2xl glass p-4 transition hover:bg-warka-bg/5"
           >
             <div>
               <p className="font-medium">{batch.name}</p>

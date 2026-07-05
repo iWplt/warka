@@ -4,9 +4,9 @@ import { Suspense } from "react";
 import { ErrorBoundary } from "@/components/layouts/error-boundary";
 import { GraduationLanding, LandingSkeleton } from "@/components/features/landing";
 import { getPriceCatalog } from "@/server/actions/payments";
+import { getActiveBundles } from "@/server/actions/bundles";
 import { getProductsCatalog } from "@/server/actions/products";
 import { WARKA_LOGO_PATH } from "@/lib/constants/brand";
-import { env } from "@/lib/env";
 import type { Locale } from "@/i18n/routing";
 import { routing } from "@/i18n/routing";
 
@@ -22,7 +22,10 @@ export async function generateMetadata({ params }: HomePageProps): Promise<Metad
   const t = await getTranslations({ locale, namespace: "auth.brand" });
 
   return {
-    title: t("title"),
+    title:
+      locale === "ar"
+        ? "WARKA | وشاح تخرج بغداد - روب تخرج - قبعة تخرج - متجر طباعة التخرج العراق"
+        : "WARKA | Graduation Sashes & Gowns — Iraq Printing Store",
     description: t("description"),
     openGraph: {
       title: t("title"),
@@ -37,7 +40,6 @@ export async function generateMetadata({ params }: HomePageProps): Promise<Metad
       description: t("description"),
       images: [WARKA_LOGO_PATH],
     },
-    metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
     alternates: {
       canonical: `/${locale}`,
       languages: { ar: "/ar", en: "/en" },
@@ -46,15 +48,16 @@ export async function generateMetadata({ params }: HomePageProps): Promise<Metad
 }
 
 export default async function HomePage() {
-  const [prices, catalogProducts] = await Promise.all([
+  const [prices, catalogProducts, bundles] = await Promise.all([
     getPriceCatalog(),
     getProductsCatalog(),
+    getActiveBundles(),
   ]);
 
   return (
     <ErrorBoundary>
       <Suspense fallback={<LandingSkeleton />}>
-        <GraduationLanding prices={prices} catalogProducts={catalogProducts} />
+        <GraduationLanding prices={prices} catalogProducts={catalogProducts} bundles={bundles} />
       </Suspense>
     </ErrorBoundary>
   );

@@ -125,7 +125,7 @@ export function RepInvitesManager({ invites }: RepInvitesManagerProps) {
       {invites.length === 0 ? (
         <EmptyState icon={KeyRound} title={t("empty")} description={t("emptyHint")} />
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-warka-border bg-white shadow-card">
+        <div className="overflow-x-auto rounded-2xl border border-warka-border bg-card shadow-card">
           <table className="w-full min-w-[640px] text-sm">
             <thead className="border-b border-warka-border bg-warka-surface text-warka-text-secondary">
               <tr>

@@ -27,7 +27,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   });
 
   const inputClass =
-    "w-full rounded-xl border border-warka-border bg-white px-4 py-2.5 text-sm text-warka-text focus:border-warka-primary focus:outline-none focus:ring-2 focus:ring-warka-primary/20";
+    "w-full rounded-xl border border-warka-border bg-card px-4 py-2.5 text-sm text-warka-text focus:border-warka-primary focus:outline-none focus:ring-2 focus:ring-warka-primary/20";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +74,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-warka-border bg-white p-6 shadow-card">
+      <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-warka-border bg-card p-6 shadow-card">
         {fields.map(([key, label]) => (
           <div key={key}>
             <label className="mb-1 block text-sm font-medium">{label}</label>

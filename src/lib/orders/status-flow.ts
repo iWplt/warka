@@ -27,6 +27,17 @@ const STATUS_TO_LIFECYCLE: Record<OrderStatus, OrderLifecycleStep> = {
 };
 
 /** Statuses employees in printing role may access. */
+export const EMBROIDERY_QUEUE_STATUSES: OrderStatus[] = [
+  "new",
+  "pending_review",
+  "designing",
+  "awaiting_approval",
+  "needs_modification",
+  "ready_for_printing",
+  "printing",
+  "printed",
+];
+
 export const PRINTING_PIPELINE_STATUSES: OrderStatus[] = [
   "ready_for_printing",
   "printing",

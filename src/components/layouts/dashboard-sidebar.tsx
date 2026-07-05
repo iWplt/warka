@@ -22,6 +22,11 @@ import {
   MapPin,
   Bell,
   KeyRound,
+  Type,
+  Sparkles,
+  Gift,
+  Ruler,
+  Layers,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/routing";
@@ -53,7 +58,12 @@ type NavLabelKey =
   | "profile"
   | "addresses"
   | "notifications"
-  | "invites";
+  | "invites"
+  | "fonts"
+  | "sizes"
+  | "bundles"
+  | "customization"
+  | "embroideryOrders";
 
 type NavItem = {
   href: string;
@@ -65,6 +75,10 @@ const ADMIN_NAV: NavItem[] = [
   { href: "/admin", labelKey: "dashboard", icon: LayoutDashboard },
   { href: "/admin/orders", labelKey: "orders", icon: ClipboardList },
   { href: "/admin/products", labelKey: "products", icon: Package },
+  { href: "/admin/bundles", labelKey: "bundles", icon: Gift },
+  { href: "/admin/customization", labelKey: "customization", icon: Layers },
+  { href: "/admin/sizes", labelKey: "sizes", icon: Ruler },
+  { href: "/admin/fonts", labelKey: "fonts", icon: Type },
   { href: "/admin/design", labelKey: "design", icon: Palette },
   { href: "/admin/templates", labelKey: "templates", icon: FileImage },
   { href: "/admin/printing", labelKey: "printing", icon: Printer },
@@ -102,11 +116,18 @@ const EMPLOYEE_NAV: NavItem[] = [
   { href: "/employee/printing", labelKey: "printing", icon: Printer },
 ];
 
+const EMBROIDERY_NAV: NavItem[] = [
+  { href: "/embroidery", labelKey: "dashboard", icon: LayoutDashboard },
+  { href: "/embroidery/orders", labelKey: "embroideryOrders", icon: Sparkles },
+  { href: "/notifications", labelKey: "notifications", icon: Bell },
+];
+
 function navForRole(role: UserRole): NavItem[] {
   if (role === "admin") return ADMIN_NAV;
   if (role === "employee") return EMPLOYEE_NAV;
   if (role === "representative") return REP_NAV;
   if (role === "student") return STUDENT_NAV;
+  if (role === "embroidery") return EMBROIDERY_NAV;
   return [];
 }
 
@@ -115,6 +136,7 @@ const PORTAL_SUBTITLES: Record<UserRole, string> = {
   employee: "بوابة الموظف",
   representative: "بوابة الممثل",
   student: "بوابة الطالب",
+  embroidery: "ورشة التطريز",
 };
 
 type DashboardSidebarProps = {
@@ -128,18 +150,22 @@ export function DashboardSidebar({ role, profile }: DashboardSidebarProps) {
   const locale = useLocale();
   const pathname = usePathname();
   const isDesktop = useIsDesktop();
+  const [mounted, setMounted] = useState(false);
   const [pendingHref, setPendingHref] = useState<string | null>(null);
   const { sidebarCollapsed, mobileSidebarOpen, setMobileSidebarOpen } = useUiStore();
 
   const navItems = navForRole(role);
   const isPending = (href: string) => pendingHref === href && pathname !== href;
-  const collapsed = isDesktop && sidebarCollapsed;
+  const collapsed = mounted && isDesktop && sidebarCollapsed;
 
   useEffect(() => {
-    if (isDesktop && mobileSidebarOpen) {
-      setMobileSidebarOpen(false);
-    }
-  }, [isDesktop, mobileSidebarOpen, setMobileSidebarOpen]);
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || !isDesktop || !mobileSidebarOpen) return;
+    setMobileSidebarOpen(false);
+  }, [mounted, isDesktop, mobileSidebarOpen, setMobileSidebarOpen]);
 
   const handleNavigate = (href: string) => {
     setPendingHref(href);
@@ -163,7 +189,7 @@ export function DashboardSidebar({ role, profile }: DashboardSidebarProps) {
             </div>
           )}
         </Link>
-        {!isDesktop && (
+        {mounted && !isDesktop && (
           <Button
             type="button"
             variant="ghost"
@@ -194,11 +220,15 @@ export function DashboardSidebar({ role, profile }: DashboardSidebarProps) {
         {!collapsed && (
           <div className="mb-2 flex items-center gap-3 rounded-xl px-3 py-2">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-warka-primary-light text-xs font-bold text-white">
-              {profile.full_name.charAt(0)}
+              {mounted ? profile.full_name.charAt(0) : ""}
             </div>
             <div className="min-w-0 overflow-hidden">
-              <p className="truncate text-xs font-medium text-white">{profile.full_name}</p>
-              <p className="truncate text-[11px] text-white/75">{profile.email}</p>
+              <p className="truncate text-xs font-medium text-white" suppressHydrationWarning>
+                {profile.full_name}
+              </p>
+              <p className="truncate text-[11px] text-white/75" suppressHydrationWarning>
+                {profile.email}
+              </p>
             </div>
           </div>
         )}
@@ -220,7 +250,7 @@ export function DashboardSidebar({ role, profile }: DashboardSidebarProps) {
     </>
   );
 
-  const widthClass = collapsed ? "w-[4.5rem]" : "w-72";
+  const widthClass = mounted && collapsed ? "w-[4.5rem]" : "w-72";
 
   return (
     <>
@@ -236,7 +266,7 @@ export function DashboardSidebar({ role, profile }: DashboardSidebarProps) {
       </aside>
 
       {/* Mobile: drawer overlay */}
-      {!isDesktop && mobileSidebarOpen && (
+      {mounted && !isDesktop && mobileSidebarOpen && (
         <>
           <button
             type="button"

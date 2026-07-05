@@ -15,6 +15,7 @@ const KNOWN_ACTIONS = [
   "record_payment",
   "create_user",
   "create_student_account",
+  "upload_production_photo",
 ] as const;
 
 type ActivityEntry = {
@@ -49,7 +50,7 @@ export function ActivityLogPanel({ activity }: ActivityLogPanelProps) {
         return (
           <li
             key={entry.id}
-            className="flex flex-col gap-1 rounded-lg bg-white/5 p-3 text-sm sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-1 rounded-lg bg-foreground/5 p-3 text-sm sm:flex-row sm:items-center sm:justify-between"
           >
             <div>
               <p className="font-medium">

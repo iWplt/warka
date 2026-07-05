@@ -1,10 +1,5 @@
-import { redirect } from "next/navigation";
+import { NewOrderRedirect } from "./new-order-redirect";
 
-type NewStudentOrderPageProps = {
-  params: Promise<{ locale: string }>;
-};
-
-export default async function NewStudentOrderPage({ params }: NewStudentOrderPageProps) {
-  const { locale } = await params;
-  redirect(`/${locale}/checkout`);
+export default function NewStudentOrderPage() {
+  return <NewOrderRedirect />;
 }

@@ -1,8 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { cache } from "react";
+import { revalidatePath, unstable_cache } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createPublicClient, isExpiredJwtError } from "@/lib/supabase/public";
 import { requireRole } from "@/lib/auth/guards";
 import { GRADUATION_PRODUCT_META } from "@/lib/constants/graduation-products";
 import { PRODUCT_CATEGORY_META } from "@/lib/constants/product-categories";
@@ -16,35 +18,11 @@ import {
   buildColorVariantsFromLegacy,
   toProductDetailDto,
 } from "@/lib/products/variants";
+import { dedupeCatalogProducts, filterProductsForCategory } from "@/lib/products/dedupe-catalog";
+import { parseProduct } from "@/lib/products/parse-product";
 import type { Product, ProductCategory, ProductColorVariant, ProductFabricOption, ProductType } from "@/types/database";
 
 const PRODUCT_TYPES = ["sash", "cap", "gown", "suit", "custom"] as const;
-
-function parseProduct(row: Record<string, unknown>): Product {
-  return {
-    id: row.id as string,
-    product_type: row.product_type as ProductType,
-    category_id: (row.category_id as string) ?? null,
-    slug: (row.slug as string) ?? null,
-    name_ar: row.name_ar as string,
-    name_en: row.name_en as string,
-    description_ar: (row.description_ar as string) ?? null,
-    description_en: (row.description_en as string) ?? null,
-    price: Number(row.price),
-    image: (row.image as string) ?? null,
-    image_path: (row.image_path as string) ?? null,
-    gallery: Array.isArray(row.gallery) ? (row.gallery as string[]) : [],
-    colors: Array.isArray(row.colors) ? (row.colors as string[]) : [],
-    color_variants: parseColorVariants(row.color_variants),
-    fabric_options: parseFabricOptions(row.fabric_options),
-    features: Array.isArray(row.features) ? (row.features as string[]) : [],
-    sort_order: Number(row.sort_order ?? 0),
-    active: Boolean(row.active),
-    created_at: row.created_at as string,
-    updated_at: row.updated_at as string,
-    category: row.category as ProductCategory | null | undefined,
-  };
-}
 
 function fallbackImage(type: ProductType): string {
   const meta = GRADUATION_PRODUCT_META.find((m) => m.productType === type);
@@ -54,7 +32,7 @@ function fallbackImage(type: ProductType): string {
 }
 
 export async function getProductCategories(): Promise<ProductCategory[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   if (!supabase) {
     return PRODUCT_CATEGORY_META.map((c, i) => ({
       id: c.slug,
@@ -91,7 +69,7 @@ export async function getProductCategories(): Promise<ProductCategory[]> {
 }
 
 export async function getProductsCatalog(): Promise<Product[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   if (!supabase) return buildFallbackCatalogProducts();
 
   const { data, error } = await supabase
@@ -102,12 +80,15 @@ export async function getProductsCatalog(): Promise<Product[]> {
     .order("created_at");
 
   if (error) {
-    console.error("getProductsCatalog:", error.message);
+    if (!isExpiredJwtError(error.message)) {
+      console.error("getProductsCatalog:", error.message);
+    }
     return buildFallbackCatalogProducts();
   }
 
   const rows = (data ?? []).map((row) => parseProduct(row as Record<string, unknown>));
-  return rows.length > 0 ? rows : buildFallbackCatalogProducts();
+  const catalog = rows.length > 0 ? rows : buildFallbackCatalogProducts();
+  return dedupeCatalogProducts(catalog);
 }
 
 function buildFallbackCatalogProducts(): Product[] {
@@ -140,24 +121,30 @@ function buildFallbackCatalogProducts(): Product[] {
 }
 
 export async function getCatalogGroupedByCategory() {
-  const [categories, products] = await Promise.all([
-    getProductCategories(),
-    getProductsCatalog(),
-  ]);
+  return loadCatalogGroupedByCategory();
+}
 
-  return categories.map((cat) => ({
-    category: cat,
-    products: products
-      .filter((p) => p.category_id === cat.id || p.product_type === cat.product_type)
-      .map((p) => {
+const loadCatalogGroupedByCategory = unstable_cache(
+  async () => {
+    const [categories, products] = await Promise.all([
+      getProductCategories(),
+      getProductsCatalog(),
+    ]);
+
+    return categories.map((cat) => ({
+      category: cat,
+      products: filterProductsForCategory(products, cat.id, cat.product_type).map((p) => {
         const dto = toProductDetailDto(p, fallbackImage);
         return {
           ...p,
           image: dto.image,
         };
       }),
-  }));
-}
+    }));
+  },
+  ["warka-catalog-grouped"],
+  { revalidate: 120, tags: ["products"] }
+);
 
 export async function getAllProductsAdmin(): Promise<Product[]> {
   await requireRole(["admin"]);
@@ -173,10 +160,10 @@ export async function getAllProductsAdmin(): Promise<Product[]> {
   return (data ?? []).map((row) => parseProduct(row as Record<string, unknown>));
 }
 
-export async function getProductById(productId: string) {
+export const getProductById = cache(async (productId: string) => {
   if (!productId) return null;
 
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   let product: Product | null = null;
 
   if (supabase) {
@@ -200,13 +187,13 @@ export async function getProductById(productId: string) {
   if (!product) return null;
 
   return toProductDetailDto(product, fallbackImage);
-}
+});
 
 export async function getProductByType(productType: string) {
   const type = productType as ProductType;
   if (!PRODUCT_TYPES.includes(type)) return null;
 
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   let product: Product | null = null;
 
   if (supabase) {

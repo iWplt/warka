@@ -1,30 +1,46 @@
-import { NextIntlClientProvider } from "next-intl";
-import { getMessages, setRequestLocale } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
-import { Tajawal, Playfair_Display } from "next/font/google";
-import { ThemeProvider } from "@teispace/next-themes";
-import { getTheme } from "@teispace/next-themes/server";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
+import type { Metadata, Viewport } from "next";
 import { QueryProvider } from "@/components/layouts/query-provider";
 import { ToastProvider } from "@/components/ui/toast-provider";
-import "../globals.css";
+import { env } from "@/lib/env";
 
-const tajawal = Tajawal({
-  subsets: ["arabic", "latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-arabic",
-  display: "swap",
-});
+const IRAQ_SEO_KEYWORDS = [
+  "مطبوعات تخرج بغداد",
+  "وشاح تخرج البصرة",
+  "روب تخرج النجف",
+  "مستلزمات تخرج كربلاء",
+  "طباعة تخرج الموصل",
+  "WARKA graduation Iraq",
+].join(", ");
 
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-playfair",
-  display: "swap",
-});
+export const metadata: Metadata = {
+  metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
+  title: {
+    default: "WARKA | وشاح تخرج بغداد - روب تخرج - قبعة تخرج",
+    template: "%s | WARKA",
+  },
+  description:
+    "متجر طباعة التخرج في العراق — وشاح، روب، قبعة، بدلة. توصيل لبغداد والبصرة والموصل.",
+  keywords: IRAQ_SEO_KEYWORDS,
+  manifest: "/manifest.json",
+  icons: {
+    icon: [{ url: "/assets/brand/warka-logo.png", type: "image/png" }],
+    apple: "/assets/brand/warka-logo.png",
+    shortcut: "/assets/brand/warka-logo.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "WARKA",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#5C5C47",
+};
 
 type LocaleLayoutProps = {
   children: React.ReactNode;
@@ -49,36 +65,11 @@ export default async function LocaleLayout({
   }
 
   setRequestLocale(locale);
-  const messages = await getMessages();
-  const dir = locale === "ar" ? "rtl" : "ltr";
-  const initialTheme = await getTheme();
 
   return (
-    <html
-      lang={locale}
-      dir={dir}
-      suppressHydrationWarning
-      data-scroll-behavior="smooth"
-    >
-      <body
-        className={`${GeistSans.variable} ${GeistMono.variable} ${tajawal.variable} ${playfair.variable} font-sans antialiased`}
-      >
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            storage="local"
-            disableTransitionOnChange
-            initialTheme={initialTheme ?? undefined}
-          >
-            <QueryProvider>
-              {children}
-              <ToastProvider />
-            </QueryProvider>
-          </ThemeProvider>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <QueryProvider>
+      {children}
+      <ToastProvider />
+    </QueryProvider>
   );
 }

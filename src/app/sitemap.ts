@@ -1,17 +1,37 @@
 import type { MetadataRoute } from "next";
 import { env } from "@/lib/env";
 import { routing } from "@/i18n/routing";
+import { getProductsCatalog } from "@/server/actions/products";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = env.NEXT_PUBLIC_APP_URL;
-  const paths = ["", "/login", "/register"];
+  const staticPaths = [
+    "",
+    "/products",
+    "/cart",
+    "/login",
+    "/register",
+    "/bulk-order",
+    "/compare",
+    "/offline",
+  ];
+
+  let productPaths: string[] = [];
+  try {
+    const products = await getProductsCatalog();
+    productPaths = products.filter((p) => p.active).map((p) => `/products/${p.id}`);
+  } catch {
+    productPaths = [];
+  }
+
+  const allPaths = [...staticPaths, ...productPaths];
 
   return routing.locales.flatMap((locale) =>
-    paths.map((path) => ({
+    allPaths.map((path) => ({
       url: `${base}/${locale}${path}`,
       lastModified: new Date(),
-      changeFrequency: path === "" ? "weekly" : "monthly",
-      priority: path === "" ? 1 : 0.6,
+      changeFrequency: path.startsWith("/products/") ? ("weekly" as const) : path === "" ? ("weekly" as const) : ("monthly" as const),
+      priority: path === "" ? 1 : path === "/products" ? 0.9 : path.startsWith("/products/") ? 0.8 : 0.6,
     }))
   );
 }

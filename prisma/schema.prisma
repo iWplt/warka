@@ -250,3 +250,17 @@ model Price {
   description String?
   isActive    Boolean            @default(true)
 }
+
+model BulkLead {
+  id              String   @id @default(cuid())
+  university      String
+  studentCount    Int
+  coordinatorName String
+  phone           String
+  email           String?
+  products        Json
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  @@index([createdAt])
+}

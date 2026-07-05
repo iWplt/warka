@@ -58,7 +58,7 @@ export function QuickAddToCart({ product, locale, className }: QuickAddToCartPro
       onClick={handleAdd}
       {...tapProps}
       className={cn(
-        "inline-flex w-full items-center justify-center gap-2 rounded-[10px] border-2 border-warka-border bg-white py-2.5 text-sm font-semibold text-warka-text transition-all hover:border-warka-primary hover:text-warka-primary disabled:opacity-60",
+        "inline-flex w-full items-center justify-center gap-2 rounded-[10px] border-2 border-warka-border bg-card py-2.5 text-sm font-semibold text-warka-text transition-all hover:border-warka-primary hover:text-warka-primary disabled:opacity-60",
         className
       )}
     >

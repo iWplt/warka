@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { getCurrentProfile, requireAuth, requireRole } from "@/lib/auth/guards";
 import { createNotification, logActivity, notifyAdminsAndEmployees } from "@/server/actions/notifications";
 import type { PaymentStatus } from "@/types/database";
@@ -137,7 +138,7 @@ export async function updatePriceCatalog(
 }
 
 export async function getPriceCatalog() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   if (!supabase) return [];
 
   const { data } = await supabase.from("price_catalog").select("*").order("product_type");

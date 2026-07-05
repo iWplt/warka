@@ -24,6 +24,7 @@ const NOTIFICATION_TYPES: NotificationType[] = [
   "printing_started",
   "ready_for_delivery",
   "payment_received",
+  "production_ready",
   "general",
 ];
 

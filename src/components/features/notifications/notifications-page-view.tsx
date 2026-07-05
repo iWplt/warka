@@ -26,6 +26,7 @@ const NOTIFICATION_TYPES: NotificationType[] = [
   "printing_started",
   "ready_for_delivery",
   "payment_received",
+  "production_ready",
   "general",
 ];
 
@@ -40,7 +41,7 @@ export function NotificationsSkeleton() {
       {Array.from({ length: 5 }).map((_, i) => (
         <div
           key={i}
-          className="rounded-2xl border border-warka-border bg-white p-5 shadow-card"
+          className="rounded-2xl border border-warka-border bg-card p-5 shadow-card"
         >
           <div className="flex gap-3">
             <Skeleton className="size-10 rounded-xl" />

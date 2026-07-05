@@ -4,30 +4,38 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Users } from "lucide-react";
 import { toast } from "sonner";
-import { useRouter } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { createUser } from "@/server/actions/users";
-import type { Profile } from "@/types/database";
+import type { Profile, UserRole } from "@/types/database";
 
 type UsersManagementProps = {
   students: Profile[];
   representatives: Profile[];
+  embroideryStaff: Profile[];
   localOnly?: boolean;
 };
+
+type UserTab = "students" | "representatives" | "embroidery";
 
 export function UsersManagement({
   students,
   representatives,
+  embroideryStaff,
   localOnly = false,
 }: UsersManagementProps) {
   const t = useTranslations();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [tab, setTab] = useState<"students" | "representatives">("students");
+  const [tab, setTab] = useState<UserTab>("students");
   const [showForm, setShowForm] = useState(false);
 
-  const list = tab === "students" ? students : representatives;
+  const list =
+    tab === "students" ? students : tab === "representatives" ? representatives : embroideryStaff;
+
+  const createRole: UserRole =
+    tab === "students" ? "student" : tab === "representatives" ? "representative" : "embroidery";
 
   return (
     <div className="space-y-6">
@@ -44,6 +52,9 @@ export function UsersManagement({
         <Button type="button" variant={tab === "representatives" ? "default" : "outline"} onClick={() => setTab("representatives")}>
           {t("nav.representatives")} ({representatives.length})
         </Button>
+        <Button type="button" variant={tab === "embroidery" ? "default" : "outline"} onClick={() => setTab("embroidery")}>
+          {t("nav.embroideryOrders")} ({embroideryStaff.length})
+        </Button>
         <Button
           type="button"
           variant="accent"
@@ -57,7 +68,7 @@ export function UsersManagement({
 
       {showForm && !localOnly && (
         <CreateUserForm
-          role={tab === "students" ? "student" : "representative"}
+          role={createRole}
           onSuccess={() => {
             setShowForm(false);
             startTransition(() => {
@@ -79,17 +90,19 @@ export function UsersManagement({
           />
         )}
         {list.map((user) => (
-          <div key={user.id} className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
+          <Link
+            key={user.id}
+            href={`/admin/users/${user.id}`}
+            className="flex items-center justify-between rounded-xl border border-glass-border glass px-4 py-3 transition-colors hover:bg-foreground/5"
+          >
             <div>
               <p className="font-medium">{user.full_name}</p>
-              <p className="text-sm text-muted-foreground">
-                {user.phone} · {user.college} {user.department}
-              </p>
+              <p className="text-sm text-muted-foreground">{user.email}</p>
             </div>
             <span className={`rounded-full px-2 py-1 text-xs ${user.is_active ? "bg-primary/20 text-primary" : "bg-accent/20 text-accent"}`}>
               {user.is_active ? t("common.active") : t("common.inactive")}
             </span>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
@@ -100,11 +113,12 @@ function CreateUserForm({
   role,
   onSuccess,
 }: {
-  role: "student" | "representative";
+  role: Extract<UserRole, "student" | "representative" | "embroidery">;
   onSuccess: () => void;
 }) {
   const t = useTranslations("auth");
   const [loading, setLoading] = useState(false);
+  const showAcademicFields = role === "student";
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -117,8 +131,8 @@ function CreateUserForm({
         full_name: form.get("full_name") as string,
         phone: (form.get("phone") as string) || undefined,
         role,
-        college: (form.get("college") as string) || undefined,
-        department: (form.get("department") as string) || undefined,
+        college: showAcademicFields ? (form.get("college") as string) || undefined : undefined,
+        department: showAcademicFields ? (form.get("department") as string) || undefined : undefined,
       });
       toast.success(t("registerButton") + " ✓");
       onSuccess();
@@ -131,7 +145,7 @@ function CreateUserForm({
     }
   };
 
-  const inputClass = "w-full rounded-xl border border-glass-border bg-white/5 px-4 py-2 text-sm";
+  const inputClass = "w-full rounded-xl border border-glass-border bg-foreground/5 px-4 py-2 text-sm";
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4 rounded-2xl glass p-6 sm:grid-cols-2">
@@ -139,8 +153,12 @@ function CreateUserForm({
       <input name="email" type="email" placeholder={t("email")} required className={inputClass} />
       <input name="phone" placeholder={t("phone")} className={inputClass} />
       <input name="password" type="password" placeholder={t("password")} required minLength={6} className={inputClass} />
-      <input name="college" placeholder="College" className={inputClass} />
-      <input name="department" placeholder="Department" className={inputClass} />
+      {showAcademicFields && (
+        <>
+          <input name="college" placeholder="College" className={inputClass} />
+          <input name="department" placeholder="Department" className={inputClass} />
+        </>
+      )}
       <Button type="submit" disabled={loading} variant="accent" className="sm:col-span-2">
         {t("registerButton")}
       </Button>

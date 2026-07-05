@@ -283,7 +283,7 @@ export function CheckoutWizard({
                         ? "border-warka-primary bg-warka-primary text-white"
                         : active
                           ? "border-warka-primary bg-warka-primary/10 text-warka-primary"
-                          : "border-warka-border bg-white text-warka-text-muted"
+                          : "border-warka-border bg-card text-warka-text-muted"
                     )}
                   >
                     {done ? "✓" : stepNum}
@@ -346,7 +346,7 @@ export function CheckoutWizard({
                             "rounded-xl border-2 p-4 text-start transition-all",
                             active
                               ? "border-warka-primary bg-warka-primary/5"
-                              : "border-warka-border bg-white hover:border-warka-primary/40"
+                              : "border-warka-border bg-card hover:border-warka-primary/40"
                           )}
                         >
                           <p className="font-semibold text-warka-text">{label}</p>
@@ -374,7 +374,7 @@ export function CheckoutWizard({
                       "rounded-xl border-2 p-4 text-start transition-all",
                       active
                         ? "border-warka-primary bg-warka-primary/5"
-                        : "border-warka-border bg-white hover:border-warka-primary/40"
+                        : "border-warka-border bg-card hover:border-warka-primary/40"
                     )}
                   >
                     <p className="font-semibold text-warka-text">{productT(meta.productType)}</p>
@@ -630,7 +630,7 @@ export function CheckoutWizard({
           <button
             type="button"
             onClick={goBack}
-            className="inline-flex items-center gap-1 rounded-xl border border-warka-border px-4 py-2.5 text-sm font-medium text-warka-text hover:bg-white"
+            className="inline-flex items-center gap-1 rounded-xl border border-warka-border px-4 py-2.5 text-sm font-medium text-warka-text hover:bg-warka-bg"
           >
             <ChevronLeft className="size-4 rtl:rotate-180" />
             {locale === "ar" ? "السابق" : "Back"}

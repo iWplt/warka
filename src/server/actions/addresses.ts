@@ -10,8 +10,13 @@ const addressSchema = z.object({
   label: z.string().min(1),
   address_line: z.string().min(3),
   city: z.string().optional(),
+  governorate: z.string().optional(),
+  area: z.string().optional(),
   phone: z.string().optional(),
   college: z.string().optional(),
+  latitude: z.number().nullable().optional(),
+  longitude: z.number().nullable().optional(),
+  location_url: z.string().nullable().optional(),
   is_default: z.boolean().optional(),
 });
 

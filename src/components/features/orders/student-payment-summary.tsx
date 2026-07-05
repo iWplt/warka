@@ -46,7 +46,7 @@ export function StudentPaymentSummary({ total, payments }: StudentPaymentSummary
           {payments.map((payment) => (
             <li
               key={payment.id}
-              className="flex justify-between rounded-lg bg-white/5 px-3 py-2 text-sm"
+              className="flex justify-between rounded-lg bg-foreground/5 px-3 py-2 text-sm"
             >
               <span>{methodT(payment.method)}</span>
               <span className="tabular-nums">{formatIqd(Number(payment.amount), locale)}</span>

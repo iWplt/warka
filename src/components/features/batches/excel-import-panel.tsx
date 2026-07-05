@@ -23,6 +23,7 @@ export function ExcelImportPanel({ batchId, onImported }: ExcelImportPanelProps)
   const [lastResult, setLastResult] = useState<{
     imported: number;
     skipped: number;
+    accountsCreated: number;
     errors: Array<{ row: number; message: string }>;
   } | null>(null);
 
@@ -103,8 +104,13 @@ export function ExcelImportPanel({ batchId, onImported }: ExcelImportPanelProps)
         />
       </div>
       {lastResult && (
-        <div className="mt-4 rounded-xl bg-white/5 p-4 text-sm">
+        <div className="mt-4 rounded-xl bg-foreground/5 p-4 text-sm">
           <p>{t("importSummary", { imported: lastResult.imported, skipped: lastResult.skipped })}</p>
+          {lastResult.accountsCreated > 0 && (
+            <p className="mt-1 text-primary">
+              {t("accountsCreatedOnImport", { count: lastResult.accountsCreated })}
+            </p>
+          )}
           {lastResult.errors.length > 0 && (
             <ul className="mt-2 max-h-32 space-y-1 overflow-y-auto text-muted-foreground">
               {lastResult.errors.slice(0, 8).map((error) => (

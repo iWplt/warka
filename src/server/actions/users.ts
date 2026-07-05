@@ -17,7 +17,7 @@ const createUserSchema = z.object({
   password: z.string().min(6),
   full_name: z.string().min(2),
   phone: z.preprocess(emptyToUndefined, z.string().optional()),
-  role: z.enum(["representative", "student"]),
+  role: z.enum(["representative", "student", "embroidery"]),
   college: z.preprocess(emptyToUndefined, z.string().optional()),
   department: z.preprocess(emptyToUndefined, z.string().optional()),
 });

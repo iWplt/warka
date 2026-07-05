@@ -48,5 +48,7 @@ export function buildDefaultCartItemFromProduct(
         ? fabric.label_ar
         : fabric.label_en
       : "",
+    diacriticsMode: "auto",
+    decorationImageDataUrl: null,
   };
 }

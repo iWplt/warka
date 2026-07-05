@@ -2,6 +2,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { computeUnitPrice, resolveFabricOptions } from "@/lib/products/variants";
+import type { CustomizationPayload } from "@/types/customization";
 import type { ProductType } from "@/types/database";
 
 export type CartLineItem = {
@@ -19,15 +21,34 @@ export type CartLineItem = {
   fabricKey: string;
   fabricLabel: string;
   size: string;
+  customText: string;
+  fontFamily: string;
+  diacriticsMode: import("@/lib/arabic/harakat").DiacriticsMode;
+  decorationImageDataUrl: string | null;
+  capSideImageDataUrl: string | null;
+  capTopImageDataUrl: string | null;
+  embroideryPosition: string;
   notes: string;
   logoDataUrl: string | null;
+  customizationPayload: CustomizationPayload | null;
   customized: boolean;
 };
 
-export type AddCartItemInput = Omit<CartLineItem, "id" | "customized" | "size" | "notes" | "logoDataUrl"> & {
+export type AddCartItemInput = Omit<
+  CartLineItem,
+  "id" | "customized" | "size" | "notes" | "logoDataUrl" | "customText" | "fontFamily" | "embroideryPosition" | "diacriticsMode" | "decorationImageDataUrl" | "capSideImageDataUrl" | "capTopImageDataUrl" | "customizationPayload"
+> & {
   size?: string;
   notes?: string;
   logoDataUrl?: string | null;
+  customText?: string;
+  fontFamily?: string;
+  embroideryPosition?: string;
+  diacriticsMode?: import("@/lib/arabic/harakat").DiacriticsMode;
+  decorationImageDataUrl?: string | null;
+  capSideImageDataUrl?: string | null;
+  capTopImageDataUrl?: string | null;
+  customizationPayload?: CustomizationPayload | null;
 };
 
 type CartState = {
@@ -35,7 +56,35 @@ type CartState = {
   addItem: (input: AddCartItemInput) => string;
   removeItem: (lineId: string) => void;
   updateQuantity: (lineId: string, quantity: number) => void;
-  updateLine: (lineId: string, patch: Partial<Pick<CartLineItem, "size" | "notes" | "logoDataUrl" | "customized">>) => void;
+  updateLine: (
+    lineId: string,
+    patch: Partial<
+      Pick<
+        CartLineItem,
+        | "size"
+        | "notes"
+        | "logoDataUrl"
+        | "customized"
+        | "unitPrice"
+        | "customText"
+        | "fontFamily"
+        | "embroideryPosition"
+        | "diacriticsMode"
+        | "decorationImageDataUrl"
+        | "capSideImageDataUrl"
+        | "capTopImageDataUrl"
+        | "customizationPayload"
+      >
+    >
+  ) => void;
+  syncPricesFromCatalog: (
+    products: Array<{
+      id: string;
+      product_type: ProductType;
+      price: number;
+      fabric_options?: import("@/types/database").ProductFabricOption[];
+    }>
+  ) => void;
   clearCart: () => void;
   itemCount: () => number;
   subtotal: () => number;
@@ -50,7 +99,10 @@ function sameLine(a: CartLineItem, b: AddCartItemInput): boolean {
     a.catalogProductId === b.catalogProductId &&
     a.colorKey === b.colorKey &&
     a.fabricKey === b.fabricKey &&
-    a.size === (b.size ?? "")
+    a.size === (b.size ?? "") &&
+    a.customText === (b.customText ?? "") &&
+    a.fontFamily === (b.fontFamily ?? "") &&
+    a.embroideryPosition === (b.embroideryPosition ?? "")
   );
 }
 
@@ -81,8 +133,22 @@ export const useCartStore = create<CartState>()(
               id,
               size: input.size ?? "",
               notes: input.notes ?? "",
+              customText: input.customText ?? "",
+              fontFamily: input.fontFamily ?? "",
+              diacriticsMode: input.diacriticsMode ?? "auto",
+              decorationImageDataUrl: input.decorationImageDataUrl ?? null,
+              capSideImageDataUrl: input.capSideImageDataUrl ?? null,
+              capTopImageDataUrl: input.capTopImageDataUrl ?? null,
+              embroideryPosition: input.embroideryPosition ?? "",
               logoDataUrl: input.logoDataUrl ?? null,
-              customized: false,
+              customizationPayload: input.customizationPayload ?? null,
+              customized: Boolean(
+                input.size ||
+                  input.customText ||
+                  input.fontFamily ||
+                  input.embroideryPosition ||
+                  input.customizationPayload
+              ),
             },
           ],
         });
@@ -106,6 +172,27 @@ export const useCartStore = create<CartState>()(
           items: get().items.map((line) =>
             line.id === lineId ? { ...line, ...patch } : line
           ),
+        }),
+
+      syncPricesFromCatalog: (products) =>
+        set({
+          items: get().items.map((line) => {
+            const product =
+              products.find((p) => p.id === line.catalogProductId) ??
+              products.find((p) => p.product_type === line.productType);
+            if (!product || product.price <= 0) return line;
+
+            const fabricOptions = resolveFabricOptions(product.fabric_options ?? []);
+            const unitPrice = computeUnitPrice(product.price, fabricOptions, line.fabricKey);
+            if (unitPrice === line.unitPrice && product.id === line.catalogProductId) {
+              return line;
+            }
+            return {
+              ...line,
+              catalogProductId: product.id,
+              unitPrice,
+            };
+          }),
         }),
 
       clearCart: () => set({ items: [] }),

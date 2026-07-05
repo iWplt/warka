@@ -41,7 +41,7 @@ export function ReportsView({ byStatus, activity }: ReportsViewProps) {
             className={`rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
               tab === item.id
                 ? "bg-primary text-primary-foreground"
-                : "bg-white/5 text-muted-foreground hover:bg-white/10"
+                : "bg-foreground/5 text-muted-foreground hover:bg-warka-bg/10"
             }`}
           >
             {item.label}
@@ -56,7 +56,7 @@ export function ReportsView({ byStatus, activity }: ReportsViewProps) {
             {Object.entries(byStatus).map(([status, count]) => (
               <div
                 key={status}
-                className="flex justify-between rounded-lg bg-white/5 p-3 text-sm"
+                className="flex justify-between rounded-lg bg-foreground/5 p-3 text-sm"
               >
                 <span>{statusT(status as never)}</span>
                 <span className="font-bold">{count}</span>

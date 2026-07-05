@@ -1,16 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { useSearchParams } from "next/navigation";
+import { useLocale } from "next-intl";
+import { useRouter } from "@/i18n/routing";
+import { Loader2 } from "lucide-react";
 import { useCartStore } from "@/stores/cart-store";
-import { CheckoutWizard } from "@/components/features/checkout/checkout-wizard";
-import { CartCheckoutWizard } from "@/components/features/checkout/cart-checkout-wizard";
-import type { PriceCatalogItem, ProductType, Profile } from "@/types/database";
+import { useOrderWizardStore } from "@/stores/order-wizard-store";
+import { buildDefaultCartItemFromProduct } from "@/lib/cart/build-item";
+import { parseStepParam } from "@/lib/orders/wizard-step-guard";
+import { UnifiedOrderWizard } from "@/components/features/checkout/unified-order-wizard";
+import { FontLoader } from "@/components/features/settings/font-loader";
+import type { Profile, ProductType, EmbroideryPosition } from "@/types/database";
+import type { WarkaFont } from "@/lib/settings/types";
 
 type CheckoutShellProps = {
   profile: Profile;
-  prices: PriceCatalogItem[];
-  initialProduct?: ProductType;
   initialCatalogProductId?: string;
   catalogProducts: Array<{
     id: string;
@@ -19,25 +24,116 @@ type CheckoutShellProps = {
     name_en: string;
     price: number;
     image: string | null;
-    category_name_ar?: string;
-    category_name_en?: string;
+    fabric_options?: import("@/types/database").ProductFabricOption[];
+    embroidery_positions?: EmbroideryPosition[];
   }>;
+  fonts: WarkaFont[];
 };
 
-export function CheckoutShell(props: CheckoutShellProps) {
+function CheckoutLoading() {
+  return (
+    <div className="mx-auto flex min-h-[40vh] max-w-4xl flex-col items-center justify-center gap-3 px-4 py-16">
+      <Loader2 className="size-8 animate-spin text-warka-primary" aria-hidden />
+      <p className="text-sm text-warka-text-secondary">Loading checkout…</p>
+    </div>
+  );
+}
+
+export function CheckoutShell({
+  profile,
+  initialCatalogProductId,
+  catalogProducts,
+  fonts,
+}: CheckoutShellProps) {
+  const locale = useLocale();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const fromCart = searchParams.get("from") === "cart";
   const cartItems = useCartStore((s) => s.items);
-  const [mounted, setMounted] = useState(false);
+  const addItem = useCartStore((s) => s.addItem);
+  const syncPricesFromCatalog = useCartStore((s) => s.syncPricesFromCatalog);
+  const setStep = useOrderWizardStore((s) => s.setStep);
+  const hasHydrated = useSyncExternalStore(
+    useCartStore.persist.onFinishHydration,
+    () => useCartStore.persist.hasHydrated(),
+    () => false
+  );
+  const wizardHydrated = useSyncExternalStore(
+    useOrderWizardStore.persist.onFinishHydration,
+    () => useOrderWizardStore.persist.hasHydrated(),
+    () => false
+  );
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    if (!hasHydrated || catalogProducts.length === 0) return;
+    syncPricesFromCatalog(catalogProducts);
+  }, [hasHydrated, catalogProducts, syncPricesFromCatalog]);
 
-  const useCartFlow =
-    mounted && (fromCart || (!props.initialCatalogProductId && cartItems.length > 0));
+  useEffect(() => {
+    if (!hasHydrated || fromCart) return;
+    if (cartItems.length > 0) return;
+    if (!initialCatalogProductId) return;
 
-  if (useCartFlow) {
-    return <CartCheckoutWizard profile={props.profile} />;
+    const product = catalogProducts.find((p) => p.id === initialCatalogProductId);
+    if (product) {
+      addItem(
+        buildDefaultCartItemFromProduct(
+          {
+            id: product.id,
+            product_type: product.product_type,
+            name_ar: product.name_ar,
+            name_en: product.name_en,
+            price: product.price,
+            image: product.image,
+            color_variants: [],
+            fabric_options: product.fabric_options ?? [],
+            colors: [],
+            gallery: [],
+            features: [],
+            sort_order: 0,
+            active: true,
+            category_id: null,
+            slug: null,
+            description_ar: null,
+            description_en: null,
+            image_path: null,
+            created_at: "",
+            updated_at: "",
+          },
+          locale === "ar" ? "ar" : "en"
+        )
+      );
+    }
+  }, [
+    hasHydrated,
+    fromCart,
+    cartItems.length,
+    initialCatalogProductId,
+    catalogProducts,
+    addItem,
+    locale,
+  ]);
+
+  useEffect(() => {
+    if (!hasHydrated || !wizardHydrated) return;
+
+    const requestedStep = parseStepParam(searchParams.get("step"));
+    if (requestedStep == null || requestedStep <= 1) return;
+
+    if (cartItems.length === 0) {
+      setStep(1);
+      router.replace("/checkout");
+    }
+  }, [hasHydrated, wizardHydrated, cartItems.length, searchParams, setStep, router]);
+
+  if (!hasHydrated || !wizardHydrated) {
+    return <CheckoutLoading />;
   }
 
-  return <CheckoutWizard {...props} />;
+  return (
+    <>
+      <FontLoader fonts={fonts} />
+      <UnifiedOrderWizard profile={profile} fonts={fonts} catalogProducts={catalogProducts} />
+    </>
+  );
 }

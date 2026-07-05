@@ -32,7 +32,7 @@ export function StatsCards({ items }: StatsCardsProps) {
         return (
           <div
             key={item.label}
-            className="rounded-2xl bg-white p-5 shadow-card transition-shadow duration-200 hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)]"
+            className="rounded-2xl bg-card p-5 shadow-card transition-shadow duration-200 hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)]"
           >
             <div className="flex items-start justify-between gap-3">
               <div

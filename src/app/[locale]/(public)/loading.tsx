@@ -1,5 +1,5 @@
-import { LandingSkeleton } from "@/components/features/landing";
+import { PublicPageSkeleton } from "@/components/ux/public-page-skeleton";
 
 export default function PublicLoading() {
-  return <LandingSkeleton />;
+  return <PublicPageSkeleton />;
 }

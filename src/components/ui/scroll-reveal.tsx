@@ -55,7 +55,7 @@ export function SectionHeading({
     >
       <h2 className="mb-2 text-3xl font-bold text-warka-text lg:text-4xl">{title}</h2>
       {subtitle ? (
-        <p className="text-sm leading-relaxed text-warka-text-muted">{subtitle}</p>
+        <p className="text-sm leading-relaxed text-warka-text-secondary">{subtitle}</p>
       ) : null}
     </ScrollReveal>
   );

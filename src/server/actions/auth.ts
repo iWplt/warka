@@ -27,10 +27,13 @@ import {
   verifyPhoneLastFour,
 } from "@/lib/auth/access-code";
 import {
-  consumeRepInviteCode,
+  finalizeRepInviteCode,
+  releaseRepInviteCode,
+  reserveRepInviteCode,
   validateRepInviteCode,
 } from "@/server/actions/invites";
 import type { UserRole } from "@/types/database";
+import { resolvePostLoginPath } from "@/lib/auth/post-login-redirect";
 
 async function upsertProfileFromServer(
   userId: string,
@@ -69,6 +72,12 @@ async function upsertProfileFromServer(
   return error ? { error: error.message } : { error: null };
 }
 
+async function deleteAuthUser(userId: string): Promise<void> {
+  const admin = createAdminClient();
+  if (!admin) return;
+  await admin.auth.admin.deleteUser(userId);
+}
+
 async function getClientIp(): Promise<string> {
   const hdrs = await headers();
   return hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
@@ -85,7 +94,8 @@ async function guardAuthRateLimit(identifier: string, locale: string): Promise<v
 async function finishAuthSession(
   userId: string,
   locale: string,
-  identifier: string
+  identifier: string,
+  redirectPath?: string | null
 ): Promise<never> {
   const supabase = await createClient();
   if (!supabase) redirect(`/${locale}/login?error=config`);
@@ -104,7 +114,9 @@ async function finishAuthSession(
   const ip = await getClientIp();
   clearAuthAttempts(buildAuthRateLimitKey(identifier, ip));
 
-  redirect(`/${locale}${getRedirectForRole(profile.role as UserRole)}`);
+  redirect(
+    resolvePostLoginPath(locale, profile.role as UserRole, redirectPath)
+  );
 }
 
 async function generateUniqueStudentCode(admin: NonNullable<ReturnType<typeof createAdminClient>>) {
@@ -209,8 +221,10 @@ export async function signIn(formData: FormData) {
     redirect(`/${locale}/login?error=disabled`);
   }
 
-  const dest = getRedirectForRole(profile.role as UserRole);
-  redirect(`/${locale}${dest}`);
+  const redirectPath = (formData.get("redirect") as string)?.trim() || null;
+  redirect(
+    resolvePostLoginPath(locale, profile.role as UserRole, redirectPath)
+  );
 }
 
 export async function signInWithAccessCode(formData: FormData) {
@@ -261,7 +275,12 @@ export async function signInWithAccessCode(formData: FormData) {
     redirect(`/${locale}/login?error=invalid-code`);
   }
 
-  await finishAuthSession(data.user.id, locale, code);
+  await finishAuthSession(
+    data.user.id,
+    locale,
+    code,
+    (formData.get("redirect") as string)?.trim() || null
+  );
 }
 
 export async function signUpStudent(formData: FormData) {
@@ -353,10 +372,16 @@ export async function signUp(formData: FormData) {
     : null;
   const inviteCode = (formData.get("inviteCode") as string)?.trim() ?? "";
 
-  const inviteCheck = await validateRepInviteCode(inviteCode);
-  if (!inviteCheck.valid || !inviteCheck.inviteId) {
+  const inviteCheck = await validateRepInviteCode(inviteCode, email);
+  if (!inviteCheck.valid) {
     redirect(`/${locale}/register?error=invalid-invite`);
   }
+
+  const reserved = await reserveRepInviteCode(inviteCode, email);
+  if (!reserved.success || !reserved.inviteId) {
+    redirect(`/${locale}/register?error=invalid-invite`);
+  }
+  const inviteId = reserved.inviteId;
 
   await guardAuthRateLimit(email, locale);
 
@@ -384,6 +409,7 @@ export async function signUp(formData: FormData) {
   });
 
   if (error) {
+    await releaseRepInviteCode(inviteId);
     const ip = await getClientIp();
     recordAuthFailure(buildAuthRateLimitKey(email, ip));
     redirect(`/${locale}/register?error=invalid`);
@@ -401,14 +427,12 @@ export async function signUp(formData: FormData) {
     });
 
     if (result.error) {
+      await deleteAuthUser(data.user.id);
+      await releaseRepInviteCode(inviteId);
       redirect(`/${locale}/register?error=profile`);
     }
 
-    try {
-      await consumeRepInviteCode(inviteCheck.inviteId, data.user.id, email);
-    } catch {
-      redirect(`/${locale}/register?error=invalid-invite`);
-    }
+    await finalizeRepInviteCode(inviteId, data.user.id);
   }
 
   if (!data.session) {

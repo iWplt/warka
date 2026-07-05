@@ -50,6 +50,13 @@ function buildNav(profile: Profile | null): NavItem[] {
   ];
 }
 
+function isNavActive(pathname: string, href: string): boolean {
+  if (href === "/") {
+    return pathname === "/" || pathname === "";
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 type MobileBottomNavProps = {
   profile?: Profile | null;
 };
@@ -67,19 +74,17 @@ export function MobileBottomNav({ profile = null }: MobileBottomNavProps) {
       <div className="flex items-stretch justify-around">
         {nav.map((item) => {
           const Icon = item.icon;
-          const active =
-            item.href === "/"
-              ? pathname === "/" || pathname === ""
-              : pathname.startsWith(item.href);
+          const active = isNavActive(pathname, item.href);
           const label = locale === "ar" ? item.labelAr : item.labelEn;
 
           return (
             <Link
-              key={item.labelAr}
+              key={`${item.href}-${item.labelAr}`}
               href={item.href}
+              prefetch
               className={cn(
-                "flex min-h-[56px] flex-1 flex-col items-center justify-center gap-0.5 px-1 py-2 text-[10px] font-medium transition-colors",
-                active ? "text-warka-primary" : "text-warka-text-muted"
+                "flex min-h-[56px] flex-1 touch-manipulation flex-col items-center justify-center gap-0.5 px-1 py-2 text-[10px] font-medium transition-colors active:scale-[0.98]",
+                active ? "text-warka-primary" : "text-warka-text-secondary"
               )}
             >
               <Icon className="h-5 w-5" />

@@ -9,6 +9,7 @@ import {
   parseLocalSessionToken,
 } from "@/lib/auth/local-session";
 import { adminExists } from "@/lib/setup/admin-exists";
+import { isSafeRedirectPath } from "@/lib/auth/post-login-redirect";
 
 const intlMiddleware = createIntlMiddleware(routing);
 
@@ -18,6 +19,7 @@ const ROLE_PATHS: Record<string, string> = {
   employee: "/employee",
   representative: "/representative",
   student: "/student",
+  embroidery: "/embroidery",
 };
 
 function stripLocale(pathname: string): { locale: string; path: string } {
@@ -50,6 +52,7 @@ function isRoleAllowedForPath(path: string, role: string): boolean {
   if (path.startsWith("/employee")) return role === "employee";
   if (path.startsWith("/representative")) return role === "representative";
   if (path.startsWith("/student")) return role === "student";
+  if (path.startsWith("/embroidery")) return role === "embroidery" || role === "admin";
   return true;
 }
 
@@ -77,6 +80,7 @@ export async function proxy(request: NextRequest) {
     path.startsWith("/employee") ||
     path.startsWith("/representative") ||
     path.startsWith("/student") ||
+    path.startsWith("/embroidery") ||
     path.startsWith("/checkout") ||
     path.startsWith("/notifications");
 
@@ -94,6 +98,10 @@ export async function proxy(request: NextRequest) {
     }
 
     if (role && isAuthPath) {
+      const redirectParam = request.nextUrl.searchParams.get("redirect");
+      if (isSafeRedirectPath(redirectParam)) {
+        return NextResponse.redirect(new URL(redirectParam, request.url));
+      }
       const dest = ROLE_PATHS[role] ?? "/admin";
       return NextResponse.redirect(new URL(`/${locale}${dest}`, request.url));
     }
@@ -169,6 +177,10 @@ export async function proxy(request: NextRequest) {
     }
 
     if (isAuthPath) {
+      const redirectParam = request.nextUrl.searchParams.get("redirect");
+      if (isSafeRedirectPath(redirectParam)) {
+        return NextResponse.redirect(new URL(redirectParam, request.url));
+      }
       const dest = ROLE_PATHS[profile.role] ?? "/student";
       return NextResponse.redirect(new URL(`/${locale}${dest}`, request.url));
     }

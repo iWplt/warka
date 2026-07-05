@@ -44,7 +44,8 @@ export async function uploadBuffer(
     bucket === "designs" ||
     bucket === "qr-codes" ||
     bucket === "templates" ||
-    bucket === "product-images";
+    bucket === "product-images" ||
+    bucket === "fonts";
   return { path, publicUrl: isPublic ? data.publicUrl : null };
 }
 

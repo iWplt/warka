@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getOrderById } from "@/server/actions/orders";
+import { getProductionPhotosForOrder } from "@/server/actions/production-photos";
 import { getTemplates } from "@/server/actions/design";
 import { OrderDetailView } from "@/components/features/orders/order-detail-view";
 import { OrderDetailHeader } from "@/components/features/orders/order-detail-header";
@@ -15,6 +16,8 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
 
   if (!data) notFound();
 
+  const productionPhotos = await getProductionPhotosForOrder(id);
+
   let designTemplate = null;
   if (data.design?.template_id) {
     const templates = await getTemplates();
@@ -27,6 +30,8 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
       <OrderDetailView
         data={data}
         canManage
+        canUploadProductionPhotos
+        productionPhotos={productionPhotos}
         designTemplate={designTemplate}
       />
     </div>

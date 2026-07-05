@@ -70,7 +70,7 @@ export function BatchTrackingView({
       <div className="overflow-x-auto rounded-2xl border border-glass-border glass">
         <table className="w-full min-w-[760px] text-sm">
           <thead>
-            <tr className="border-b border-glass-border bg-white/5">
+            <tr className="border-b border-glass-border bg-foreground/5">
               <th className="px-4 py-3 text-start">{t("student")}</th>
               <th className="px-4 py-3 text-start">{t("payment")}</th>
               <th className="px-4 py-3 text-start">{t("design")}</th>

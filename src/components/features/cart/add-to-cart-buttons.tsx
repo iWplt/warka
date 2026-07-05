@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { ShoppingBag, Zap } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ShoppingBag, Zap, Check } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/routing";
 import { toast } from "sonner";
@@ -15,15 +15,27 @@ import { cn } from "@/lib/utils";
 type AddToCartButtonsProps = {
   item: AddCartItemInput;
   className?: string;
+  requiresSize?: boolean;
+  selectedSize?: string;
+  customMeasurements?: string;
+  sizeIsComplete?: boolean;
 };
 
-export function AddToCartButtons({ item, className }: AddToCartButtonsProps) {
+export function AddToCartButtons({
+  item,
+  className,
+  requiresSize = false,
+  selectedSize = "",
+  customMeasurements = "",
+  sizeIsComplete,
+}: AddToCartButtonsProps) {
   const t = useTranslations("cart");
   const locale = useLocale();
   const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
   const reducedMotion = useReducedMotion();
   const [adding, setAdding] = useState(false);
+  const [addedFlash, setAddedFlash] = useState(false);
 
   const tapProps = reducedMotion
     ? {}
@@ -33,10 +45,23 @@ export function AddToCartButtons({ item, className }: AddToCartButtonsProps) {
       };
 
   const handleAdd = (thenCheckout: boolean) => {
+    const complete = sizeIsComplete ?? Boolean(selectedSize.trim() || customMeasurements.trim());
+    if (requiresSize && !complete) {
+      toast.error(
+        locale === "ar"
+          ? "يرجى اختيار المقاس أو إدخال قياساتك"
+          : "Please select a size or enter your measurements"
+      );
+      return;
+    }
     setAdding(true);
     try {
       addItem(item);
       dispatchCartPulse();
+      if (!thenCheckout) {
+        setAddedFlash(true);
+        window.setTimeout(() => setAddedFlash(false), 1500);
+      }
       if (thenCheckout) {
         router.push("/checkout?from=cart");
         return;
@@ -60,10 +85,38 @@ export function AddToCartButtons({ item, className }: AddToCartButtonsProps) {
           disabled={adding}
           onClick={() => handleAdd(false)}
           {...tapProps}
-          className="inline-flex items-center justify-center gap-2 rounded-[10px] border-2 border-warka-primary bg-white py-3.5 text-sm font-semibold text-warka-primary transition-all hover:bg-warka-primary/5 disabled:opacity-60"
+          className={cn(
+            "inline-flex items-center justify-center gap-2 rounded-[10px] border-2 py-3.5 text-sm font-semibold transition-all disabled:opacity-60",
+            addedFlash
+              ? "border-[#4CAF50] bg-[#4CAF50] text-white"
+              : "border-warka-primary bg-card text-warka-primary hover:bg-warka-primary/10"
+          )}
         >
-          <ShoppingBag className="size-4" />
-          {t("addToCart")}
+          <AnimatePresence mode="wait">
+            {addedFlash ? (
+              <motion.span
+                key="done"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                className="inline-flex items-center gap-2"
+              >
+                <Check className="size-4" />
+                {locale === "ar" ? "✓ تمت الإضافة" : "✓ Added"}
+              </motion.span>
+            ) : (
+              <motion.span
+                key="add"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="inline-flex items-center gap-2"
+              >
+                <ShoppingBag className="size-4" />
+                {t("addToCart")}
+              </motion.span>
+            )}
+          </AnimatePresence>
         </motion.button>
         <motion.button
           type="button"

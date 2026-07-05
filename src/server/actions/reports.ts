@@ -1,11 +1,9 @@
 "use server";
 
 import ExcelJS from "exceljs";
-import QRCode from "qrcode";
-import { BRAND_PDF } from "@/lib/constants/brand-pdf";
-import { getWarkaLogoDataUrl } from "@/lib/brand/logo-data-url";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile, requireRole } from "@/lib/auth/guards";
+import { PRINTING_PIPELINE_STATUSES } from "@/lib/orders/status-flow";
 import { env } from "@/lib/env";
 
 export async function getDashboardStats() {
@@ -291,7 +289,7 @@ export async function exportSalesExcel() {
 export async function exportOrderInvoicePdf(orderId: string) {
   const profile = await getCurrentProfile();
   if (!profile) throw new Error("Unauthorized");
-  if (!["admin", "student", "representative"].includes(profile.role)) {
+  if (!["admin", "student", "representative", "employee"].includes(profile.role)) {
     throw new Error("Unauthorized");
   }
 
@@ -300,7 +298,7 @@ export async function exportOrderInvoicePdf(orderId: string) {
 
   const { data: order } = await supabase
     .from("orders")
-    .select("*, profiles!orders_student_id_fkey(full_name)")
+    .select("*, profiles!orders_student_id_fkey(full_name, phone, college, department)")
     .eq("id", orderId)
     .single();
 
@@ -312,80 +310,57 @@ export async function exportOrderInvoicePdf(orderId: string) {
   if (profile.role === "representative" && order.representative_id !== profile.id) {
     throw new Error("Unauthorized");
   }
+  if (
+    profile.role === "employee" &&
+    !PRINTING_PIPELINE_STATUSES.includes(order.status as (typeof PRINTING_PIPELINE_STATUSES)[number])
+  ) {
+    throw new Error("Unauthorized");
+  }
 
-  const { data: items } = await supabase
-    .from("order_items")
-    .select("*")
-    .eq("order_id", orderId);
+  const [{ data: items }, { data: payments }] = await Promise.all([
+    supabase.from("order_items").select("*").eq("order_id", orderId),
+    supabase.from("payments").select("*").eq("order_id", orderId).order("created_at"),
+  ]);
 
-  const { jsPDF } = await import("jspdf");
-  const autoTable = (await import("jspdf-autotable")).default;
-  const doc = new jsPDF();
+  const catalogIds = [...new Set((items ?? []).map((i) => i.catalog_product_id).filter(Boolean))];
+  const productNames: Record<string, { name_ar: string; name_en: string }> = {};
 
-  const student = order.profiles as { full_name: string } | null;
+  if (catalogIds.length > 0) {
+    const { data: products } = await supabase
+      .from("products")
+      .select("id, name_ar, name_en")
+      .in("id", catalogIds as string[]);
+
+    for (const product of products ?? []) {
+      productNames[product.id] = {
+        name_ar: product.name_ar,
+        name_en: product.name_en,
+      };
+    }
+  }
+
   const trackPath =
     profile.role === "student"
       ? `/student/orders/${orderId}`
       : `/admin/orders/${orderId}`;
-  const qrValue = `${env.NEXT_PUBLIC_APP_URL}${trackPath}`;
-  const qrDataUrl = await QRCode.toDataURL(qrValue, {
-    width: 96,
-    margin: 1,
-    color: { dark: "#3F4430", light: "#F2EDE3" },
+  const trackUrl = `${env.NEXT_PUBLIC_APP_URL}${trackPath}`;
+
+  const studentProfile = order.profiles as {
+    full_name: string;
+    phone: string | null;
+    college: string | null;
+    department: string | null;
+  } | null;
+
+  const { buildOrderInvoicePdf } = await import("@/lib/invoices/order-invoice-pdf");
+  const arrayBuffer = await buildOrderInvoicePdf({
+    order,
+    student: studentProfile,
+    items: items ?? [],
+    payments: payments ?? [],
+    productNames,
+    trackUrl,
   });
 
-  const logoDataUrl = getWarkaLogoDataUrl();
-
-  doc.setFillColor(...BRAND_PDF.cream);
-  doc.rect(0, 0, 210, 36, "F");
-  doc.addImage(logoDataUrl, "PNG", 14, 7, 48, 22);
-  doc.setFillColor(...BRAND_PDF.olive);
-  doc.rect(0, 36, 210, 1.2, "F");
-
-  doc.setTextColor(...BRAND_PDF.textDark);
-  doc.setFontSize(10);
-  doc.text("Invoice", 170, 18);
-  doc.setFontSize(8);
-  doc.setTextColor(...BRAND_PDF.darkOlive);
-  doc.text("Graduation Printing Store", 170, 24);
-
-  doc.setTextColor(...BRAND_PDF.textDark);
-  doc.setFontSize(10);
-  doc.text(`Order: ${order.order_number}`, 14, 46);
-  doc.text(`Student: ${student?.full_name ?? "—"}`, 14, 52);
-  doc.text(`Status: ${order.status}`, 14, 58);
-  doc.text(`Date: ${new Date(order.created_at).toLocaleDateString()}`, 14, 64);
-  doc.addImage(qrDataUrl, "PNG", 156, 42, 38, 38);
-  doc.setFontSize(8);
-  doc.setTextColor(...BRAND_PDF.darkOlive);
-  doc.text("Scan to track", 156, 84);
-
-  autoTable(doc, {
-    startY: 72,
-    head: [["Product", "Size", "Unit price (IQD)"]],
-    body: (items ?? []).map((item) => [
-      item.product_type,
-      item.size ?? "—",
-      String(item.unit_price),
-    ]),
-    headStyles: {
-      fillColor: [...BRAND_PDF.darkOlive],
-      textColor: [...BRAND_PDF.cream],
-      fontStyle: "bold",
-    },
-    alternateRowStyles: { fillColor: [...BRAND_PDF.warmCream] },
-    styles: {
-      textColor: [...BRAND_PDF.textDark],
-      lineColor: [...BRAND_PDF.sand],
-      lineWidth: 0.1,
-    },
-  });
-
-  const finalY = (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 96;
-  doc.setFontSize(12);
-  doc.setTextColor(...BRAND_PDF.olive);
-  doc.text(`Total: ${order.total} IQD`, 14, finalY + 14);
-
-  const arrayBuffer = doc.output("arraybuffer");
   return Buffer.from(arrayBuffer).toString("base64");
 }

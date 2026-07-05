@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
 
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-[transform,opacity,box-shadow,background-color] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold leading-snug transition-[transform,opacity,box-shadow,background-color] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
 
   {
 
@@ -50,7 +50,7 @@ const buttonVariants = cva(
 
         default: "h-10 min-h-[40px] px-4 py-2",
 
-        sm: "h-8 min-h-[32px] rounded-md px-3 text-xs",
+        sm: "h-8 min-h-[32px] rounded-md px-3 text-xs whitespace-nowrap",
 
         lg: "h-12 min-h-[48px] rounded-lg px-7 text-base",
 

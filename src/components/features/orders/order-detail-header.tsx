@@ -1,11 +1,8 @@
-"use client";
-
-import { useTranslations } from "next-intl";
+import { getTranslations, getLocale } from "next-intl/server";
 import { QrCodeDisplay } from "@/components/shared";
 import { OrderStatusBadge } from "@/components/shared";
 import { InvoiceDownloadButton } from "@/components/features/orders/invoice-download-button";
 import { formatIqd } from "@/lib/format/currency";
-import { useLocale } from "next-intl";
 import type { Order } from "@/types/database";
 
 type OrderDetailHeaderProps = {
@@ -15,15 +12,15 @@ type OrderDetailHeaderProps = {
   showInvoice?: boolean;
 };
 
-export function OrderDetailHeader({
+export async function OrderDetailHeader({
   order,
   appUrl,
   qrPath,
   showInvoice = false,
 }: OrderDetailHeaderProps) {
-  const t = useTranslations("orders");
-  const statusT = useTranslations("orderStatus");
-  const locale = useLocale();
+  const t = await getTranslations("orders");
+  const statusT = await getTranslations("orderStatus");
+  const locale = await getLocale();
   const qrValue = `${appUrl}${qrPath ?? `/admin/orders/${order.id}`}`;
 
   return (
@@ -33,6 +30,11 @@ export function OrderDetailHeader({
         <h1 className="text-h1 font-bold">{order.order_number}</h1>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <OrderStatusBadge status={order.status} label={statusT(order.status)} />
+          {order.student_modified_at && (
+            <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-300">
+              {locale === "ar" ? "معدّل من الطالب" : "Edited by student"}
+            </span>
+          )}
           <span className="text-sm text-muted-foreground">
             {new Date(order.created_at).toLocaleString(locale)}
           </span>

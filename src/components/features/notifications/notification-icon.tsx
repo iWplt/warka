@@ -1,5 +1,6 @@
 import {
   Bell,
+  Camera,
   CheckCircle,
   CreditCard,
   Edit,
@@ -23,6 +24,7 @@ const ICON_BY_TYPE: Record<NotificationType, LucideIcon> = {
   printing_started: Printer,
   ready_for_delivery: Truck,
   payment_received: CreditCard,
+  production_ready: Camera,
   general: Bell,
 };
 
