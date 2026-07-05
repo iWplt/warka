@@ -135,7 +135,7 @@ const styleSchema = z.object({
   preview_image_url: z.string().optional().nullable(),
 });
 
-export async function upsertProductStyle(input: z.infer<typeof styleSchema> & { id?: string }) {
+export async function upsertProductStyle(input: z.input<typeof styleSchema> & { id?: string }) {
   await requireRole(["admin"]);
   const data = styleSchema.parse(input);
   const supabase = await createClient();
@@ -173,7 +173,7 @@ const zoneSchema = z.object({
   is_active: z.boolean().default(true),
 });
 
-export async function upsertCustomizationZone(input: z.infer<typeof zoneSchema> & { id?: string }) {
+export async function upsertCustomizationZone(input: z.input<typeof zoneSchema> & { id?: string }) {
   await requireRole(["admin"]);
   const data = zoneSchema.parse(input);
   const supabase = await createClient();
@@ -205,7 +205,7 @@ const textLibrarySchema = z.object({
   is_active: z.boolean().default(true),
 });
 
-export async function upsertTextLibraryEntry(input: z.infer<typeof textLibrarySchema> & { id?: string }) {
+export async function upsertTextLibraryEntry(input: z.input<typeof textLibrarySchema> & { id?: string }) {
   await requireRole(["admin"]);
   const data = textLibrarySchema.parse(input);
   const supabase = await createClient();
@@ -232,7 +232,7 @@ const colorSchema = z.object({
   is_active: z.boolean().default(true),
 });
 
-export async function upsertEmbroideryColor(input: z.infer<typeof colorSchema> & { id?: string }) {
+export async function upsertEmbroideryColor(input: z.input<typeof colorSchema> & { id?: string }) {
   await requireRole(["admin"]);
   const data = colorSchema.parse(input);
   const supabase = await createClient();
@@ -285,7 +285,7 @@ const zoneOptionSchema = z.object({
 });
 
 export async function upsertZoneContentOption(
-  input: z.infer<typeof zoneOptionSchema> & { id?: string }
+  input: z.input<typeof zoneOptionSchema> & { id?: string }
 ) {
   await requireRole(["admin"]);
   const data = zoneOptionSchema.parse(input);
@@ -313,7 +313,7 @@ const sizeRuleSchema = z.object({
 });
 
 export async function upsertEmbroiderySizeRule(
-  input: z.infer<typeof sizeRuleSchema> & { id?: string }
+  input: z.input<typeof sizeRuleSchema> & { id?: string }
 ) {
   await requireRole(["admin"]);
   const data = sizeRuleSchema.parse(input);
@@ -345,7 +345,7 @@ const gownAdditionSchema = z.object({
 });
 
 export async function upsertGownAddition(
-  input: z.infer<typeof gownAdditionSchema> & { id?: string }
+  input: z.input<typeof gownAdditionSchema> & { id?: string }
 ) {
   await requireRole(["admin"]);
   const data = gownAdditionSchema.parse(input);

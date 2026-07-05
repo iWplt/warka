@@ -66,7 +66,12 @@ export function CartCheckoutWizard({ profile }: CartCheckoutWizardProps) {
       ? String(profile.graduation_year)
       : String(new Date().getFullYear()),
   });
-  const [deliveryData, setDeliveryData] = useState({
+  const [deliveryData, setDeliveryData] = useState<{
+    governorate: string;
+    area: string;
+    phone: string;
+    preferred_date: string;
+  }>({
     governorate: IRAQI_GOVERNORATES[0].en,
     area: "",
     phone: profile.phone ?? "",

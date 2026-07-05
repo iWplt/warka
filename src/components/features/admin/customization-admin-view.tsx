@@ -77,7 +77,7 @@ export function CustomizationAdminView({
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t("title")} subtitle={t("subtitle")} />
+      <PageHeader title={t("title")} description={t("subtitle")} />
 
       <div className="rounded-2xl border border-warka-primary/20 bg-warka-primary/5 p-4 sm:p-5">
         <h2 className="text-sm font-bold text-warka-text">{t("howTitle")}</h2>
@@ -251,6 +251,8 @@ function StylesPanel({
         style_name_en: draft.style_name_en,
         preview_image_url: draft.preview_image_url || undefined,
         sort_order: styles.length,
+        is_active: true,
+        is_batch_locked: false,
       });
       toast.success(t("saved"));
       setDraft({ style_key: "", style_name_ar: "", style_name_en: "", preview_image_url: null });
@@ -333,7 +335,13 @@ function ZonesPanel({
     if (!draft.zone_label_ar.trim()) return toast.error(t("nameRequired"));
     setSaving(true);
     try {
-      await upsertCustomizationZone({ product_id: productId, ...draft, is_required: false });
+      await upsertCustomizationZone({
+        product_id: productId,
+        ...draft,
+        is_required: false,
+        is_active: true,
+        allows_multiple: false,
+      });
       toast.success(t("saved"));
       onRefresh();
     } catch (e) {
@@ -888,6 +896,8 @@ function StylePreviewUpload({
         style_name_en: String(style.style_name_en ?? ""),
         preview_image_url: url ?? undefined,
         sort_order: Number(style.sort_order ?? 0),
+        is_active: style.is_active !== false,
+        is_batch_locked: Boolean(style.is_batch_locked),
       });
       toast.success("saved");
       onSaved();

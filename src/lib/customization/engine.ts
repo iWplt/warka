@@ -4,6 +4,7 @@ import type {
   CustomizationZone,
   EmbroideryColor,
   EmbroiderySizeRule,
+  ProductCustomizationProfile,
   ProductStyle,
   ZoneColorOption,
   ZoneSelection,

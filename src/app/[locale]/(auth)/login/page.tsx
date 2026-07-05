@@ -6,12 +6,17 @@ import { LoginForm } from "@/components/features/auth/login-form";
 import { isLocalAuthEnabled } from "@/lib/auth/local-session";
 import { getSetupStatus } from "@/server/actions/setup";
 
+import { routing, type Locale } from "@/i18n/routing";
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
-  const { locale } = await params;
+  const { locale: localeParam } = await params;
+  const locale = routing.locales.includes(localeParam as Locale)
+    ? (localeParam as Locale)
+    : routing.defaultLocale;
   const t = await getTranslations({ locale, namespace: "auth" });
   return {
     title: t("loginSeoTitle"),

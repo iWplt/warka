@@ -13,6 +13,7 @@ import { getBatchDefaultsSettings, getProductFieldPermissions } from "@/server/a
 import {
   buildBatchLockedSnapshot,
   buildStudentFieldsSnapshot,
+  compactStringRecord,
 } from "@/lib/orders/product-field-permissions";
 import { suggestSizeFromGuide } from "@/lib/settings/size-guide";
 import { getSizeGuideEntries } from "@/server/actions/settings";
@@ -338,16 +339,17 @@ export async function updateBatchSettingsAction(input: z.infer<typeof batchSetti
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase not configured");
 
+  const { size_policies: sizePolicies, ...restSettings } = data.settings;
   const mergedSettings: BatchSettings = {
     ...((batch.settings ?? {}) as BatchSettings),
-    ...data.settings,
+    ...restSettings,
   };
 
   if ("size_policies" in data.settings) {
-    if (data.settings.size_policies == null) {
+    if (sizePolicies == null) {
       delete mergedSettings.size_policies;
     } else {
-      mergedSettings.size_policies = data.settings.size_policies;
+      mergedSettings.size_policies = sizePolicies;
     }
   }
 
@@ -848,8 +850,8 @@ export async function createGroupOrder(
         fabric_type: (locked.fabric_type as string) ?? student.fabric_type ?? undefined,
         font_family: (studentSnap.font_family as string) ?? student.font_family ?? undefined,
         custom_text: (studentSnap.custom_text as string) ?? student.custom_text ?? undefined,
-        batch_locked_fields: locked,
-        student_fields: studentSnap,
+        batch_locked_fields: compactStringRecord(locked),
+        student_fields: compactStringRecord(studentSnap),
         unit_price: priceMap[productType],
       };
     });

@@ -173,8 +173,7 @@ export async function uploadBundleImage(bundleId: string, dataUrl: string) {
     supabase,
     "products",
     `bundles/${bundleId}/${Date.now()}.webp`,
-    dataUrl,
-    { validation: "product" }
+    dataUrl
   );
 
   const { error } = await supabase

@@ -88,6 +88,14 @@ export const DEFAULT_PRODUCT_FIELD_PERMISSIONS: Record<ProductType, ProductField
 
 export type OrderItemFieldSnapshot = Record<string, string | null | undefined>;
 
+export function compactStringRecord(snapshot: OrderItemFieldSnapshot): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(snapshot).flatMap(([key, value]) =>
+      value != null && value !== "" ? [[key, value]] : []
+    )
+  );
+}
+
 const COLUMN_TO_ITEM: Record<string, (item: Record<string, unknown>) => unknown> = {
   sash_color: (i) => i.sash_color,
   fabric_type: (i) => i.fabric_type,

@@ -335,10 +335,11 @@ function ZoneEditor({
               />
               {zone.content_type === "name_major" && displayText && (
                 <EmbroideryLivePreview
-                  displayName={displayText}
+                  baseName={displayText}
+                  diacriticsMode="auto"
                   fontFamily={fontFamily}
-                  threadColor={resolvedColor ?? "#C9A227"}
                   locale={locale}
+                  embedded
                 />
               )}
             </>

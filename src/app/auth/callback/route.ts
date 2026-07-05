@@ -9,6 +9,7 @@ const ROLE_PATHS: Record<UserRole, string> = {
   employee: "/employee",
   representative: "/representative",
   student: "/student",
+  embroidery: "/embroidery",
 };
 
 export async function GET(request: Request) {

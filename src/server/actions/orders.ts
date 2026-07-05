@@ -31,6 +31,7 @@ import {
   assertStudentFieldUpdatesAllowed,
   buildBatchLockedSnapshot,
   buildStudentFieldsSnapshot,
+  compactStringRecord,
   DEFAULT_PRODUCT_FIELD_PERMISSIONS,
   type ProductFieldPermissions,
 } from "@/lib/orders/product-field-permissions";
@@ -285,7 +286,16 @@ export async function getOrderById(orderId: string) {
     payments: payments ?? [],
     student,
     itemMedia,
-    editLogs: editLogs ?? [],
+    editLogs: (editLogs ?? []).map((row) => {
+      const profiles = row.profiles as { full_name: string } | { full_name: string }[] | null;
+      return {
+        id: row.id as string,
+        action: row.action as string,
+        created_at: row.created_at as string,
+        metadata: (row.metadata as Record<string, unknown> | null) ?? null,
+        profiles: Array.isArray(profiles) ? profiles[0] ?? null : profiles,
+      };
+    }),
   };
 }
 
@@ -321,8 +331,11 @@ export async function createOrder(input: z.infer<typeof createOrderSchema>) {
           cap_type: (locked.cap_type as string) ?? item.cap_type,
           font_family: (studentSnap.font_family as string) ?? item.font_family,
           custom_text: (studentSnap.custom_text as string) ?? item.custom_text,
-          batch_locked_fields: locked,
-          student_fields: { ...studentSnap, ...(item.student_fields ?? {}) },
+          batch_locked_fields: compactStringRecord(locked),
+          student_fields: compactStringRecord({
+            ...studentSnap,
+            ...(item.student_fields ?? {}),
+          }),
         };
       });
     }

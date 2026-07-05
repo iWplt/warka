@@ -14,6 +14,7 @@ type DecorationUploadFieldProps = {
   locale: "ar" | "en";
   className?: string;
   compact?: boolean;
+  label?: string;
 };
 
 export function DecorationUploadField({
@@ -22,6 +23,7 @@ export function DecorationUploadField({
   locale,
   className,
   compact = false,
+  label,
 }: DecorationUploadFieldProps) {
   const isAr = locale === "ar";
   const inputRef = useRef<HTMLInputElement>(null);
@@ -49,7 +51,7 @@ export function DecorationUploadField({
     <div className={cn("space-y-3", className)}>
       <div>
         <p className="text-sm font-semibold text-warka-text">
-          {isAr ? "مرجع الزخرفة (اختياري)" : "Decoration reference (optional)"}
+          {label ?? (isAr ? "مرجع الزخرفة (اختياري)" : "Decoration reference (optional)")}
         </p>
         <p className="mt-1 text-xs text-warka-text-muted">
           {isAr
