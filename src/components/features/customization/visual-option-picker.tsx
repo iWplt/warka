@@ -86,7 +86,7 @@ export function VisualOptionPicker({
                   e.stopPropagation();
                   setPreview(opt);
                 }}
-                className="absolute end-1.5 top-1.5 flex size-7 items-center justify-center rounded-full bg-card/90 text-warka-primary shadow-sm opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+                className="absolute end-1.5 top-1.5 flex size-8 touch-manipulation items-center justify-center rounded-full bg-card/95 text-warka-primary shadow-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
                 aria-label={isAr ? "معاينة" : "Preview"}
               >
                 <Eye className="size-3.5" />

@@ -6,9 +6,9 @@ import { ShoppingBag } from "lucide-react";
 import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 
-const INITIAL_DELAY_MS = 2_500;
-const ROTATE_INTERVAL_MS = 45_000;
-const VISIBLE_DURATION_MS = 6_000;
+const INITIAL_DELAY_MS = 14_000;
+const ROTATE_INTERVAL_MS = 55_000;
+const VISIBLE_DURATION_MS = 5_000;
 
 type SocialProofMessage = {
   ar: string;
@@ -71,21 +71,21 @@ export function SocialProofToast() {
       role="status"
       aria-live="polite"
       className={cn(
-        "social-proof-toast animate-fade-in fixed inset-x-4 z-[90] mx-auto max-w-md font-arabic",
-        "bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))]",
-        "md:inset-x-auto md:bottom-6 md:start-4 md:end-auto md:max-w-sm"
+        "social-proof-toast animate-fade-in fixed inset-x-3 z-[55] mx-auto max-w-sm font-arabic",
+        "bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))]",
+        "md:inset-x-auto md:bottom-5 md:start-4 md:end-auto"
       )}
     >
-      <div className="flex items-start gap-3 p-3.5 sm:p-4">
-        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warka-primary/25">
+      <div className="flex items-center gap-2.5 p-3">
+        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-warka-primary/20">
           <span className="social-proof-live-dot" aria-hidden />
-          <ShoppingBag className="h-4 w-4 text-warka-primary" aria-hidden />
+          <ShoppingBag className="h-3.5 w-3.5 text-warka-primary" aria-hidden />
         </div>
         <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-warka-primary sm:text-xs">
-            {isAr ? "طلب مباشر الآن" : "Live order"}
+          <p className="text-[10px] font-bold uppercase tracking-wide text-warka-primary">
+            {isAr ? "طلب مباشر" : "Live order"}
           </p>
-          <p className="mt-1 text-sm font-semibold leading-snug text-warka-text sm:text-[0.9375rem]">
+          <p className="mt-0.5 line-clamp-2 text-xs font-medium leading-snug text-warka-text">
             {message}
           </p>
         </div>

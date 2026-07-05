@@ -31,12 +31,15 @@ import { findFontByFamily, fontDisplayName } from "@/lib/constants/arabic-font-p
 import { NameDiacriticsControls } from "@/components/features/embroidery/name-diacritics-controls";
 import { EmbroideryLivePreview } from "@/components/features/embroidery/embroidery-live-preview";
 import type { ProductCustomizationProfile } from "@/types/customization";
-import { ProductCustomizationEngine } from "@/components/features/customization/product-customization-engine";
-import { CustomizationExtras } from "@/components/features/customization/customization-extras";
+import {
+  CustomizationStudioModal,
+  CustomizationStudioTrigger,
+} from "@/components/features/customization/customization-studio-modal";
 import { CustomizationVisualPreview } from "@/components/features/customization/customization-visual-preview";
 import {
   primaryNameFromPayload,
   profileHasEngine,
+  zonesForStyle,
 } from "@/lib/customization/engine";
 import type { CustomizationPayload } from "@/types/customization";
 import { resolveEmbroideryDisplayName, type DiacriticsMode } from "@/lib/arabic/harakat";
@@ -90,6 +93,7 @@ export function ProductDetailView({
   );
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [studioOpen, setStudioOpen] = useState(false);
 
   const needsSize = productNeedsSizeFromGuide(sizeGuideEntries, product.product_type);
   const sizeIsComplete = Boolean(selectedSize.trim() || customMeasurements.trim());
@@ -143,6 +147,18 @@ export function ProductDetailView({
     ? engineName || resolveEmbroideryDisplayName(studentName, diacriticsMode)
     : resolveEmbroideryDisplayName(studentName, diacriticsMode);
   const activeStyleKey = customizationProfile?.styles.find((s) => s.id === customization.style_id)?.style_key;
+  const activeStyleLabel = customizationProfile?.styles.find((s) => s.id === customization.style_id);
+  const engineZones = useMemo(
+    () =>
+      customizationProfile
+        ? zonesForStyle(customizationProfile.zones, customization.style_id ?? null)
+        : [],
+    [customizationProfile, customization.style_id]
+  );
+  const zonesFilled = customization.zones.filter(
+    (z) => z.text_value?.trim() || z.option_id || z.image_data_url
+  ).length;
+  const selectedFontMeta = selectedFont ? findFontByFamily(fonts, selectedFont) : null;
 
   const cartItem = {
     catalogProductId: product.id,
@@ -184,19 +200,34 @@ export function ProductDetailView({
   return (
     <div className="mx-auto max-w-7xl px-3 py-6 sm:px-6 sm:py-10 lg:px-8">
       <div className="grid gap-10 lg:grid-cols-2">
-        <div className="space-y-4">
+        <div className={cn("space-y-4", usesEngine && "max-lg:space-y-3")}>
           {usesEngine && customizationProfile ? (
-            <CustomizationVisualPreview
-              baseImage={activeImage}
-              productType={product.product_type}
-              profile={customizationProfile}
-              customization={customization}
-              sashColorHex={selectedVariant?.hex ?? null}
-              fontFamily={selectedFont ?? "Cairo, sans-serif"}
-              locale={locale === "ar" ? "ar" : "en"}
-            />
+            <>
+              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-warka-bg shadow-card lg:hidden">
+                <CustomizationVisualPreview
+                  baseImage={activeImage}
+                  productType={product.product_type}
+                  profile={customizationProfile}
+                  customization={customization}
+                  sashColorHex={selectedVariant?.hex ?? null}
+                  fontFamily={selectedFont ?? "Cairo, sans-serif"}
+                  locale={locale === "ar" ? "ar" : "en"}
+                />
+              </div>
+              <div className="hidden lg:block lg:sticky lg:top-20">
+                <CustomizationVisualPreview
+                  baseImage={activeImage}
+                  productType={product.product_type}
+                  profile={customizationProfile}
+                  customization={customization}
+                  sashColorHex={selectedVariant?.hex ?? null}
+                  fontFamily={selectedFont ?? "Cairo, sans-serif"}
+                  locale={locale === "ar" ? "ar" : "en"}
+                />
+              </div>
+            </>
           ) : (
-          <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-warka-bg shadow-card">
+          <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-warka-bg shadow-card lg:sticky lg:top-20">
             <Image
               src={activeImage}
               alt={name}
@@ -296,30 +327,39 @@ export function ProductDetailView({
 
           {usesEngine && customizationProfile ? (
             <>
-              <ProductCustomizationEngine
-                profile={customizationProfile}
+              <CustomizationStudioTrigger
                 locale={locale === "ar" ? "ar" : "en"}
-                value={customization}
-                onChange={setCustomization}
-                sashColorHex={selectedVariant?.hex ?? null}
-                fontFamily={selectedFont ?? "Cairo, sans-serif"}
-                isBatchStudent={false}
+                onClick={() => setStudioOpen(true)}
+                styleLabel={
+                  activeStyleLabel
+                    ? locale === "ar"
+                      ? activeStyleLabel.style_name_ar
+                      : activeStyleLabel.style_name_en ?? activeStyleLabel.style_name_ar
+                    : null
+                }
+                fontLabel={
+                  selectedFontMeta
+                    ? fontDisplayName(selectedFontMeta, locale === "ar" ? "ar" : "en")
+                    : null
+                }
+                zonesFilled={zonesFilled}
+                zonesTotal={engineZones.length}
+                thumbnailUrl={activeImage}
               />
-              {fonts.length > 0 && (
-                <WarkaCard className="space-y-2 p-4 sm:p-6">
-                  <FontPickerTrigger
-                    fonts={fonts}
-                    previewText={displayName}
-                    selectedFontFamily={selectedFont}
-                    onConfirm={setSelectedFont}
-                    locale={locale === "ar" ? "ar" : "en"}
-                    required
-                  />
-                </WarkaCard>
-              )}
-              <CustomizationExtras
+              <CustomizationStudioModal
+                open={studioOpen}
+                onOpenChange={setStudioOpen}
                 locale={locale === "ar" ? "ar" : "en"}
                 productType={product.product_type}
+                baseImage={activeImage}
+                profile={customizationProfile}
+                customization={customization}
+                onCustomizationChange={setCustomization}
+                sashColorHex={selectedVariant?.hex ?? null}
+                fonts={fonts}
+                selectedFont={selectedFont}
+                onFontChange={setSelectedFont}
+                displayName={displayName}
                 decorationUrl={decorationImageDataUrl}
                 onDecorationChange={setDecorationImageDataUrl}
                 capSideUrl={capSideImage}

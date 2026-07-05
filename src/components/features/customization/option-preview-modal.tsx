@@ -31,12 +31,16 @@ export function OptionPreviewModal({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <Dialog.Overlay className="fixed inset-0 z-[85] bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <Dialog.Content
           className={cn(
-            "fixed top-1/2 left-1/2 z-[71] w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 -translate-y-1/2",
-            "rounded-2xl border border-warka-border bg-card shadow-tint-lg outline-none",
-            "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+            "fixed z-[86] flex flex-col overflow-hidden border border-warka-border bg-card shadow-tint-lg outline-none",
+            "inset-x-0 bottom-0 top-[12dvh] max-h-none w-full max-w-none rounded-t-2xl rounded-b-none",
+            "sm:inset-auto sm:top-1/2 sm:left-1/2 sm:max-h-[min(92vh,640px)] sm:w-[calc(100%-1.5rem)] sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl",
+            "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+            "data-[state=closed]:slide-out-to-bottom-[8%] data-[state=open]:slide-in-from-bottom-[8%]",
+            "sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=open]:slide-in-from-bottom-0",
+            "sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95"
           )}
         >
           <Dialog.Close

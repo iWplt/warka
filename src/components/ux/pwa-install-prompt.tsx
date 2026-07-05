@@ -13,7 +13,12 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-export function PWAInstallPrompt() {
+type PWAInstallPromptProps = {
+  /** When true, wait before showing so it does not compete with hero CTAs */
+  delayOnHomepage?: boolean;
+};
+
+export function PWAInstallPrompt({ delayOnHomepage = false }: PWAInstallPromptProps) {
   const locale = useLocale();
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
@@ -26,18 +31,29 @@ export function PWAInstallPrompt() {
       /* ignore */
     }
 
+    let showTimer: ReturnType<typeof setTimeout> | undefined;
+
     const handleBeforeInstall = (event: Event) => {
       event.preventDefault();
-      setDeferredPrompt(event as BeforeInstallPromptEvent);
-      setVisible(true);
+      const prompt = event as BeforeInstallPromptEvent;
+      const reveal = () => {
+        setDeferredPrompt(prompt);
+        setVisible(true);
+      };
+      if (delayOnHomepage) {
+        showTimer = setTimeout(reveal, 18_000);
+      } else {
+        reveal();
+      }
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+      if (showTimer) clearTimeout(showTimer);
     };
-  }, []);
+  }, [delayOnHomepage]);
 
   const dismiss = useCallback(() => {
     setVisible(false);

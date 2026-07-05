@@ -52,8 +52,10 @@ import { resolveEmbroideryDisplayName, type DiacriticsMode } from "@/lib/arabic/
 import { validateImageFile } from "@/lib/upload/validate";
 import { useCartStore, type CartLineItem } from "@/stores/cart-store";
 import { getProductCustomizationProfile } from "@/server/actions/customization";
-import { ProductCustomizationEngine } from "@/components/features/customization/product-customization-engine";
-import { CustomizationExtras } from "@/components/features/customization/customization-extras";
+import {
+  CustomizationStudioModal,
+  CustomizationStudioTrigger,
+} from "@/components/features/customization/customization-studio-modal";
 import { CustomizationVisualPreview } from "@/components/features/customization/customization-visual-preview";
 import {
   primaryNameFromPayload,
@@ -952,12 +954,18 @@ function EmbroideryStep({
 }) {
   const isAr = locale === "ar";
   const usesEngine = profileHasEngine(profile);
+  const [studioOpen, setStudioOpen] = useState(false);
   const engineValue: CustomizationPayload = customization ?? {
     style_id: profile?.styles[0]?.id ?? null,
     zones: [],
   };
-  const hasNameZone = profile?.zones.some((z) => z.content_type === "name_major") ?? false;
   const activeStyleKey = profile?.styles.find((s) => s.id === engineValue.style_id)?.style_key;
+  const activeStyleLabel = profile?.styles.find((s) => s.id === engineValue.style_id);
+  const engineZones = profile ? zonesForStyle(profile.zones, engineValue.style_id ?? null) : [];
+  const zonesFilled = engineValue.zones.filter(
+    (z) => z.text_value?.trim() || z.option_id || z.image_data_url
+  ).length;
+  const selectedFontMeta = line.fontFamily ? findFontByFamily(fonts, line.fontFamily) : null;
   const decorationUrl = line.decorationImageDataUrl ?? draft.embroideryImageDataUrl;
 
   const syncDecoration = (dataUrl: string | null) => {
@@ -972,16 +980,6 @@ function EmbroideryStep({
           <LineTabs items={items} activeLineId={activeLineId} onSelect={onSelectLine} locale={locale} />
         </WarkaCard>
 
-        <ProductCustomizationEngine
-          profile={profile}
-          locale={locale}
-          value={engineValue}
-          onChange={onCustomizationChange}
-          sashColorHex={sashColorHex}
-          fontFamily={line.fontFamily || "Cairo, sans-serif"}
-          isBatchStudent={isBatchStudent}
-        />
-
         <CustomizationVisualPreview
           baseImage={line.image}
           productType={line.productType}
@@ -990,11 +988,39 @@ function EmbroideryStep({
           sashColorHex={sashColorHex ?? line.colorHex}
           fontFamily={line.fontFamily || "Cairo, sans-serif"}
           locale={locale}
+          className="max-lg:max-h-[min(52vh,420px)]"
         />
 
-        <CustomizationExtras
+        <CustomizationStudioTrigger
+          locale={locale}
+          onClick={() => setStudioOpen(true)}
+          styleLabel={
+            activeStyleLabel
+              ? isAr
+                ? activeStyleLabel.style_name_ar
+                : activeStyleLabel.style_name_en ?? activeStyleLabel.style_name_ar
+              : null
+          }
+          fontLabel={selectedFontMeta ? fontDisplayName(selectedFontMeta, locale) : null}
+          zonesFilled={zonesFilled}
+          zonesTotal={engineZones.length}
+          thumbnailUrl={line.image}
+        />
+
+        <CustomizationStudioModal
+          open={studioOpen}
+          onOpenChange={setStudioOpen}
           locale={locale}
           productType={line.productType}
+          baseImage={line.image}
+          profile={profile}
+          customization={engineValue}
+          onCustomizationChange={onCustomizationChange}
+          sashColorHex={sashColorHex ?? line.colorHex}
+          fonts={fonts}
+          selectedFont={line.fontFamily || null}
+          onFontChange={(fontFamilyCss) => onLinePatch({ fontFamily: fontFamilyCss })}
+          displayName={resolveEmbroideryDisplayName(line.customText, line.diacriticsMode ?? "auto")}
           decorationUrl={decorationUrl}
           onDecorationChange={syncDecoration}
           capSideUrl={draft.capSideImageDataUrl}
@@ -1004,20 +1030,8 @@ function EmbroideryStep({
           showCustomReference={activeStyleKey === "custom_image"}
           customReferenceUrl={draft.embroideryImageDataUrl}
           onCustomReferenceChange={syncDecoration}
+          isBatchStudent={isBatchStudent}
         />
-
-        {hasNameZone && fonts.length > 0 && (
-          <WarkaCard className="space-y-2">
-            <FontPickerTrigger
-              fonts={fonts}
-              previewText={resolveEmbroideryDisplayName(line.customText, line.diacriticsMode ?? "auto")}
-              selectedFontFamily={line.fontFamily || null}
-              onConfirm={(fontFamilyCss) => onLinePatch({ fontFamily: fontFamilyCss })}
-              locale={locale}
-              required
-            />
-          </WarkaCard>
-        )}
       </div>
     );
   }
