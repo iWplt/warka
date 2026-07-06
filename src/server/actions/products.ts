@@ -18,7 +18,7 @@ import {
   buildColorVariantsFromLegacy,
   toProductDetailDto,
 } from "@/lib/products/variants";
-import { dedupeCatalogProducts, filterProductsForCategory } from "@/lib/products/dedupe-catalog";
+import { sortProductsForDisplay, filterProductsForCategory } from "@/lib/products/dedupe-catalog";
 import { parseProduct } from "@/lib/products/parse-product";
 import type { Product, ProductCategory, ProductColorVariant, ProductFabricOption, ProductType } from "@/types/database";
 
@@ -88,7 +88,7 @@ export async function getProductsCatalog(): Promise<Product[]> {
 
   const rows = (data ?? []).map((row) => parseProduct(row as Record<string, unknown>));
   const catalog = rows.length > 0 ? rows : buildFallbackCatalogProducts();
-  return dedupeCatalogProducts(catalog);
+  return sortProductsForDisplay(catalog);
 }
 
 function buildFallbackCatalogProducts(): Product[] {
@@ -113,6 +113,7 @@ function buildFallbackCatalogProducts(): Product[] {
       fabric_options: [],
       features: [],
       sort_order: cat.sortOrder,
+      is_featured: cat.sortOrder === 0,
       active: true,
       created_at: now,
       updated_at: now,
@@ -227,6 +228,7 @@ export async function getProductByType(productType: string) {
     fabric_options: product?.fabric_options ?? [],
     features: product?.features ?? [],
     sort_order: product?.sort_order ?? 0,
+    is_featured: product?.is_featured ?? false,
     active: product?.active ?? true,
     created_at: product?.created_at ?? new Date().toISOString(),
     updated_at: product?.updated_at ?? new Date().toISOString(),
@@ -245,6 +247,7 @@ const productInputSchema = z.object({
   description_en: z.string().optional(),
   price: z.coerce.number().min(0),
   active: z.boolean(),
+  is_featured: z.boolean().default(false),
   sort_order: z.coerce.number().int().min(0).default(0),
   colors: z.array(z.string()).optional(),
   color_variants: z.array(z.any()).optional(),
@@ -270,6 +273,7 @@ export async function createProduct(input: z.infer<typeof productInputSchema>) {
       description_en: data.description_en ?? null,
       price: data.price,
       active: data.active,
+      is_featured: data.is_featured,
       sort_order: data.sort_order,
       colors: data.colors ?? ["أسود", "بيج", "زيتوني", "كريمي"],
       color_variants: data.color_variants ?? [],
@@ -283,6 +287,7 @@ export async function createProduct(input: z.infer<typeof productInputSchema>) {
   if (error) throw new Error(error.message);
   revalidatePath("/admin/products");
   revalidatePath("/products");
+  revalidatePath("/products", "layout");
   return row.id as string;
 }
 
@@ -308,6 +313,7 @@ export async function updateProduct(input: z.infer<typeof updateProductSchema>) 
       description_en: data.description_en ?? null,
       price: data.price,
       active: data.active,
+      is_featured: data.is_featured,
       sort_order: data.sort_order,
       colors: data.colors ?? ["أسود", "بيج", "زيتوني", "كريمي"],
       color_variants: data.color_variants ?? [],
@@ -320,6 +326,91 @@ export async function updateProduct(input: z.infer<typeof updateProductSchema>) 
   if (error) throw new Error(error.message);
   revalidatePath("/admin/products");
   revalidatePath("/products");
+  revalidatePath("/products", "layout");
+}
+
+const moveProductSchema = z.object({
+  productId: z.string().uuid(),
+  direction: z.enum(["up", "down"]),
+});
+
+export async function moveProductSortOrder(input: z.infer<typeof moveProductSchema>) {
+  await requireRole(["admin"]);
+  const { productId, direction } = moveProductSchema.parse(input);
+  const supabase = await createClient();
+  if (!supabase) throw new Error("Supabase not configured");
+
+  const { data: productRow, error: productError } = await supabase
+    .from("products")
+    .select("id, category_id, product_type, sort_order")
+    .eq("id", productId)
+    .maybeSingle();
+
+  if (productError || !productRow) throw new Error("Product not found");
+
+  const categoryId = productRow.category_id as string | null;
+  const productType = productRow.product_type as string;
+
+  let siblingsQuery = supabase
+    .from("products")
+    .select("id, sort_order, created_at")
+    .order("sort_order")
+    .order("created_at");
+
+  if (categoryId) {
+    siblingsQuery = siblingsQuery.eq("category_id", categoryId);
+  } else {
+    siblingsQuery = siblingsQuery.eq("product_type", productType).is("category_id", null);
+  }
+
+  const { data: siblings, error: siblingsError } = await siblingsQuery;
+  if (siblingsError) throw new Error(siblingsError.message);
+
+  const list = siblings ?? [];
+  const index = list.findIndex((row) => row.id === productId);
+  if (index < 0) throw new Error("Product not in category");
+
+  const swapIndex = direction === "up" ? index - 1 : index + 1;
+  if (swapIndex < 0 || swapIndex >= list.length) return;
+
+  const current = list[index];
+  const other = list[swapIndex];
+  const currentOrder = Number(current.sort_order ?? 0);
+  const otherOrder = Number(other.sort_order ?? 0);
+
+  const { error: updateError } = await supabase
+    .from("products")
+    .update({ sort_order: otherOrder, updated_at: new Date().toISOString() })
+    .eq("id", current.id);
+
+  if (updateError) throw new Error(updateError.message);
+
+  const { error: swapError } = await supabase
+    .from("products")
+    .update({ sort_order: currentOrder, updated_at: new Date().toISOString() })
+    .eq("id", other.id);
+
+  if (swapError) throw new Error(swapError.message);
+
+  revalidatePath("/admin/products");
+  revalidatePath("/products");
+  revalidatePath("/products", "layout");
+}
+
+export async function getCategoryCatalogSection(categorySlug: string) {
+  const categories = await getProductCategories();
+  const category = categories.find((c) => c.slug === categorySlug);
+  if (!category) return null;
+
+  const products = await getProductsCatalog();
+  const sectionProducts = filterProductsForCategory(products, category.id, category.product_type).map(
+    (p) => {
+      const dto = toProductDetailDto(p, fallbackImage);
+      return { ...p, image: dto.image };
+    }
+  );
+
+  return { category, products: sectionProducts };
 }
 
 export async function deleteProduct(productId: string) {
@@ -335,6 +426,7 @@ export async function deleteProduct(productId: string) {
   if (error) throw new Error(error.message);
   revalidatePath("/admin/products");
   revalidatePath("/products");
+  revalidatePath("/products", "layout");
 }
 
 export async function uploadProductImage(productId: string, dataUrl: string) {
@@ -372,6 +464,7 @@ export async function uploadProductImage(productId: string, dataUrl: string) {
   if (error) throw new Error(error.message);
   revalidatePath("/admin/products");
   revalidatePath("/products");
+  revalidatePath("/products", "layout");
   return publicUrl;
 }
 
@@ -425,6 +518,7 @@ export async function updateProductVariants(input: z.infer<typeof variantsSchema
   if (error) throw new Error(error.message);
   revalidatePath("/admin/products");
   revalidatePath("/products");
+  revalidatePath("/products", "layout");
 }
 
 export async function uploadProductVariantImage(
@@ -503,6 +597,7 @@ export async function uploadProductVariantImage(
   if (error) throw new Error(error.message);
   revalidatePath("/admin/products");
   revalidatePath("/products");
+  revalidatePath("/products", "layout");
   return publicUrl;
 }
 
@@ -552,6 +647,7 @@ export async function removeProductVariantImage(
   if (error) throw new Error(error.message);
   revalidatePath("/admin/products");
   revalidatePath("/products");
+  revalidatePath("/products", "layout");
 }
 
 export async function uploadProductFabricImage(
@@ -595,6 +691,7 @@ export async function uploadProductFabricImage(
   if (error) throw new Error(error.message);
   revalidatePath("/admin/products");
   revalidatePath("/products");
+  revalidatePath("/products", "layout");
   return publicUrl;
 }
 

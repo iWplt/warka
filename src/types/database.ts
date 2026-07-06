@@ -359,6 +359,7 @@ export type Product = {
   features: string[];
   embroidery_positions?: EmbroideryPosition[];
   sort_order: number;
+  is_featured: boolean;
   active: boolean;
   created_at: string;
   updated_at: string;

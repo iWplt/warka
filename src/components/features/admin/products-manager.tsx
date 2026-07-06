@@ -5,10 +5,11 @@ import Image from "next/image";
 import { useRouter } from "@/i18n/routing";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Package, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Package, Plus, Star, Trash2 } from "lucide-react";
 import {
   createProduct,
   deleteProduct,
+  moveProductSortOrder,
   updateProduct,
   uploadProductImage,
 } from "@/server/actions/products";
@@ -65,9 +66,9 @@ export function ProductsManager({ products, categories }: ProductsManagerProps) 
     return categories.map((cat) => ({
       category: cat,
       meta: PRODUCT_CATEGORY_META.find((m) => m.slug === cat.slug),
-      products: products.filter(
-        (p) => p.category_id === cat.id || p.product_type === cat.product_type
-      ),
+      products: products
+        .filter((p) => p.category_id === cat.id || p.product_type === cat.product_type)
+        .sort((a, b) => a.sort_order - b.sort_order || a.name_ar.localeCompare(b.name_ar, "ar")),
     }));
   }, [categories, products]);
 
@@ -85,6 +86,7 @@ export function ProductsManager({ products, categories }: ProductsManagerProps) 
         description_en: String(form.get("description_en") ?? ""),
         price: Number(form.get("price") ?? product.price),
         active: form.get("active") === "on",
+        is_featured: form.get("is_featured") === "on",
         sort_order: Number(form.get("sort_order") ?? product.sort_order ?? 0),
       });
       toast.success(t("saved"));
@@ -116,6 +118,7 @@ export function ProductsManager({ products, categories }: ProductsManagerProps) 
         description_en: draft.description_en || undefined,
         price: Number(draft.price) || 0,
         active: draft.active,
+        is_featured: false,
         sort_order: Number(draft.sort_order) || 0,
       });
       toast.success(t("created"));
@@ -138,6 +141,19 @@ export function ProductsManager({ products, categories }: ProductsManagerProps) 
       router.refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("error"));
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const handleMove = async (productId: string, direction: "up" | "down") => {
+    setSaving(`move-${productId}`);
+    try {
+      await moveProductSortOrder({ productId, direction });
+      toast.success(t("orderUpdated"));
+      router.refresh();
+    } catch {
+      toast.error(t("error"));
     } finally {
       setSaving(null);
     }
@@ -284,20 +300,50 @@ export function ProductsManager({ products, categories }: ProductsManagerProps) 
               <EmptyState icon={Package} title={t("sectionEmpty")} />
             ) : (
               <div className="mx-auto grid max-w-3xl gap-6">
-                {sectionProducts.map((product) => (
+                {sectionProducts.map((product, index) => (
                   <WarkaCard key={product.id}>
                     <div className="mb-4 flex items-start justify-between gap-3">
-                      <WarkaCardTitle>
-                        {locale === "ar" ? product.name_ar : product.name_en}
-                      </WarkaCardTitle>
-                      <button
-                        type="button"
-                        onClick={() => void handleDelete(product.id)}
-                        className="rounded-lg p-2 text-destructive hover:bg-destructive/10"
-                        title={t("delete")}
-                      >
-                        <Trash2 className="size-4" />
-                      </button>
+                      <div className="min-w-0">
+                        <WarkaCardTitle>
+                          {locale === "ar" ? product.name_ar : product.name_en}
+                        </WarkaCardTitle>
+                        {product.is_featured && (
+                          <p className="mt-1 flex items-center gap-1 text-xs font-medium text-amber-700">
+                            <Star className="size-3.5 fill-amber-500 text-amber-500" />
+                            {t("featuredBadge")}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <button
+                          type="button"
+                          disabled={index === 0 || saving === `move-${product.id}`}
+                          onClick={() => void handleMove(product.id, "up")}
+                          className="rounded-lg border border-warka-border p-2 text-warka-text-secondary hover:bg-warka-bg disabled:opacity-40"
+                          title={t("moveUp")}
+                        >
+                          <ArrowUp className="size-4" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={
+                            index === sectionProducts.length - 1 || saving === `move-${product.id}`
+                          }
+                          onClick={() => void handleMove(product.id, "down")}
+                          className="rounded-lg border border-warka-border p-2 text-warka-text-secondary hover:bg-warka-bg disabled:opacity-40"
+                          title={t("moveDown")}
+                        >
+                          <ArrowDown className="size-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleDelete(product.id)}
+                          className="rounded-lg p-2 text-destructive hover:bg-destructive/10"
+                          title={t("delete")}
+                        >
+                          <Trash2 className="size-4" />
+                        </button>
+                      </div>
                     </div>
 
                     {product.image && (
@@ -370,6 +416,14 @@ export function ProductsManager({ products, categories }: ProductsManagerProps) 
                       <label className="flex items-center gap-2 text-sm font-medium text-warka-text">
                         <input name="active" type="checkbox" defaultChecked={product.active} />
                         {t("active")}
+                      </label>
+                      <label className="flex items-center gap-2 text-sm font-medium text-warka-text">
+                        <input
+                          name="is_featured"
+                          type="checkbox"
+                          defaultChecked={product.is_featured}
+                        />
+                        {t("featured")}
                       </label>
                       <button
                         type="submit"

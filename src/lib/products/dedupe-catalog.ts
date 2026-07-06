@@ -1,6 +1,19 @@
 import type { Product } from "@/types/database";
 
-/** Prefer the priced row when migration seeds created duplicate category defaults. */
+/** Sort products for storefront display (admin-controlled order). */
+export function sortProductsForDisplay(products: Product[]): Product[] {
+  return [...products].sort(
+    (a, b) =>
+      a.sort_order - b.sort_order ||
+      a.name_ar.localeCompare(b.name_ar, "ar") ||
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+}
+
+/**
+ * @deprecated Legacy helper — kept for one-per-type fallbacks only.
+ * Prefer `sortProductsForDisplay` for full catalogs.
+ */
 export function dedupeCatalogProducts(products: Product[]): Product[] {
   const byType = new Map<string, Product>();
 
@@ -24,9 +37,7 @@ export function dedupeCatalogProducts(products: Product[]): Product[] {
     }
   }
 
-  return Array.from(byType.values()).sort(
-    (a, b) => a.sort_order - b.sort_order || a.name_en.localeCompare(b.name_en)
-  );
+  return sortProductsForDisplay(Array.from(byType.values()));
 }
 
 export function filterProductsForCategory(
@@ -39,5 +50,27 @@ export function filterProductsForCategory(
       p.category_id === categoryId ||
       (p.category_id == null && p.product_type === productType)
   );
-  return dedupeCatalogProducts(matched);
+  return sortProductsForDisplay(matched);
+}
+
+export function filterFeaturedProducts(products: Product[], limit = 8): Product[] {
+  const featured = sortProductsForDisplay(products.filter((p) => p.active && p.is_featured));
+  if (featured.length > 0) return featured.slice(0, limit);
+  return sortProductsForDisplay(products.filter((p) => p.active)).slice(0, limit);
+}
+
+export const CATALOG_PAGE_SIZE = 12;
+
+export function paginateProducts<T>(items: T[], page: number, pageSize = CATALOG_PAGE_SIZE) {
+  const total = items.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const start = (safePage - 1) * pageSize;
+  return {
+    items: items.slice(start, start + pageSize),
+    page: safePage,
+    pageSize,
+    total,
+    totalPages,
+  };
 }

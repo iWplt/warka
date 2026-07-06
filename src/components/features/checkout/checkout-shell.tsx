@@ -91,6 +91,7 @@ export function CheckoutShell({
             gallery: [],
             features: [],
             sort_order: 0,
+            is_featured: false,
             active: true,
             category_id: null,
             slug: null,

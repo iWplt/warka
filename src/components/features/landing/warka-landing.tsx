@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/scroll-reveal";
 import { SeasonalBanner } from "@/components/features/landing/seasonal-banner";
 import { LandingBundlesSection } from "@/components/features/landing/landing-bundles-section";
-import { dedupeCatalogProducts } from "@/lib/products/dedupe-catalog";
+import { filterFeaturedProducts } from "@/lib/products/dedupe-catalog";
 import type { PriceCatalogItem, Product, ProductBundle, Profile } from "@/types/database";
 
 const CountdownTimer = dynamic(
@@ -80,11 +80,6 @@ type LandingProduct = {
   isCustom: boolean;
 };
 
-function getFeaturedProductIndex(products: LandingProduct[]): number {
-  const customIndex = products.findIndex((p) => p.isCustom);
-  return customIndex >= 0 ? customIndex : 0;
-}
-
 export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profile, dashboardPath, heroImageUrl }: WarkaLandingProps) {
   const t = useTranslations("landing");
   const tContact = useTranslations("landing.contact");
@@ -105,21 +100,25 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
   const priceMap = buildPriceMap(prices);
   const products: LandingProduct[] = [];
 
-  const catalogActive = dedupeCatalogProducts(catalogProducts.filter((p) => p.active));
+  const catalogActive = catalogProducts.filter((p) => p.active);
+
+  const toLandingProduct = (p: Product): LandingProduct => {
+    const meta = GRADUATION_PRODUCT_META.find((m) => m.productType === p.product_type);
+    const isCustom = p.product_type === "custom";
+    return {
+      key: p.id,
+      name: locale === "ar" ? p.name_ar : p.name_en,
+      price: isCustom
+        ? tProducts("items.custom.description")
+        : tProducts("priceFrom", { price: formatIqd(Number(p.price), locale) }),
+      image: p.image || meta?.image || LANDING_IMAGES.products.custom,
+      isCustom,
+    };
+  };
 
   if (catalogActive.length > 0) {
     for (const p of catalogActive) {
-      const meta = GRADUATION_PRODUCT_META.find((m) => m.productType === p.product_type);
-      const isCustom = p.product_type === "custom";
-      products.push({
-        key: p.id,
-        name: locale === "ar" ? p.name_ar : p.name_en,
-        price: isCustom
-          ? tProducts("items.custom.description")
-          : tProducts("priceFrom", { price: formatIqd(Number(p.price), locale) }),
-        image: p.image || meta?.image || LANDING_IMAGES.products.custom,
-        isCustom,
-      });
+      products.push(toLandingProduct(p));
     }
   } else {
     for (const meta of GRADUATION_PRODUCT_META) {
@@ -147,16 +146,11 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
     }
   }
 
-  const featuredIndex = products.length > 1 ? getFeaturedProductIndex(products) : -1;
-
+  const featuredCatalog = filterFeaturedProducts(catalogActive, 8);
   const displayProducts =
-    featuredIndex > 0
-      ? [
-          products[featuredIndex],
-          ...products.slice(0, featuredIndex),
-          ...products.slice(featuredIndex + 1),
-        ]
-      : products;
+    featuredCatalog.length > 0
+      ? featuredCatalog.map(toLandingProduct)
+      : products.slice(0, 8);
 
   const steps = [
     { num: 1, title: t("steps.items.order.title"), desc: t("steps.items.order.description") },
@@ -379,7 +373,7 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
             </Link>
           </div>
 
-          {products.length === 0 ? (
+          {displayProducts.length === 0 ? (
             <ScrollReveal>
               <div className="rounded-[14px] border border-warka-border bg-card px-6 py-12 text-center shadow-card">
                 <p className="text-warka-text-secondary">{tProducts("empty")}</p>

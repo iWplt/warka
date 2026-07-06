@@ -23,6 +23,7 @@ export function parseProduct(row: Record<string, unknown>): Product {
       ? (row.embroidery_positions as Product["embroidery_positions"])
       : [],
     sort_order: Number(row.sort_order ?? 0),
+    is_featured: Boolean(row.is_featured ?? false),
     active: Boolean(row.active),
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
