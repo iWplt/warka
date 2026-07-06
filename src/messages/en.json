@@ -1005,7 +1005,8 @@
       "title": "Craft your graduation day with confidence",
       "subtitle": "From product catalog to doorstep delivery — one platform for students, representatives, and print teams.",
       "ctaPrimary": "Get started",
-      "ctaSecondary": "View products",
+      "ctaSecondary": "Our products",
+      "ctaProductsHint": "Browse the full catalog — sash, cap, gown & more",
       "imageAlt": "Students at a graduation ceremony",
       "statOrders": "Orders fulfilled",
       "statSatisfaction": "Satisfaction rate",
@@ -1117,6 +1118,8 @@
       "eyebrow": "Catalog",
       "title": "Graduation Products",
       "subtitle": "Transparent pricing for everything you need on graduation day",
+      "viewAll": "View all products",
+      "viewAllHint": "Open the full catalog by category",
       "empty": "Prices are not available right now. Sign in or contact the print shop.",
       "priceFrom": "From {price}",
       "items": {

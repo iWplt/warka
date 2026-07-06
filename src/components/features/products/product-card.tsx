@@ -72,7 +72,7 @@ export function ProductCard({
     <>
       <article
         className={cn(
-          "group relative flex h-full flex-col overflow-hidden rounded-2xl border border-warka-border bg-card shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)]",
+          "group relative flex h-full flex-col overflow-hidden rounded-xl border border-warka-border bg-card shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] sm:rounded-2xl",
           className
         )}
       >
@@ -116,35 +116,35 @@ export function ProductCard({
                 alt={name}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
-                sizes="(max-width: 768px) 100vw, 33vw"
+                sizes="(max-width: 640px) 50vw, 33vw"
               />
             </div>
           )}
         </Link>
 
-        <div className="flex flex-1 flex-col p-5">
+        <div className="flex flex-1 flex-col p-3 sm:p-5">
           {categoryLabel && (
-            <p className="text-xs font-medium uppercase tracking-wide text-warka-primary">
+            <p className="hidden text-xs font-medium uppercase tracking-wide text-warka-primary sm:block">
               {categoryLabel}
             </p>
           )}
           <Link href={href}>
-            <h3 className="mt-1 line-clamp-2 text-base font-semibold text-warka-text transition-colors group-hover:text-warka-primary">
+            <h3 className="mt-0 line-clamp-2 text-sm font-semibold text-warka-text transition-colors group-hover:text-warka-primary sm:mt-1 sm:text-base">
               {name}
             </h3>
           </Link>
 
-          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-warka-text-secondary">
+          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-warka-text-secondary sm:mt-2 sm:text-sm">
             {shortDesc}
           </p>
 
           {fabricSummary && (
-            <p className="mt-2 text-xs font-medium text-warka-text-muted">
+            <p className="mt-1 hidden text-xs font-medium text-warka-text-muted sm:mt-2 sm:block">
               {isAr ? "الأقمشة:" : "Fabrics:"} {fabricSummary}
             </p>
           )}
 
-          <p className="mt-3 text-lg font-bold text-warka-primary">
+          <p className="mt-2 text-base font-bold text-warka-primary sm:mt-3 sm:text-lg">
             {isCustom && !product.price
               ? isAr
                 ? "حسب الطلب"
@@ -152,18 +152,18 @@ export function ProductCard({
               : formatIqd(price, locale)}
           </p>
 
-          <div className="mt-auto space-y-2 pt-4">
+          <div className="mt-auto space-y-1.5 pt-3 sm:space-y-2 sm:pt-4">
             <Link
               href={href}
-              className="block w-full rounded-xl border-2 border-warka-primary py-2.5 text-center text-sm font-semibold text-warka-primary transition-colors hover:bg-warka-primary/5"
+              className="block w-full rounded-xl border-2 border-warka-primary py-2 text-center text-xs font-semibold text-warka-primary transition-colors hover:bg-warka-primary/5 sm:py-2.5 sm:text-sm"
             >
               {isAr ? "عرض التفاصيل" : "View details"}
             </Link>
             <Link
               href={orderHref}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-warka-primary py-2.5 text-sm font-semibold text-white transition-colors hover:bg-warka-primary-dark"
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-warka-primary py-2 text-xs font-semibold text-white transition-colors hover:bg-warka-primary-dark sm:gap-2 sm:py-2.5 sm:text-sm"
             >
-              <Zap className="size-4" />
+              <Zap className="size-3.5 sm:size-4" />
               {isAr ? "اطلب الآن" : "Order now"}
             </Link>
           </div>

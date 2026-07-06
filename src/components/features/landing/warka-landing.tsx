@@ -259,13 +259,25 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
                 >
                   {t("hero.ctaPrimary")}
                 </Link>
-                <a
-                  href="#products"
+                <Link
+                  href="/products"
                   className="rounded-[10px] border-2 border-warka-primary px-6 py-3 text-center text-sm font-semibold text-warka-primary transition-all duration-200 hover:bg-warka-primary hover:text-white sm:w-auto"
                 >
                   {t("hero.ctaSecondary")}
-                </a>
+                </Link>
               </div>
+              <Link
+                href="/products"
+                className="mt-4 flex min-h-11 items-center justify-between gap-3 rounded-xl border border-warka-primary/25 bg-warka-primary/8 px-4 py-3 text-start transition-colors hover:border-warka-primary/45 hover:bg-warka-primary/12 sm:max-w-md"
+              >
+                <span className="min-w-0">
+                  <span className="block text-sm font-bold text-warka-text">{t("hero.ctaSecondary")}</span>
+                  <span className="mt-0.5 block text-xs leading-relaxed text-warka-text-secondary">
+                    {t("hero.ctaProductsHint")}
+                  </span>
+                </span>
+                <ArrowLeft className="size-4 shrink-0 text-warka-primary" aria-hidden />
+              </Link>
 
               <div className="mt-8 flex items-center justify-center gap-6 border-t border-warka-border pt-6 sm:mt-10 sm:justify-start sm:gap-8 sm:border-0 sm:pt-0">
                 <div className="text-center sm:text-start">
@@ -354,9 +366,18 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
         </div>
       </section>
 
-      <section id="products" className="scroll-mt-16 bg-warka-bg py-12 md:py-16">
+      <section id="products" className="scroll-mt-16 bg-warka-bg py-10 md:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <SectionHeading title={tProducts("title")} subtitle={tProducts("subtitle")} />
+          <div className="mb-6 flex flex-col items-center gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+            <SectionHeading title={tProducts("title")} subtitle={tProducts("subtitle")} className="mb-0" />
+            <Link
+              href="/products"
+              className="inline-flex min-h-10 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-warka-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-warka-primary-dark sm:w-auto"
+            >
+              {tProducts("viewAll")}
+              <ArrowLeft className="size-4" aria-hidden />
+            </Link>
+          </div>
 
           {products.length === 0 ? (
             <ScrollReveal>
@@ -365,40 +386,41 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
               </div>
             </ScrollReveal>
           ) : (
-            <ScrollRevealStagger className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <ScrollRevealStagger className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
               {displayProducts.map((p) => (
                   <ScrollRevealItem
                     key={p.key}
                     className="group flex h-full flex-col overflow-hidden rounded-[14px] border border-warka-border bg-white shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)]"
                   >
                     {p.isCustom ? (
-                      <div className="flex aspect-square items-center justify-center border-b border-warka-border bg-warka-bg">
-                        <div className="text-center">
-                          <Palette className="mx-auto mb-2 h-10 w-10 text-warka-primary" />
-                          <span className="text-sm text-warka-text-secondary">
+                      <div className="flex aspect-[4/5] items-center justify-center border-b border-warka-border bg-warka-bg sm:aspect-square">
+                        <div className="text-center px-2">
+                          <Palette className="mx-auto mb-1.5 h-7 w-7 text-warka-primary sm:mb-2 sm:h-10 sm:w-10" />
+                          <span className="text-[11px] text-warka-text-secondary sm:text-sm">
                             {tProducts("items.custom.title")}
                           </span>
                         </div>
                       </div>
                     ) : (
-                      <div className="aspect-square overflow-hidden bg-warka-bg">
+                      <div className="aspect-[4/5] overflow-hidden bg-warka-bg sm:aspect-square">
                         <Image
                           src={p.image}
                           alt={p.name}
                           width={400}
                           height={400}
                           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          sizes="(max-width: 640px) 50vw, 25vw"
                         />
                       </div>
                     )}
-                    <div className="flex flex-1 flex-col p-4">
-                      <h3 className="mb-1 text-base font-semibold text-warka-text">
+                    <div className="flex flex-1 flex-col p-3 sm:p-4">
+                      <h3 className="mb-1 line-clamp-2 text-xs font-semibold leading-snug text-warka-text sm:text-base">
                         {p.name}
                       </h3>
-                      <p className="mb-3 text-sm text-warka-text-secondary">{p.price}</p>
+                      <p className="mb-2 line-clamp-2 text-[11px] text-warka-text-secondary sm:mb-3 sm:text-sm">{p.price}</p>
                       <Link
                         href={`/products/${p.key}`}
-                        className="mt-auto block w-full rounded-[10px] bg-warka-primary py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-warka-primary-dark"
+                        className="mt-auto block w-full rounded-[10px] bg-warka-primary py-2 text-center text-[11px] font-semibold text-white transition-colors hover:bg-warka-primary-dark sm:py-2.5 sm:text-sm"
                       >
                         {tContact("cta")}
                       </Link>
