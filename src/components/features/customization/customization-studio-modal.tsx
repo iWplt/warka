@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Palette, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -65,6 +65,7 @@ export function CustomizationStudioModal({
   isBatchStudent = false,
 }: CustomizationStudioModalProps) {
   const isAr = locale === "ar";
+  const [fontPickerOpen, setFontPickerOpen] = useState(false);
 
   const filledZones = useMemo(
     () =>
@@ -75,7 +76,7 @@ export function CustomizationStudioModal({
   );
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <Dialog.Root open={open} onOpenChange={onOpenChange} modal={!fontPickerOpen}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[80] bg-warka-text/30 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <Dialog.Content
@@ -147,6 +148,9 @@ export function CustomizationStudioModal({
                     onConfirm={onFontChange}
                     locale={locale}
                     required
+                    nested
+                    open={fontPickerOpen}
+                    onOpenChange={setFontPickerOpen}
                   />
                 </div>
               )}

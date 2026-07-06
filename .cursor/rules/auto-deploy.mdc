@@ -1,0 +1,19 @@
+---
+description: Push and deploy to Vercel after every code change in this project
+alwaysApply: true
+---
+
+# Auto-deploy after changes
+
+When you finish implementing a requested change in this repository:
+
+1. Commit only the files related to the task (never unrelated WIP or secrets).
+2. Push to the remote branch immediately so Vercel deploys — do not wait for the user to ask.
+3. After push, briefly tell the user the commit is live or deploying on Vercel.
+
+Skip push only if:
+- The user explicitly says not to deploy in that message, or
+- There are no code changes to commit, or
+- Push fails (report the error and what to fix).
+
+Do not force-push to `main`/`master`.
