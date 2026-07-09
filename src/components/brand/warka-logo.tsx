@@ -47,6 +47,7 @@ export function WarkaLogo({
         height={128}
         className={cn("object-contain", MARK_SIZE_CLASS[size], className)}
         priority={priority}
+        unoptimized
       />
     );
   }

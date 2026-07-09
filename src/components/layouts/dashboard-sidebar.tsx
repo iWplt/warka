@@ -35,7 +35,7 @@ import type { Profile, UserRole } from "@/types/database";
 import { useUiStore } from "@/stores/ui-store";
 import { useIsDesktop } from "@/hooks/use-is-desktop";
 import { Button } from "@/components/ui/button";
-import { WARKA_MARK_PATH } from "@/lib/constants/brand";
+import { WARKA_MARK_ON_DARK_PATH } from "@/lib/constants/brand";
 import { signOut } from "@/server/actions/auth";
 
 type NavLabelKey =
@@ -182,11 +182,11 @@ export function DashboardSidebar({ role, profile }: DashboardSidebarProps) {
       >
         <Link href={`/${role}`} className="flex items-center gap-3">
           <Image
-            src={WARKA_MARK_PATH}
+            src={WARKA_MARK_ON_DARK_PATH}
             alt="WARKA"
             width={40}
             height={40}
-            className="h-10 w-10 shrink-0 object-contain brightness-0 invert"
+            className="h-10 w-10 shrink-0 object-contain"
           />
           {!collapsed && (
             <div className="overflow-hidden">

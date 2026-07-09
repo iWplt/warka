@@ -82,13 +82,14 @@ export function SiteHeader({ profile }: SiteHeaderProps) {
             <Image
               src={WARKA_MARK_PATH}
               alt="WARKA"
-              width={44}
-              height={44}
-              className="h-10 w-10 shrink-0 object-contain sm:h-11 sm:w-11"
+              width={48}
+              height={48}
+              className="h-11 w-11 shrink-0 object-contain"
               priority
+              unoptimized
             />
             <div className="hidden min-w-0 flex-col sm:flex">
-              <span className="font-display text-xl font-bold tracking-[0.12em] text-warka-text">
+              <span className="font-display text-xl font-bold tracking-[0.14em] text-warka-text">
                 WARKA
               </span>
               <span className="-mt-0.5 truncate text-[10px] text-warka-text-muted">{tagline}</span>
