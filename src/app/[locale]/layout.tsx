@@ -27,9 +27,9 @@ export const metadata: Metadata = {
   keywords: IRAQ_SEO_KEYWORDS,
   manifest: "/manifest.json",
   icons: {
-    icon: [{ url: "/assets/brand/warka-mark-v3.png", type: "image/png" }],
-    apple: "/assets/brand/warka-mark-v3.png",
-    shortcut: "/assets/brand/warka-mark-v3.png",
+    icon: [{ url: "/assets/brand/warka-mark-v4.png", type: "image/png" }],
+    apple: "/assets/brand/warka-mark-v4.png",
+    shortcut: "/assets/brand/warka-mark-v4.png",
   },
   appleWebApp: {
     capable: true,

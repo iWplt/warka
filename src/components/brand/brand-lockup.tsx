@@ -36,7 +36,7 @@ export function BrandLockup({
         alt={WARKA_BRAND_NAME}
         width={48}
         height={48}
-        className={cn("shrink-0 object-contain p-1", className)}
+        className={cn("shrink-0 object-contain object-center", className)}
         priority={priority}
         unoptimized
       />
@@ -50,7 +50,7 @@ export function BrandLockup({
         alt={WARKA_BRAND_NAME}
         width={160}
         height={192}
-        className={cn("h-auto w-auto max-h-16 object-contain object-left sm:max-h-[4.5rem]", className)}
+        className={cn("h-auto w-auto max-h-[4.25rem] object-contain object-top sm:max-h-[4.75rem]", className)}
         priority={priority}
         unoptimized
       />
@@ -65,7 +65,7 @@ export function BrandLockup({
           alt={WARKA_BRAND_NAME}
           width={140}
           height={168}
-          className="h-[4.5rem] w-auto max-w-[6.5rem] object-contain sm:h-20 sm:max-w-[7rem]"
+          className="h-[4.75rem] w-auto max-w-[7rem] object-contain object-top sm:h-20 sm:max-w-[7.5rem]"
           priority={priority}
           unoptimized
         />
@@ -74,21 +74,23 @@ export function BrandLockup({
     );
   }
 
-  const markSize = layout === "footer" ? "h-10 w-10" : "h-8 w-8 sm:h-9 sm:w-9";
+  const markSize = layout === "footer" ? "h-10 w-10" : "h-9 w-9 sm:h-10 sm:w-10";
   const wordSize = layout === "footer" ? "text-xl" : "text-base sm:text-lg";
 
   return (
-    <div className={cn("flex min-w-0 items-center gap-2", className)}>
-      <Image
-        src={markSrc}
-        alt=""
-        aria-hidden
-        width={48}
-        height={48}
-        className={cn("shrink-0 object-contain p-1", markSize)}
-        priority={priority}
-        unoptimized
-      />
+    <div className={cn("flex min-w-0 items-center gap-2 overflow-visible", className)}>
+      <span className="inline-flex shrink-0 items-center justify-center overflow-visible">
+        <Image
+          src={markSrc}
+          alt=""
+          aria-hidden
+          width={56}
+          height={56}
+          className={cn("object-contain object-center", markSize)}
+          priority={priority}
+          unoptimized
+        />
+      </span>
       <div className="min-w-0 leading-none">
         <span className={cn("font-display block font-bold tracking-[0.14em]", wordSize)}>
           {WARKA_BRAND_NAME}

@@ -77,7 +77,7 @@ export function SiteHeader({ profile }: SiteHeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full overflow-visible border-b border-warka-border bg-white/95 backdrop-blur-sm">
       <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
-        <div className="grid h-16 grid-cols-[1fr_auto] items-center gap-2 sm:gap-3 md:grid-cols-[auto_1fr_auto] md:gap-4">
+        <div className="grid min-h-[4.25rem] grid-cols-[1fr_auto] items-center gap-2 py-1 sm:gap-3 md:grid-cols-[auto_1fr_auto] md:gap-4">
           <Link href="/" className="min-w-0 shrink-0 justify-self-start overflow-visible pe-1 sm:pe-0">
             <BrandLockup layout="header" tagline={tagline} priority />
           </Link>
