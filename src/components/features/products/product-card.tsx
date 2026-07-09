@@ -72,7 +72,7 @@ export function ProductCard({
     <>
       <article
         className={cn(
-          "group relative flex h-full flex-col overflow-hidden rounded-xl border border-warka-border bg-card shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] sm:rounded-2xl",
+          "group relative flex h-full flex-col overflow-hidden border-b border-warka-border/80 bg-transparent transition-colors",
           className
         )}
       >
@@ -152,16 +152,16 @@ export function ProductCard({
               : formatIqd(price, locale)}
           </p>
 
-          <div className="mt-auto space-y-1.5 pt-3 sm:space-y-2 sm:pt-4">
+          <div className="mt-auto flex flex-col gap-2 pt-4 sm:flex-row sm:items-center">
             <Link
               href={href}
-              className="block w-full rounded-xl border-2 border-warka-primary py-2 text-center text-xs font-semibold text-warka-primary transition-colors hover:bg-warka-primary/5 sm:py-2.5 sm:text-sm"
+              className="text-sm font-semibold text-warka-primary underline-offset-4 hover:underline"
             >
               {isAr ? "عرض التفاصيل" : "View details"}
             </Link>
             <Link
               href={orderHref}
-              className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-warka-primary py-2 text-xs font-semibold text-white transition-colors hover:bg-warka-primary-dark sm:gap-2 sm:py-2.5 sm:text-sm"
+              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg bg-warka-primary px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-warka-primary-dark sm:text-sm"
             >
               <Zap className="size-3.5 sm:size-4" />
               {isAr ? "اطلب الآن" : "Order now"}

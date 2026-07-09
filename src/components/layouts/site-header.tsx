@@ -75,7 +75,7 @@ export function SiteHeader({ profile }: SiteHeaderProps) {
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-warka-border bg-white/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 w-full border-b border-warka-border bg-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid h-16 grid-cols-[1fr_auto] items-center gap-3 md:grid-cols-[auto_1fr_auto] md:gap-4">
           <Link href="/" className="flex shrink-0 items-center gap-2.5 justify-self-start">

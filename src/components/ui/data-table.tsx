@@ -57,7 +57,7 @@ export function DataTable<T>({
         />
       )}
 
-      <div className="glass-panel overflow-hidden rounded-xl">
+      <div className="utility-surface overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

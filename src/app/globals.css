@@ -18,7 +18,7 @@
   --color-secondary: #f2ece3;
   --color-secondary-foreground: #2c2c2c;
   --color-muted: #f2ece3;
-  --color-muted-foreground: #6b6b6b;
+  --color-muted-foreground: #4a4a4a;
   --color-accent: #d7cbb8;
   --color-accent-foreground: #2c2c2c;
   --color-accent-gold: #c7bcaf;
@@ -37,8 +37,8 @@
   --color-warka-surface: #f6f4ef;
   --color-warka-text: #1f1f1f;
   --color-warka-text-secondary: #454545;
-  --color-warka-text-muted: #5a5a5a;
-  --color-warka-border: #a89f92;
+  --color-warka-text-muted: #525252;
+  --color-warka-border: #b7aea1;
   --color-warka-accent: #d7cbb8;
   --color-warka-muted: #c7bcaf;
   --color-warka-sidebar: #5c6247;
@@ -60,10 +60,11 @@
   --radius-card: 0.75rem;
   --radius-button: 0.5rem;
 
-  --shadow-card: 0 2px 12px rgb(0 0 0 / 0.06);
-  --shadow-tint: 0 2px 12px rgb(0 0 0 / 0.04);
-  --shadow-tint-lg: 0 8px 24px rgb(0 0 0 / 0.1);
-  --shadow-glow: 0 0 0 1px rgb(74 90 58 / 0.1), 0 4px 16px rgb(0 0 0 / 0.05);
+  /* Soft Utility: prefer borders over heavy drop shadows */
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-tint: 0 1px 2px rgb(0 0 0 / 0.03);
+  --shadow-tint-lg: 0 4px 14px rgb(0 0 0 / 0.06);
+  --shadow-glow: 0 0 0 1px rgb(74 90 58 / 0.08);
 
   --z-base: 0;
   --z-dropdown: 20;
@@ -265,7 +266,16 @@
   .glass {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    @apply rounded-2xl border border-warka-border bg-card text-warka-text shadow-card;
+    @apply rounded-xl border border-warka-border bg-card text-warka-text shadow-none;
+  }
+
+  /* Atelier public surfaces: quieter cards, more air */
+  .atelier-surface {
+    @apply rounded-xl border border-warka-border/70 bg-card;
+  }
+
+  .utility-surface {
+    @apply rounded-xl border border-warka-border bg-card shadow-none;
   }
 
   .mesh-section {

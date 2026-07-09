@@ -48,7 +48,7 @@ function DetailValue({
       <span className="inline-flex items-center gap-2">
         {hex && (
           <span
-            className="inline-block size-5 shrink-0 rounded-md border border-glass-border shadow-sm"
+            className="inline-block size-5 shrink-0 rounded-md border border-warka-border"
             style={{ backgroundColor: hex }}
             title={hex}
             aria-hidden
@@ -66,7 +66,7 @@ function DetailValue({
           href={detail.imageUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="relative block aspect-video max-w-md overflow-hidden rounded-lg border border-glass-border bg-foreground/5"
+          className="relative block aspect-video max-w-md overflow-hidden rounded-lg border border-warka-border bg-warka-bg"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -107,7 +107,7 @@ export function OrderItemsDetailPanel({
 
   if (items.length === 0) {
     return (
-      <div className="rounded-2xl glass p-6">
+      <div className="utility-surface p-6">
         <p className="text-sm text-muted-foreground">
           {isAr ? "لا توجد منتجات في هذا الطلب" : "No products in this order"}
         </p>
@@ -138,12 +138,12 @@ export function OrderItemsDetailPanel({
         return (
           <article
             key={item.id}
-            className="overflow-hidden rounded-2xl border border-glass-border glass"
+            className="overflow-hidden utility-surface"
           >
-            <header className="flex flex-wrap items-start justify-between gap-3 border-b border-glass-border bg-foreground/[0.03] px-4 py-4 sm:px-5">
+            <header className="flex flex-wrap items-start justify-between gap-3 border-b border-warka-border bg-warka-bg/40 px-4 py-4 sm:px-5">
               <div className="flex min-w-0 flex-1 items-start gap-3">
                 {media?.productImageUrl && (
-                  <div className="relative size-16 shrink-0 overflow-hidden rounded-xl border border-glass-border bg-foreground/5 sm:size-20">
+                  <div className="relative size-16 shrink-0 overflow-hidden rounded-xl border border-warka-border bg-warka-bg sm:size-20">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={media.productImageUrl}
@@ -213,7 +213,7 @@ export function OrderItemsDetailPanel({
                         <div
                           key={detail.key}
                           className={cn(
-                            "rounded-xl border border-glass-border bg-foreground/[0.03] px-3 py-2.5",
+                            "rounded-xl border border-warka-border bg-warka-bg/30 px-3 py-2.5",
                             detail.kind === "image" && "sm:col-span-2"
                           )}
                         >
