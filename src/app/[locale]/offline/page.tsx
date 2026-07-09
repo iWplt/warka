@@ -1,8 +1,7 @@
-import Image from "next/image";
 import { getLocale } from "next-intl/server";
 import { WifiOff, RefreshCw } from "lucide-react";
 import { Link } from "@/i18n/routing";
-import { WARKA_MARK_PATH } from "@/lib/constants/brand";
+import { BrandLockup } from "@/components/brand/brand-lockup";
 
 export default async function OfflinePage() {
   const locale = (await getLocale()) as "ar" | "en";
@@ -10,13 +9,7 @@ export default async function OfflinePage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-warka-bg p-6 font-arabic text-center">
-      <Image
-        src={WARKA_MARK_PATH}
-        alt="WARKA"
-        width={72}
-        height={72}
-        className="h-[72px] w-[72px] object-contain opacity-70"
-      />
+      <BrandLockup layout="auth" className="opacity-70" />
 
       <div className="flex size-16 items-center justify-center rounded-2xl bg-[#FF9800]/10">
         <WifiOff className="size-8 text-[#FF9800]" aria-hidden />

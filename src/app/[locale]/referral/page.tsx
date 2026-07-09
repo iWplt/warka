@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import Image from "next/image";
 import { useLocale } from "next-intl";
 import {
   Copy,
@@ -16,7 +15,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { WarkaCard, WarkaCardTitle } from "@/components/ui/warka-card";
 import { Link } from "@/i18n/routing";
-import { WARKA_MARK_PATH } from "@/lib/constants/brand";
+import { BrandLockup } from "@/components/brand/brand-lockup";
 import { buildWhatsAppUrl } from "@/lib/constants/iraq-market";
 import { cn } from "@/lib/utils";
 
@@ -104,15 +103,8 @@ export default function ReferralPage() {
     <div className="min-h-screen bg-warka-bg font-arabic pb-16">
       <header className="border-b border-warka-border bg-card">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <Image
-              src={WARKA_MARK_PATH}
-              alt="WARKA"
-              width={36}
-              height={36}
-              className="h-9 w-9 object-contain"
-            />
-            <span className="font-display font-bold tracking-[0.12em] text-warka-text">WARKA</span>
+          <Link href="/">
+            <BrandLockup layout="header" />
           </Link>
           <Link
             href="/"

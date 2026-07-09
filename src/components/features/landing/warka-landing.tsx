@@ -214,8 +214,8 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
           </svg>
         </div>
 
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-12 lg:px-8 lg:py-20">
-          <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-2 lg:gap-12">
+        <div className="mx-auto max-w-7xl px-2.5 py-3 sm:px-6 sm:py-10 lg:px-8 lg:py-16">
+          <div className="grid grid-cols-1 items-center gap-3 sm:gap-6 lg:grid-cols-2 lg:gap-12">
             <div className="relative order-1 lg:order-2 lg:col-start-2 lg:row-start-1 lg:ps-4">
               <div className="relative overflow-hidden rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.10)]">
                 <Image
@@ -237,13 +237,13 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
               <span className="mb-3 inline-flex rounded-full bg-warka-primary/10 px-3 py-1 text-xs font-semibold text-warka-primary">
                 {t("hero.kicker")}
               </span>
-              <div className="mb-4">
+              <div className="mb-3">
                 <CountdownTimer targetDate={new Date("2026-07-15T23:59:59")} />
               </div>
               <h1 className="mb-4 text-3xl leading-[1.12] font-bold text-warka-text sm:text-4xl lg:text-5xl xl:text-6xl">
                 {t("hero.title")}
               </h1>
-              <p className="mb-8 max-w-lg text-sm leading-relaxed text-warka-text-secondary sm:text-base">
+              <p className="mb-5 max-w-lg text-sm leading-relaxed text-warka-text-secondary sm:mb-8 sm:text-base">
                 {t("hero.subtitle")}
               </p>
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -262,7 +262,7 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
               </div>
               <Link
                 href="/products"
-                className="mt-4 flex min-h-11 items-center justify-between gap-3 rounded-xl border border-warka-primary/25 bg-warka-primary/8 px-4 py-3 text-start transition-colors hover:border-warka-primary/45 hover:bg-warka-primary/12 sm:max-w-md"
+                className="mt-3 hidden min-h-11 items-center justify-between gap-3 rounded-xl border border-warka-primary/25 bg-warka-primary/8 px-4 py-3 text-start transition-colors hover:border-warka-primary/45 hover:bg-warka-primary/12 sm:mt-4 sm:flex sm:max-w-md"
               >
                 <span className="min-w-0">
                   <span className="block text-sm font-bold text-warka-text">{t("hero.ctaSecondary")}</span>
@@ -273,7 +273,7 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
                 <ArrowLeft className="size-4 shrink-0 text-warka-primary" aria-hidden />
               </Link>
 
-              <div className="mt-8 flex items-center justify-center gap-6 border-t border-warka-border pt-6 sm:mt-10 sm:justify-start sm:gap-8 sm:border-0 sm:pt-0">
+              <div className="mt-4 flex items-center justify-center gap-3 border-t border-warka-border pt-3 sm:mt-8 sm:justify-start sm:gap-8 sm:border-0 sm:pt-0">
                 <div className="text-center sm:text-start">
                   <div className="text-2xl font-bold text-warka-text">2.4k+</div>
                   <div className="mt-1 text-xs text-warka-text-secondary">{t("hero.statOrders")}</div>
@@ -306,15 +306,15 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
       </div>
 
       <section className="border-y border-warka-border bg-warka-bg">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <ScrollRevealStagger className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+        <div className="mx-auto max-w-7xl px-2.5 py-3 sm:px-6 sm:py-6 lg:px-8">
+          <ScrollRevealStagger className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4 lg:gap-6">
             {features.map((f) => (
               <ScrollRevealItem
                 key={f.title}
-                className="flex min-h-[112px] items-start gap-3 rounded-[14px] border border-warka-border bg-white p-4 shadow-sm"
+                className="flex items-start gap-2.5 rounded-xl border border-warka-border bg-white p-3 shadow-sm sm:min-h-[112px] sm:gap-3 sm:rounded-[14px] sm:p-4"
               >
-                <div className="flex aspect-square h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-warka-primary/10">
-                  <f.icon className="h-5 w-5 text-warka-primary" />
+                <div className="flex aspect-square h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-warka-primary/10 sm:h-12 sm:w-12 sm:rounded-xl">
+                  <f.icon className="h-4 w-4 text-warka-primary sm:h-5 sm:w-5" />
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-warka-text">{f.title}</div>
@@ -326,11 +326,11 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
         </div>
       </section>
 
-      <section className="bg-warka-bg py-12 md:py-16">
-        <div className="mx-auto max-w-3xl px-4 text-center">
+      <section className="bg-warka-bg py-5 sm:py-8 md:py-14">
+        <div className="mx-auto max-w-3xl px-2.5 text-center sm:px-4">
           <ScrollReveal>
-            <h2 className="mb-4 text-3xl font-bold text-warka-text lg:text-4xl">{t("philosophy.title")}</h2>
-            <p className="mb-6 text-sm leading-relaxed text-warka-text-secondary">{t("philosophy.body")}</p>
+            <h2 className="mb-3 text-2xl font-bold text-warka-text sm:mb-4 sm:text-3xl lg:text-4xl">{t("philosophy.title")}</h2>
+            <p className="mb-4 text-sm leading-relaxed text-warka-text-secondary sm:mb-6">{t("philosophy.body")}</p>
             <a
               href="#how-it-works"
               className="inline-flex items-center gap-2 font-medium text-warka-primary hover:underline"
@@ -340,19 +340,17 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
             </a>
           </ScrollReveal>
         </div>
-      </section>
 
-      <section className="bg-warka-bg py-12 md:py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mx-auto mt-4 max-w-7xl px-2.5 sm:mt-6 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4 lg:gap-6">
             {values.map((v) => (
               <ScrollReveal key={v.title} className="h-full">
-                <div className="flex h-full min-h-[220px] flex-col rounded-[14px] border border-warka-border bg-white p-6 shadow-sm transition-shadow duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
-                  <div className="mb-4 flex aspect-square h-12 w-12 items-center justify-center rounded-xl bg-warka-primary/10">
-                    <v.icon className="h-6 w-6 text-warka-primary" />
+                <div className="flex flex-col rounded-xl border border-warka-border bg-white p-3.5 shadow-sm sm:min-h-[220px] sm:rounded-[14px] sm:p-6 sm:transition-shadow sm:duration-300 sm:hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
+                  <div className="mb-2 flex aspect-square h-9 w-9 items-center justify-center rounded-lg bg-warka-primary/10 sm:mb-4 sm:h-12 sm:w-12 sm:rounded-xl">
+                    <v.icon className="h-5 w-5 text-warka-primary sm:h-6 sm:w-6" />
                   </div>
-                  <h3 className="mb-2 text-base font-bold text-warka-text">{v.title}</h3>
-                  <p className="text-sm leading-relaxed text-warka-text-secondary">{v.desc}</p>
+                  <h3 className="mb-1.5 text-base font-bold text-warka-text sm:mb-2">{v.title}</h3>
+                  <p className="text-sm leading-snug text-warka-text-secondary sm:leading-relaxed">{v.desc}</p>
                 </div>
               </ScrollReveal>
             ))}
@@ -360,8 +358,8 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
         </div>
       </section>
 
-      <section id="products" className="scroll-mt-16 bg-warka-bg py-10 md:py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section id="products" className="scroll-mt-16 bg-warka-bg py-5 sm:py-8 md:py-14">
+        <div className="mx-auto max-w-7xl px-2.5 sm:px-6 lg:px-8">
           <div className="mb-6 flex flex-col items-center gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
             <SectionHeading title={tProducts("title")} subtitle={tProducts("subtitle")} className="mb-0" />
             <Link
@@ -428,12 +426,12 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
 
       <LandingBundlesSection catalogProducts={catalogActive} bundles={bundles} />
 
-      <section id="how-it-works" className="scroll-mt-16 bg-warka-bg py-12 md:py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <SectionHeading title={t("steps.title")} subtitle={t("steps.subtitle")} className="mb-12" />
+      <section id="how-it-works" className="scroll-mt-16 bg-warka-bg py-5 sm:py-8 md:py-14">
+        <div className="mx-auto max-w-7xl px-2.5 sm:px-6 lg:px-8">
+          <SectionHeading title={t("steps.title")} subtitle={t("steps.subtitle")} className="mb-8 sm:mb-12" />
 
           <div className="relative">
-            <ScrollRevealStagger className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            <ScrollRevealStagger className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-4">
               {steps.map((s) => (
                 <ScrollRevealItem key={s.num} className="relative text-center">
                   <div className="relative z-10 mx-auto mb-4 flex aspect-square h-16 w-16 items-center justify-center rounded-xl border-2 border-warka-primary bg-white text-xl font-bold text-warka-primary shadow-sm">
@@ -449,16 +447,16 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
         </div>
       </section>
 
-      <section id="audience" className="scroll-mt-16 bg-warka-bg py-12 md:py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section id="audience" className="scroll-mt-16 bg-warka-bg py-5 sm:py-8 md:py-14">
+        <div className="mx-auto max-w-7xl px-2.5 sm:px-6 lg:px-8">
           <SectionHeading title={tRoles("title")} subtitle={tRoles("subtitle")} />
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:gap-6 md:grid-cols-3">
             {audiences.map((a) => (
               <ScrollReveal key={a.title} className="h-full">
-                <div className="flex h-full min-h-[260px] flex-col rounded-[14px] border border-warka-border bg-white p-6 text-center shadow-sm transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
-                  <div className="mx-auto mb-4 flex aspect-square h-14 w-14 items-center justify-center rounded-xl bg-warka-primary/10">
-                    <a.icon className="h-7 w-7 text-warka-primary" />
+                <div className="flex h-full flex-col rounded-xl border border-warka-border bg-white p-3.5 text-center shadow-sm sm:min-h-[260px] sm:rounded-[14px] sm:p-6 sm:transition-all sm:duration-300 sm:hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
+                  <div className="mx-auto mb-3 flex aspect-square h-12 w-12 items-center justify-center rounded-xl bg-warka-primary/10 sm:mb-4 sm:h-14 sm:w-14">
+                    <a.icon className="h-6 w-6 text-warka-primary sm:h-7 sm:w-7" />
                   </div>
                   <h3 className="mb-2 text-lg font-bold text-warka-text">{a.title}</h3>
                   <p className="mb-5 flex-1 text-sm leading-relaxed text-warka-text-secondary">{a.desc}</p>
@@ -486,7 +484,7 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
         </div>
       </section>
 
-      <section className="bg-warka-primary py-14">
+      <section className="bg-warka-primary py-10 sm:py-14">
         <div className="mx-auto max-w-4xl px-4 text-center">
           <ScrollReveal>
             <h2 className="mb-4 text-2xl font-bold text-white lg:text-3xl">{t("ctaStrip.title")}</h2>
@@ -522,12 +520,12 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
         </div>
       </section>
 
-      <section id="contact" className="scroll-mt-16 bg-warka-bg py-12 md:py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section id="contact" className="scroll-mt-16 bg-warka-bg py-5 sm:py-8 md:py-14">
+        <div className="mx-auto max-w-7xl px-2.5 sm:px-6 lg:px-8">
           <SectionHeading title={tContact("title")} subtitle={tContact("subtitle")} />
 
-          <div className="mx-auto grid max-w-3xl grid-cols-1 gap-6 sm:grid-cols-3">
-            <ScrollReveal className="landing-contact-card flex min-h-[172px] flex-col items-center justify-center rounded-[14px] border border-warka-border p-6 text-center shadow-sm">
+          <div className="mx-auto grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-6">
+            <ScrollReveal className="landing-contact-card flex flex-col items-center justify-center rounded-xl border border-warka-border p-3.5 text-center shadow-sm sm:min-h-[172px] sm:rounded-[14px] sm:p-6">
               <div className="mx-auto mb-3 flex aspect-square h-12 w-12 items-center justify-center rounded-xl bg-warka-primary/10">
                 <Phone className="h-5 w-5 text-warka-primary" />
               </div>
@@ -541,7 +539,7 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
               </a>
             </ScrollReveal>
 
-            <ScrollReveal delay={0.09} className="landing-contact-card flex min-h-[172px] flex-col items-center justify-center rounded-[14px] border border-warka-border p-6 text-center shadow-sm">
+            <ScrollReveal delay={0.09} className="landing-contact-card flex flex-col items-center justify-center rounded-xl border border-warka-border p-3.5 text-center shadow-sm sm:min-h-[172px] sm:rounded-[14px] sm:p-6">
               <div className="mx-auto mb-3 flex aspect-square h-12 w-12 items-center justify-center rounded-xl bg-warka-primary/10">
                 <Mail className="h-5 w-5 text-warka-primary" />
               </div>
@@ -551,7 +549,7 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
               </a>
             </ScrollReveal>
 
-            <ScrollReveal delay={0.18} className="landing-contact-card flex min-h-[172px] flex-col items-center justify-center rounded-[14px] border border-warka-border p-6 text-center shadow-sm">
+            <ScrollReveal delay={0.18} className="landing-contact-card flex flex-col items-center justify-center rounded-xl border border-warka-border p-3.5 text-center shadow-sm sm:min-h-[172px] sm:rounded-[14px] sm:p-6">
               <div className="mx-auto mb-3 flex aspect-square h-12 w-12 items-center justify-center rounded-xl bg-warka-primary/10">
                 <MapPin className="h-5 w-5 text-warka-primary" />
               </div>

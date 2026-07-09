@@ -1,8 +1,8 @@
-import Image from "next/image";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Phone, Mail, MapPin } from "lucide-react";
 import { Link } from "@/i18n/routing";
-import { WARKA_MARK_ON_DARK_PATH, WARKA_TAGLINE_AR, WARKA_TAGLINE_EN } from "@/lib/constants/brand";
+import { BrandLockup } from "@/components/brand/brand-lockup";
+import { WARKA_TAGLINE_AR, WARKA_TAGLINE_EN } from "@/lib/constants/brand";
 import { SITE_CONTACT } from "@/lib/constants/site-contact";
 
 export async function SiteFooter() {
@@ -17,19 +17,7 @@ export async function SiteFooter() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4">
-            <div className="flex items-center gap-2.5">
-              <Image
-                src={WARKA_MARK_ON_DARK_PATH}
-                alt="WARKA"
-                width={44}
-                height={44}
-                className="h-10 w-10 object-contain"
-              />
-              <div className="flex flex-col">
-                <span className="font-display text-xl font-bold tracking-[0.12em]">WARKA</span>
-                <span className="-mt-0.5 text-[10px] opacity-60">{tagline}</span>
-              </div>
-            </div>
+            <BrandLockup variant="dark" layout="footer" tagline={tagline} />
             <p className="text-sm leading-relaxed opacity-75">{t("tagline")}</p>
           </div>
 

@@ -35,7 +35,7 @@ import type { Profile, UserRole } from "@/types/database";
 import { useUiStore } from "@/stores/ui-store";
 import { useIsDesktop } from "@/hooks/use-is-desktop";
 import { Button } from "@/components/ui/button";
-import { WARKA_MARK_ON_DARK_PATH } from "@/lib/constants/brand";
+import { BrandLockup } from "@/components/brand/brand-lockup";
 import { signOut } from "@/server/actions/auth";
 
 type NavLabelKey =
@@ -180,20 +180,17 @@ export function DashboardSidebar({ role, profile }: DashboardSidebarProps) {
           collapsed ? "justify-center" : "justify-between"
         )}
       >
-        <Link href={`/${role}`} className="flex items-center gap-3">
-          <Image
-            src={WARKA_MARK_ON_DARK_PATH}
-            alt="WARKA"
-            width={40}
-            height={40}
-            className="h-10 w-10 shrink-0 object-contain"
-          />
-          {!collapsed && (
+        <Link href={`/${role}`} className={cn("flex items-center gap-3", collapsed && "justify-center")}>
+          {collapsed ? (
+            <BrandLockup variant="dark" layout="mark" className="h-10 w-10" priority />
+          ) : (
             <div className="overflow-hidden">
-              <div className="font-display text-lg leading-tight font-bold tracking-[0.12em] text-white">
-                WARKA
-              </div>
-              <div className="text-[11px] leading-tight text-white/80">{PORTAL_SUBTITLES[role]}</div>
+              <BrandLockup
+                variant="dark"
+                layout="header"
+                className="[&_span]:text-white [&_.text-warka-text-muted]:text-white/75"
+              />
+              <div className="mt-1 text-[11px] leading-tight text-white/80">{PORTAL_SUBTITLES[role]}</div>
             </div>
           )}
         </Link>

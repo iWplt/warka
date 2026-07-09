@@ -49,11 +49,11 @@ function TimeUnit({ value, label, urgent }: TimeUnitProps) {
     <div className="flex flex-col items-center gap-1">
       <div
         className={cn(
-          "flex aspect-square h-14 w-14 items-center justify-center rounded-xl font-mono text-xl font-bold text-white shadow-card sm:h-16 sm:w-16",
+          "flex aspect-square h-11 w-11 items-center justify-center rounded-xl font-mono text-lg font-bold text-white shadow-card sm:h-16 sm:w-16 sm:text-2xl",
           urgent ? "bg-red-600" : "bg-warka-primary"
         )}
       >
-        <span suppressHydrationWarning className="text-xl sm:text-2xl">{pad(value)}</span>
+        <span suppressHydrationWarning className="text-lg sm:text-2xl">{pad(value)}</span>
       </div>
       <span className="text-[10px] font-medium uppercase tracking-wide text-warka-text-secondary sm:text-xs">
         {label}
@@ -130,7 +130,7 @@ export function CountdownTimer({
         <TimeUnit value={timeLeft.seconds} label={labels.seconds} urgent={urgent} />
       </div>
 
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-warka-bg">
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-warka-bg sm:mt-4 sm:h-2">
         <div
           className={cn(
             "h-full rounded-full transition-all duration-1000 ease-out",

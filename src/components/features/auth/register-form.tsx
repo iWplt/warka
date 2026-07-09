@@ -9,12 +9,12 @@ import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { Check, GraduationCap, Users, KeyRound } from "lucide-react";
 import { toast } from "sonner";
-import Image from "next/image";
 import { signUp } from "@/server/actions/auth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LanguageSwitcher } from "@/components/layouts/language-switcher";
-import { WARKA_MARK_PATH, WARKA_TAGLINE_AR, WARKA_TAGLINE_EN } from "@/lib/constants/brand";
+import { BrandLockup } from "@/components/brand/brand-lockup";
+import { WARKA_TAGLINE_AR, WARKA_TAGLINE_EN } from "@/lib/constants/brand";
 import { cn } from "@/lib/utils";
 
 const studentSchema = z.object({
@@ -163,16 +163,7 @@ export function RegisterForm() {
     <div className="w-full max-w-lg">
       <div className="mb-6 text-center">
         <Link href="/" className="inline-flex flex-col items-center gap-2">
-          <Image
-            src={WARKA_MARK_PATH}
-            alt="WARKA"
-            width={56}
-            height={56}
-            className="h-12 w-12 object-contain"
-            priority
-          />
-          <span className="font-display text-xl font-bold tracking-wide text-warka-text">WARKA</span>
-          <p className="text-xs text-warka-text-muted">{tagline}</p>
+          <BrandLockup layout="auth" tagline={tagline} priority />
         </Link>
       </div>
 

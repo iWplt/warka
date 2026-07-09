@@ -6,7 +6,7 @@ let cachedLogoDataUrl: string | null = null;
 export function getWarkaLogoDataUrl(): string {
   if (cachedLogoDataUrl) return cachedLogoDataUrl;
 
-  const filePath = path.join(process.cwd(), "public/assets/brand/warka-logo-v2.png");
+  const filePath = path.join(process.cwd(), "public/assets/brand/warka-logo-v3.png");
   const buffer = fs.readFileSync(filePath);
   cachedLogoDataUrl = `data:image/png;base64,${buffer.toString("base64")}`;
   return cachedLogoDataUrl;
