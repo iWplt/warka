@@ -2,11 +2,19 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
-import { ArrowLeft, GraduationCap, Package, Receipt, ScrollText } from "lucide-react";
+import {
+  ArrowLeft,
+  ExternalLink,
+  GraduationCap,
+  Package,
+  Receipt,
+  ScrollText,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OrderStatusBadge } from "@/components/shared";
 import { InvoiceDownloadButton } from "@/components/features/orders/invoice-download-button";
 import { formatIqd } from "@/lib/format/currency";
+import { summarizeOrderItemForList } from "@/lib/orders/order-item-details";
 import type { StudentAdminDashboard } from "@/server/actions/student-admin";
 
 const KNOWN_ACTIVITY_ACTIONS = [
@@ -182,20 +190,85 @@ export function StudentAdminView({ data }: StudentAdminViewProps) {
                   </div>
                 </div>
                 {order.items.length > 0 && (
-                  <ul className="mt-3 space-y-1 border-t border-glass-border pt-3 text-sm">
-                    {order.items.map((item) => (
-                      <li key={item.id} className="flex justify-between gap-2">
-                        <span>
-                          {productT(item.product_type)}
-                          {item.size ? ` · ${item.size}` : ""}
-                          {item.custom_text ? ` · "${item.custom_text}"` : ""}
-                          {item.font_family ? ` · ${item.font_family}` : ""}
-                        </span>
-                        <span className="tabular-nums">
-                          {formatIqd(Number(item.unit_price), locale)}
-                        </span>
-                      </li>
-                    ))}
+                  <ul className="mt-3 space-y-3 border-t border-glass-border pt-3 text-sm">
+                    {order.items.map((item) => {
+                      const summaryBits = summarizeOrderItemForList(
+                        item,
+                        locale === "ar" ? "ar" : "en"
+                      );
+                      return (
+                        <li
+                          key={item.id}
+                          className="rounded-xl border border-glass-border bg-background/40 p-3"
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-2">
+                            <div className="min-w-0 space-y-1.5">
+                              <p className="font-semibold">
+                                {item.product_label
+                                  ? `${item.product_label} · ${productT(item.product_type)}`
+                                  : productT(item.product_type)}
+                              </p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {item.sash_color && (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2 py-0.5 text-[11px]">
+                                    {item.sash_color.startsWith("#") && (
+                                      <span
+                                        className="size-2.5 rounded-full border border-black/10"
+                                        style={{ backgroundColor: item.sash_color }}
+                                      />
+                                    )}
+                                    {t("color")}: {item.sash_color}
+                                  </span>
+                                )}
+                                {item.font_family && (
+                                  <span className="rounded-full bg-foreground/5 px-2 py-0.5 text-[11px]">
+                                    {t("font")}:{" "}
+                                    <span style={{ fontFamily: item.font_family }}>
+                                      {item.font_family}
+                                    </span>
+                                  </span>
+                                )}
+                                {item.embroidery_position && (
+                                  <span className="rounded-full bg-foreground/5 px-2 py-0.5 text-[11px]">
+                                    {t("embroidery")}: {item.embroidery_position}
+                                  </span>
+                                )}
+                                {item.fabric_type && (
+                                  <span className="rounded-full bg-foreground/5 px-2 py-0.5 text-[11px]">
+                                    {t("fabric")}: {item.fabric_type}
+                                  </span>
+                                )}
+                                {item.size && (
+                                  <span className="rounded-full bg-foreground/5 px-2 py-0.5 text-[11px]">
+                                    {t("size")}: {item.size}
+                                  </span>
+                                )}
+                              </div>
+                              {item.custom_text && (
+                                <p className="text-xs text-muted-foreground" dir="rtl">
+                                  &ldquo;{item.custom_text}&rdquo;
+                                </p>
+                              )}
+                              {summaryBits.length > 0 && (
+                                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                                  {summaryBits.join(" · ")}
+                                </p>
+                              )}
+                            </div>
+                            <span className="shrink-0 tabular-nums font-semibold">
+                              {formatIqd(Number(item.unit_price), locale)}
+                            </span>
+                          </div>
+                          <Link
+                            href={`/admin/orders/${order.id}`}
+                            className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                          >
+                            {t("viewFullDetails")}
+                            <ExternalLink className="size-3" />
+                          </Link>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </div>

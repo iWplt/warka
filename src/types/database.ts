@@ -164,6 +164,7 @@ export type OrderItem = {
   order_id: string;
   product_type: ProductType;
   catalog_product_id: string | null;
+  product_label: string | null;
   size: string | null;
   sash_color: string | null;
   fabric_type: string | null;
@@ -183,6 +184,8 @@ export type OrderItem = {
   cap_top_embroidery_path: string | null;
   batch_locked_fields?: Record<string, string>;
   student_fields?: Record<string, string>;
+  /** Full customization engine selection (style, zones, gown additions) */
+  customization_payload?: import("@/types/customization").CustomizationPayload | null;
   template_id: string | null;
   unit_price: number;
   created_at: string;

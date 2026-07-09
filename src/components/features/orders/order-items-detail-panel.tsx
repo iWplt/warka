@@ -16,6 +16,85 @@ type OrderItemsDetailPanelProps = {
   itemMedia?: Record<string, OrderItemMedia>;
 };
 
+function DetailValue({
+  detail,
+  isAr,
+}: {
+  detail: {
+    key: string;
+    labelAr: string;
+    labelEn: string;
+    value: string;
+    kind?: "text" | "font" | "image" | "color";
+    imageUrl?: string | null;
+    colorHex?: string | null;
+  };
+  isAr: boolean;
+}) {
+  if (detail.kind === "font") {
+    return (
+      <span style={{ fontFamily: detail.value }} dir="rtl">
+        {detail.value}
+        <span className="ms-2 font-normal text-muted-foreground" dir="ltr">
+          ({detail.value})
+        </span>
+      </span>
+    );
+  }
+
+  if (detail.kind === "color") {
+    const hex = detail.colorHex?.startsWith("#") ? detail.colorHex : null;
+    return (
+      <span className="inline-flex items-center gap-2">
+        {hex && (
+          <span
+            className="inline-block size-5 shrink-0 rounded-md border border-glass-border shadow-sm"
+            style={{ backgroundColor: hex }}
+            title={hex}
+            aria-hidden
+          />
+        )}
+        <span dir="auto">{detail.value}</span>
+      </span>
+    );
+  }
+
+  if (detail.kind === "image" && detail.imageUrl) {
+    return (
+      <div className="mt-2 space-y-2">
+        <a
+          href={detail.imageUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="relative block aspect-video max-w-md overflow-hidden rounded-lg border border-glass-border bg-foreground/5"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={detail.imageUrl}
+            alt={isAr ? detail.labelAr : detail.labelEn}
+            className="h-full w-full object-contain"
+          />
+        </a>
+        <a
+          href={detail.imageUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+        >
+          {isAr ? "فتح الصورة بالحجم الكامل" : "Open full-size image"}
+          <ExternalLink className="size-3" />
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <span dir={detail.key.includes("text") || detail.key === "custom_text" ? "rtl" : undefined}>
+      {detail.value}
+    </span>
+  );
+}
+
 export function OrderItemsDetailPanel({
   order,
   items,
@@ -48,7 +127,13 @@ export function OrderItemsDetailPanel({
 
       {items.map((item, index) => {
         const media = itemMedia[item.id];
-        const { studentName, sections } = buildOrderItemDetailRows(item, order.type, media);
+        const { studentName, productTitle, sections } = buildOrderItemDetailRows(
+          item,
+          order.type,
+          media
+        );
+        const typeLabel = productT(item.product_type);
+        const heading = productTitle ? `${productTitle} · ${typeLabel}` : typeLabel;
 
         return (
           <article
@@ -56,24 +141,60 @@ export function OrderItemsDetailPanel({
             className="overflow-hidden rounded-2xl border border-glass-border glass"
           >
             <header className="flex flex-wrap items-start justify-between gap-3 border-b border-glass-border bg-foreground/[0.03] px-4 py-4 sm:px-5">
-              <div className="min-w-0">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {isAr ? `منتج ${index + 1}` : `Item ${index + 1}`}
-                </p>
-                <h3 className="mt-0.5 text-lg font-bold">{productT(item.product_type)}</h3>
-                {studentName && (
-                  <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-primary">
-                    <User className="size-3.5 shrink-0" />
-                    {studentName}
-                  </p>
+              <div className="flex min-w-0 flex-1 items-start gap-3">
+                {media?.productImageUrl && (
+                  <div className="relative size-16 shrink-0 overflow-hidden rounded-xl border border-glass-border bg-foreground/5 sm:size-20">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={media.productImageUrl}
+                      alt={heading}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
                 )}
+                <div className="min-w-0">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    {isAr ? `منتج ${index + 1}` : `Item ${index + 1}`}
+                  </p>
+                  <h3 className="mt-0.5 text-lg font-bold leading-snug">{heading}</h3>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
+                    {item.sash_color && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2 py-0.5">
+                        {item.sash_color.startsWith("#") && (
+                          <span
+                            className="size-2.5 rounded-full border border-black/10"
+                            style={{ backgroundColor: item.sash_color }}
+                          />
+                        )}
+                        {isAr ? "اللون" : "Color"}: {item.sash_color}
+                      </span>
+                    )}
+                    {item.font_family && (
+                      <span className="rounded-full bg-foreground/5 px-2 py-0.5">
+                        {isAr ? "الخط" : "Font"}:{" "}
+                        <span style={{ fontFamily: item.font_family }}>{item.font_family}</span>
+                      </span>
+                    )}
+                    {item.custom_text && (
+                      <span className="rounded-full bg-foreground/5 px-2 py-0.5" dir="rtl">
+                        &ldquo;{item.custom_text}&rdquo;
+                      </span>
+                    )}
+                  </div>
+                  {studentName && (
+                    <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-primary">
+                      <User className="size-3.5 shrink-0" />
+                      {studentName}
+                    </p>
+                  )}
+                </div>
               </div>
               <p className="text-lg font-bold tabular-nums text-accent">
                 {formatIqd(Number(item.unit_price), locale)}
               </p>
             </header>
 
-            <div className="space-y-4 p-4 sm:p-5">
+            <div className="space-y-5 p-4 sm:p-5">
               {sections.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   {isAr ? "لا توجد تفاصيل إضافية لهذا المنتج" : "No extra details for this product"}
@@ -81,7 +202,10 @@ export function OrderItemsDetailPanel({
               ) : (
                 sections.map((section) => (
                   <section key={section.id}>
-                    <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    <h4 className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                      {section.id === "attachments" && (
+                        <MapPin className="size-3.5 text-primary" aria-hidden />
+                      )}
                       {isAr ? section.titleAr : section.titleEn}
                     </h4>
                     <dl className="grid gap-2 sm:grid-cols-2">
@@ -97,43 +221,7 @@ export function OrderItemsDetailPanel({
                             {isAr ? detail.labelAr : detail.labelEn}
                           </dt>
                           <dd className="mt-1 text-sm font-semibold text-foreground">
-                            {detail.kind === "font" ? (
-                              <span style={{ fontFamily: detail.value }} dir="rtl">
-                                {detail.value}
-                                <span className="ms-2 font-normal text-muted-foreground" dir="ltr">
-                                  ({detail.value})
-                                </span>
-                              </span>
-                            ) : detail.kind === "image" && detail.imageUrl ? (
-                              <div className="mt-2 space-y-2">
-                                <a
-                                  href={detail.imageUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="relative block aspect-video max-w-sm overflow-hidden rounded-lg border border-glass-border bg-foreground/5"
-                                >
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
-                                    src={detail.imageUrl}
-                                    alt={isAr ? detail.labelAr : detail.labelEn}
-                                    className="h-full w-full object-contain"
-                                  />
-                                </a>
-                                <a
-                                  href={detail.imageUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
-                                >
-                                  {isAr ? "فتح الصورة" : "Open image"}
-                                  <ExternalLink className="size-3" />
-                                </a>
-                              </div>
-                            ) : (
-                              <span dir={detail.key === "custom_text" ? "rtl" : undefined}>
-                                {detail.value}
-                              </span>
-                            )}
+                            <DetailValue detail={detail} isAr={isAr} />
                           </dd>
                         </div>
                       ))}

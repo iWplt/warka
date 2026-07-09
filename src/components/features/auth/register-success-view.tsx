@@ -7,7 +7,7 @@ import Link from "next/link";
 import { Copy, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { WARKA_LOGO_PATH } from "@/lib/constants/brand";
+import { WARKA_MARK_PATH } from "@/lib/constants/brand";
 import { isValidStudentAccessCode, normalizeAccessCode } from "@/lib/auth/access-code";
 
 export function RegisterSuccessView() {
@@ -41,7 +41,13 @@ export function RegisterSuccessView() {
   return (
     <div className="w-full max-w-lg rounded-2xl bg-card p-8 shadow-card">
       <div className="mb-6 text-center">
-        <Image src={WARKA_LOGO_PATH} alt="WARKA" width={56} height={56} className="mx-auto h-14 w-14" />
+        <Image
+          src={WARKA_MARK_PATH}
+          alt="WARKA"
+          width={64}
+          height={64}
+          className="mx-auto h-14 w-14 object-contain"
+        />
         <CheckCircle2 className="mx-auto mt-4 size-10 text-warka-primary" />
         <h1 className="mt-4 text-xl font-bold text-warka-text">{t("registerSuccessTitle")}</h1>
         <p className="mt-2 text-sm leading-relaxed text-warka-text-secondary">{t("registerSuccessHint")}</p>

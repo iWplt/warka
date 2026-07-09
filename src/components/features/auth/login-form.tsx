@@ -10,7 +10,7 @@ import { signIn } from "@/server/actions/auth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LanguageSwitcher } from "@/components/layouts/language-switcher";
-import { WARKA_LOGO_PATH, WARKA_TAGLINE_AR, WARKA_TAGLINE_EN } from "@/lib/constants/brand";
+import { WARKA_MARK_PATH, WARKA_TAGLINE_AR, WARKA_TAGLINE_EN } from "@/lib/constants/brand";
 import { cn } from "@/lib/utils";
 
 type LoginFormProps = {
@@ -59,7 +59,14 @@ export function LoginForm({ localMode = false }: LoginFormProps) {
     <div className="w-full max-w-md">
       <div className="mb-8 text-center">
         <Link href="/" className="inline-flex flex-col items-center gap-2">
-          <Image src={WARKA_LOGO_PATH} alt="WARKA" width={64} height={64} className="h-16 w-16" priority />
+          <Image
+            src={WARKA_MARK_PATH}
+            alt="WARKA"
+            width={72}
+            height={72}
+            className="mx-auto h-16 w-16 object-contain"
+            priority
+          />
           <div>
             <span className="font-display text-2xl font-bold tracking-wide text-warka-text">WARKA</span>
             <p className="mt-1 text-xs text-warka-text-muted">{tagline}</p>

@@ -11,13 +11,13 @@
   "dir": "rtl",
   "icons": [
     {
-      "src": "/assets/brand/warka-logo.png",
+      "src": "/assets/brand/warka-mark.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/assets/brand/warka-logo.png",
+      "src": "/assets/brand/warka-mark.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

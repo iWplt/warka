@@ -2,7 +2,7 @@ import Image from "next/image";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Phone, Mail, MapPin } from "lucide-react";
 import { Link } from "@/i18n/routing";
-import { WARKA_LOGO_PATH, WARKA_TAGLINE_AR, WARKA_TAGLINE_EN } from "@/lib/constants/brand";
+import { WARKA_MARK_PATH, WARKA_TAGLINE_AR, WARKA_TAGLINE_EN } from "@/lib/constants/brand";
 import { SITE_CONTACT } from "@/lib/constants/site-contact";
 
 export async function SiteFooter() {
@@ -17,17 +17,17 @@ export async function SiteFooter() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <Image
-                src={WARKA_LOGO_PATH}
+                src={WARKA_MARK_PATH}
                 alt="WARKA"
-                width={40}
-                height={40}
-                className="h-10 w-10 brightness-0 invert"
+                width={44}
+                height={44}
+                className="h-10 w-10 object-contain brightness-0 invert"
               />
               <div className="flex flex-col">
-                <span className="font-display text-xl font-bold tracking-wide">WARKA</span>
-                <span className="-mt-1 text-[10px] opacity-60">{tagline}</span>
+                <span className="font-display text-xl font-bold tracking-[0.12em]">WARKA</span>
+                <span className="-mt-0.5 text-[10px] opacity-60">{tagline}</span>
               </div>
             </div>
             <p className="text-sm leading-relaxed opacity-75">{t("tagline")}</p>

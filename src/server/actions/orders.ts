@@ -167,8 +167,33 @@ async function resolveOrderItemMedia(
     embroidery_image_path: string | null;
     cap_side_embroidery_path: string | null;
     cap_top_embroidery_path: string | null;
+    catalog_product_id?: string | null;
+    customization_payload?: unknown;
   }>
 ): Promise<Record<string, OrderItemMedia>> {
+  const catalogIds = [
+    ...new Set(
+      items
+        .map((item) => item.catalog_product_id)
+        .filter((id): id is string => Boolean(id))
+    ),
+  ];
+
+  const productImageById = new Map<string, string | null>();
+  if (catalogIds.length > 0 && supabase) {
+    const { data: products } = await supabase
+      .from("products")
+      .select("id, image, image_path")
+      .in("id", catalogIds);
+    await Promise.all(
+      (products ?? []).map(async (product) => {
+        const raw = (product.image as string | null) || (product.image_path as string | null);
+        const url = await signedStorageUrl(supabase, raw);
+        productImageById.set(product.id as string, url);
+      })
+    );
+  }
+
   const entries = await Promise.all(
     items.map(async (item) => {
       const [logoUrl, embroideryUrl, capSideUrl, capTopUrl] = await Promise.all([
@@ -177,9 +202,41 @@ async function resolveOrderItemMedia(
         signedStorageUrl(supabase, item.cap_side_embroidery_path),
         signedStorageUrl(supabase, item.cap_top_embroidery_path),
       ]);
+
+      const zoneImages: Record<string, string | null> = {};
+      const payload = item.customization_payload;
+      if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+        const zones = (payload as { zones?: Array<Record<string, unknown>> }).zones;
+        if (Array.isArray(zones)) {
+          await Promise.all(
+            zones.map(async (zone, index) => {
+              const key =
+                (typeof zone.zone_key === "string" && zone.zone_key) ||
+                (typeof zone.zone_id === "string" && zone.zone_id) ||
+                `zone-${index}`;
+              const raw =
+                (typeof zone.image_data_url === "string" && zone.image_data_url) ||
+                (typeof zone.image_path === "string" && zone.image_path) ||
+                null;
+              if (!raw) return;
+              zoneImages[key] = await signedStorageUrl(supabase, raw);
+            })
+          );
+        }
+      }
+
       return [
         item.id,
-        { logoUrl, embroideryUrl, capSideUrl, capTopUrl },
+        {
+          logoUrl,
+          embroideryUrl,
+          capSideUrl,
+          capTopUrl,
+          productImageUrl: item.catalog_product_id
+            ? productImageById.get(item.catalog_product_id) ?? null
+            : null,
+          zoneImages: Object.keys(zoneImages).length > 0 ? zoneImages : undefined,
+        },
       ] as const;
     })
   );

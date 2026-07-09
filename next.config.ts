@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/favicon.ico",
-        destination: "/assets/brand/warka-logo.png",
+        destination: "/assets/brand/warka-mark.png",
         permanent: false,
       },
       {

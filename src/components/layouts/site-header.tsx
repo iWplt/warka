@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Search, ShoppingCart, User, Menu, X, LogOut, LayoutDashboard } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
-import { WARKA_LOGO_PATH, WARKA_TAGLINE_AR, WARKA_TAGLINE_EN } from "@/lib/constants/brand";
+import { WARKA_MARK_PATH, WARKA_TAGLINE_AR, WARKA_TAGLINE_EN } from "@/lib/constants/brand";
 import { getDashboardPath } from "@/lib/auth/permissions";
 import type { Profile } from "@/types/database";
 import { signOut } from "@/server/actions/auth";
@@ -78,18 +78,20 @@ export function SiteHeader({ profile }: SiteHeaderProps) {
     <header className="sticky top-0 z-50 w-full border-b border-warka-border bg-white/95 backdrop-blur-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid h-16 grid-cols-[1fr_auto] items-center gap-3 md:grid-cols-[auto_1fr_auto] md:gap-4">
-          <Link href="/" className="flex shrink-0 items-center gap-2 justify-self-start">
+          <Link href="/" className="flex shrink-0 items-center gap-2.5 justify-self-start">
             <Image
-              src={WARKA_LOGO_PATH}
+              src={WARKA_MARK_PATH}
               alt="WARKA"
-              width={40}
-              height={40}
-              className="h-10 w-10 shrink-0"
+              width={44}
+              height={44}
+              className="h-10 w-10 shrink-0 object-contain sm:h-11 sm:w-11"
               priority
             />
             <div className="hidden min-w-0 flex-col sm:flex">
-              <span className="font-display text-xl font-bold tracking-wide text-warka-text">WARKA</span>
-              <span className="-mt-1 truncate text-[10px] text-warka-text-muted">{tagline}</span>
+              <span className="font-display text-xl font-bold tracking-[0.12em] text-warka-text">
+                WARKA
+              </span>
+              <span className="-mt-0.5 truncate text-[10px] text-warka-text-muted">{tagline}</span>
             </div>
           </Link>
 

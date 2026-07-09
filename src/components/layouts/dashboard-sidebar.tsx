@@ -35,7 +35,7 @@ import type { Profile, UserRole } from "@/types/database";
 import { useUiStore } from "@/stores/ui-store";
 import { useIsDesktop } from "@/hooks/use-is-desktop";
 import { Button } from "@/components/ui/button";
-import { WARKA_LOGO_PATH } from "@/lib/constants/brand";
+import { WARKA_MARK_PATH } from "@/lib/constants/brand";
 import { signOut } from "@/server/actions/auth";
 
 type NavLabelKey =
@@ -181,10 +181,18 @@ export function DashboardSidebar({ role, profile }: DashboardSidebarProps) {
         )}
       >
         <Link href={`/${role}`} className="flex items-center gap-3">
-          <Image src={WARKA_LOGO_PATH} alt="WARKA" width={40} height={40} className="h-10 w-10 shrink-0" />
+          <Image
+            src={WARKA_MARK_PATH}
+            alt="WARKA"
+            width={40}
+            height={40}
+            className="h-10 w-10 shrink-0 object-contain brightness-0 invert"
+          />
           {!collapsed && (
             <div className="overflow-hidden">
-              <div className="font-display text-lg leading-tight font-bold text-white">WARKA</div>
+              <div className="font-display text-lg leading-tight font-bold tracking-[0.12em] text-white">
+                WARKA
+              </div>
               <div className="text-[11px] leading-tight text-white/80">{PORTAL_SUBTITLES[role]}</div>
             </div>
           )}
