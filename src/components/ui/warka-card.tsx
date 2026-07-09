@@ -9,7 +9,7 @@ export function WarkaCard({
   return (
     <div
       className={cn(
-        "utility-surface p-6 text-card-foreground",
+        "rounded-2xl border border-warka-border bg-card p-6 text-card-foreground shadow-card",
         className
       )}
       {...props}

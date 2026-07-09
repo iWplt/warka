@@ -14,7 +14,7 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
 
       className={cn(
 
-        "rounded-xl border border-warka-border bg-card text-card-foreground shadow-none",
+        "rounded-xl border border-border bg-card text-card-foreground shadow-card",
 
         className
 
@@ -116,7 +116,7 @@ const GlassCard = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivE
 
   ({ className, ...props }, ref) => (
 
-    <div ref={ref} className={cn("utility-surface", className)} {...props} />
+    <div ref={ref} className={cn("rounded-2xl border border-warka-border bg-card shadow-card", className)} {...props} />
 
   )
 

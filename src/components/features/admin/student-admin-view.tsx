@@ -92,7 +92,7 @@ export function StudentAdminView({ data }: StudentAdminViewProps) {
         <StatCard label={t("balanceDue")} value={formatIqd(stats.balanceDue, locale)} />
       </div>
 
-      <section className="utility-surface p-6">
+      <section className="rounded-2xl border border-glass-border glass p-6">
         <h2 className="mb-4 flex items-center gap-2 font-semibold">
           <GraduationCap className="size-5 text-primary" aria-hidden />
           {t("profileSection")}
@@ -113,7 +113,7 @@ export function StudentAdminView({ data }: StudentAdminViewProps) {
       </section>
 
       {batches.length > 0 && (
-        <section className="utility-surface p-6">
+        <section className="rounded-2xl border border-glass-border glass p-6">
           <h2 className="mb-4 font-semibold">{t("batchesSection")}</h2>
           <ul className="space-y-3">
             {batches.map(({ batch, roster }) => (
@@ -142,7 +142,7 @@ export function StudentAdminView({ data }: StudentAdminViewProps) {
         </section>
       )}
 
-      <section className="utility-surface p-6">
+      <section className="rounded-2xl border border-glass-border glass p-6">
         <h2 className="mb-4 flex items-center gap-2 font-semibold">
           <Package className="size-5 text-primary" aria-hidden />
           {t("ordersSection")}
@@ -152,7 +152,7 @@ export function StudentAdminView({ data }: StudentAdminViewProps) {
         ) : (
           <div className="space-y-4">
             {orders.map((order) => (
-              <div key={order.id} className="rounded-xl border border-warka-border bg-warka-bg/40 p-4">
+              <div key={order.id} className="rounded-xl border border-glass-border bg-foreground/5 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <Link
@@ -190,7 +190,7 @@ export function StudentAdminView({ data }: StudentAdminViewProps) {
                   </div>
                 </div>
                 {order.items.length > 0 && (
-                  <ul className="mt-3 space-y-3 border-t border-warka-border pt-3 text-sm">
+                  <ul className="mt-3 space-y-3 border-t border-glass-border pt-3 text-sm">
                     {order.items.map((item) => {
                       const summaryBits = summarizeOrderItemForList(
                         item,
@@ -199,7 +199,7 @@ export function StudentAdminView({ data }: StudentAdminViewProps) {
                       return (
                         <li
                           key={item.id}
-                          className="rounded-xl border border-warka-border bg-card p-3"
+                          className="rounded-xl border border-glass-border bg-background/40 p-3"
                         >
                           <div className="flex flex-wrap items-start justify-between gap-2">
                             <div className="min-w-0 space-y-1.5">
@@ -277,7 +277,7 @@ export function StudentAdminView({ data }: StudentAdminViewProps) {
         )}
       </section>
 
-      <section className="utility-surface p-6">
+      <section className="rounded-2xl border border-glass-border glass p-6">
         <h2 className="mb-4 flex items-center gap-2 font-semibold">
           <Receipt className="size-5 text-primary" aria-hidden />
           {t("paymentsSection")}
@@ -310,7 +310,7 @@ export function StudentAdminView({ data }: StudentAdminViewProps) {
         )}
       </section>
 
-      <section className="utility-surface p-6">
+      <section className="rounded-2xl border border-glass-border glass p-6">
         <h2 className="mb-4 flex items-center gap-2 font-semibold">
           <ScrollText className="size-5 text-primary" aria-hidden />
           {t("auditSection")}
@@ -363,7 +363,7 @@ export function StudentAdminView({ data }: StudentAdminViewProps) {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="utility-surface p-4">
+    <div className="rounded-2xl border border-glass-border glass p-4">
       <p className="text-sm text-muted-foreground">{label}</p>
       <p className="mt-1 text-xl font-semibold tabular-nums">{value}</p>
     </div>

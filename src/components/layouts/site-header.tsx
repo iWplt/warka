@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Search, ShoppingCart, User, Menu, X, LogOut, LayoutDashboard } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
-import { WARKA_MARK_PATH, WARKA_TAGLINE_AR, WARKA_TAGLINE_EN } from "@/lib/constants/brand";
+import { WARKA_LOGO_PATH, WARKA_TAGLINE_AR, WARKA_TAGLINE_EN } from "@/lib/constants/brand";
 import { getDashboardPath } from "@/lib/auth/permissions";
 import type { Profile } from "@/types/database";
 import { signOut } from "@/server/actions/auth";
@@ -75,25 +75,22 @@ export function SiteHeader({ profile }: SiteHeaderProps) {
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-warka-border bg-white">
+    <header className="sticky top-0 z-50 w-full border-b border-warka-border bg-white/95 backdrop-blur-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid h-16 grid-cols-[1fr_auto] items-center gap-3 md:grid-cols-[auto_1fr_auto] md:gap-4">
-          <Link href="/" className="flex shrink-0 items-center gap-2.5 justify-self-start">
+        <div className="grid min-h-16 h-auto grid-cols-[1fr_auto] items-center gap-3 py-1 md:grid-cols-[auto_1fr_auto] md:gap-4">
+          <Link href="/" className="flex shrink-0 items-center gap-2.5 justify-self-start py-1">
             <Image
-              src={WARKA_MARK_PATH}
+              src={WARKA_LOGO_PATH}
               alt="WARKA"
-              width={48}
-              height={48}
-              className="h-11 w-11 shrink-0 object-contain"
+              width={140}
+              height={168}
+              className="h-12 w-auto max-w-[5.25rem] object-contain object-left sm:h-14 sm:max-w-[6.25rem]"
               priority
               unoptimized
             />
-            <div className="hidden min-w-0 flex-col sm:flex">
-              <span className="font-display text-xl font-bold tracking-[0.14em] text-warka-text">
-                WARKA
-              </span>
-              <span className="-mt-0.5 truncate text-[10px] text-warka-text-muted">{tagline}</span>
-            </div>
+            <span className="hidden min-w-0 truncate text-[10px] text-warka-text-muted md:block max-w-[8rem]">
+              {tagline}
+            </span>
           </Link>
 
           <nav className="hidden items-center justify-center gap-6 lg:gap-8 md:flex" aria-label="Main">
