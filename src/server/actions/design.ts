@@ -6,7 +6,11 @@ import { createClient } from "@/lib/supabase/server";
 import { uploadDataUrl } from "@/lib/supabase/storage";
 import { isLocalAuthEnabled } from "@/lib/auth/local-session";
 import { PermissionError, requireAuth, requireRole, requirePermission } from "@/lib/auth/guards";
-import { createNotification, logActivity, notifyAdminsAndEmployees } from "@/server/actions/notifications";
+import {
+  createNotificationInternal as createNotification,
+  logActivityInternal as logActivity,
+  notifyAdminsAndEmployees,
+} from "@/lib/notifications/internal";
 import { getDemoTemplates } from "@/lib/design/demo-templates";
 import type { DesignSubmissionStatus, DesignTemplate, ProductType, TemplateConfig } from "@/types/database";
 

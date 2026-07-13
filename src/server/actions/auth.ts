@@ -16,6 +16,7 @@ import {
   createLocalSessionToken,
   isLocalAuthEnabled,
   LOCAL_SESSION_COOKIE,
+  LOCAL_SESSION_MAX_AGE_SEC,
   validateLocalCredentials,
 } from "@/lib/auth/local-session";
 import {
@@ -27,11 +28,15 @@ import {
   verifyPhoneLastFour,
 } from "@/lib/auth/access-code";
 import {
-  finalizeRepInviteCode,
-  releaseRepInviteCode,
   reserveRepInviteCode,
   validateRepInviteCode,
 } from "@/server/actions/invites";
+import {
+  finalizeRepInviteCodeInternal as finalizeRepInviteCode,
+  releaseRepInviteCodeInternal as releaseRepInviteCode,
+} from "@/lib/invites/lifecycle";
+import { logSecurityEvent } from "@/lib/security/audit-log";
+import { isProductionRuntime } from "@/lib/security/is-production";
 import type { UserRole } from "@/types/database";
 import { resolvePostLoginPath } from "@/lib/auth/post-login-redirect";
 
@@ -87,6 +92,7 @@ async function guardAuthRateLimit(identifier: string, locale: string): Promise<v
   const ip = await getClientIp();
   const key = buildAuthRateLimitKey(identifier, ip);
   if (isAuthRateLimited(key)) {
+    logSecurityEvent("auth.rate_limited", { ip });
     redirect(`/${locale}/login?error=rate-limit`);
   }
 }
@@ -151,6 +157,7 @@ export async function signIn(formData: FormData) {
     if (!validateLocalCredentials(login.trim(), password)) {
       const ip = await getClientIp();
       recordAuthFailure(buildAuthRateLimitKey(login.trim(), ip));
+      logSecurityEvent("auth.login_failed", { method: "local", ip });
       redirect(`/${locale}/login?error=invalid`);
     }
 
@@ -164,8 +171,9 @@ export async function signIn(formData: FormData) {
     cookieStore.set(LOCAL_SESSION_COOKIE, token, {
       httpOnly: true,
       sameSite: "lax",
+      secure: isProductionRuntime(),
       path: "/",
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: LOCAL_SESSION_MAX_AGE_SEC,
     });
 
     redirect(`/${locale}/admin`);
@@ -186,6 +194,7 @@ export async function signIn(formData: FormData) {
   if (error) {
     const ip = await getClientIp();
     recordAuthFailure(buildAuthRateLimitKey(login.trim(), ip));
+    logSecurityEvent("auth.login_failed", { method: "password", ip });
     redirect(`/${locale}/login?error=invalid`);
   }
 

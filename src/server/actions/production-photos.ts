@@ -8,7 +8,10 @@ import {
   requireAuth,
   requirePermission,
 } from "@/lib/auth/guards";
-import { createNotification, logActivity } from "@/server/actions/notifications";
+import {
+  createNotificationInternal as createNotification,
+  logActivityInternal as logActivity,
+} from "@/lib/notifications/internal";
 import { queueWhatsAppNotification } from "@/lib/messaging/dispatch";
 import { uploadDataUrl } from "@/lib/supabase/storage";
 import { validateProductImageDataUrl } from "@/lib/upload/validate";

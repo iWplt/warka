@@ -2,25 +2,29 @@
 
 import { promises as fs } from "fs";
 import path from "path";
+import { headers } from "next/headers";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit, rateLimitKey } from "@/lib/security/rate-limit";
+import { logSecurityEvent } from "@/lib/security/audit-log";
+import { assertSameOriginRequest } from "@/lib/security/origin";
 
 const bulkLeadProductSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  product_type: z.string().optional(),
-  quantity: z.coerce.number().min(1).optional(),
-  sizes: z.record(z.string(), z.coerce.number().min(0)).optional(),
+  id: z.string().max(100),
+  name: z.string().max(200),
+  product_type: z.string().max(50).optional(),
+  quantity: z.coerce.number().min(1).max(10_000).optional(),
+  sizes: z.record(z.string().max(20), z.coerce.number().min(0).max(10_000)).optional(),
 });
 
 export const bulkLeadSchema = z.object({
-  university: z.string().min(1),
-  student_count: z.coerce.number().min(1),
-  coordinator_name: z.string().min(1),
-  phone: z.string().min(7),
-  email: z.string().email().optional().or(z.literal("")),
-  products: z.array(bulkLeadProductSchema).min(1),
-  notes: z.string().optional(),
+  university: z.string().min(1).max(200),
+  student_count: z.coerce.number().min(1).max(50_000),
+  coordinator_name: z.string().min(1).max(120),
+  phone: z.string().min(7).max(30),
+  email: z.string().email().max(200).optional().or(z.literal("")),
+  products: z.array(bulkLeadProductSchema).min(1).max(50),
+  notes: z.string().max(2000).optional(),
 });
 
 export type BulkLeadInput = z.infer<typeof bulkLeadSchema>;
@@ -46,16 +50,29 @@ async function appendLeadToFile(payload: Record<string, unknown>): Promise<boole
 }
 
 export async function createBulkLead(input: BulkLeadInput): Promise<BulkLeadResult> {
+  await assertSameOriginRequest();
+
+  const h = await headers();
+  const ip =
+    h.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    h.get("x-real-ip") ||
+    "unknown";
+  const rl = checkRateLimit(rateLimitKey("bulk-lead", ip), 8, 15 * 60 * 1000);
+  if (!rl.allowed) {
+    logSecurityEvent("auth.rate_limited", { scope: "bulk-lead", ip });
+    throw new Error("Too many requests. Please try again later.");
+  }
+
   const parsed = bulkLeadSchema.parse(input);
 
   const payload = {
-    university: parsed.university,
+    university: parsed.university.trim().slice(0, 200),
     student_count: parsed.student_count,
-    coordinator_name: parsed.coordinator_name,
-    phone: parsed.phone,
-    email: parsed.email?.trim() ? parsed.email.trim() : null,
+    coordinator_name: parsed.coordinator_name.trim().slice(0, 120),
+    phone: parsed.phone.trim().slice(0, 30),
+    email: parsed.email?.trim() ? parsed.email.trim().slice(0, 200) : null,
     products: parsed.products,
-    notes: parsed.notes?.trim() ? parsed.notes.trim() : null,
+    notes: parsed.notes?.trim() ? parsed.notes.trim().slice(0, 2000) : null,
   };
 
   const supabase = await createClient();
@@ -78,10 +95,9 @@ export async function createBulkLead(input: BulkLeadInput): Promise<BulkLeadResu
 
   const fileSaved = await appendLeadToFile(payload);
   if (fileSaved) {
-    console.log("[createBulkLead] Lead saved to local file fallback:", payload.university);
     return { success: true, persisted: "file" };
   }
 
-  console.log("[createBulkLead] Lead logged (graceful fallback):", JSON.stringify(payload));
+  console.log("[createBulkLead] Lead accepted (log fallback)");
   return { success: true, persisted: "log" };
 }

@@ -11,10 +11,10 @@ import {
   requirePermission,
 } from "@/lib/auth/guards";
 import {
-  createNotification,
-  logActivity,
+  createNotificationInternal as createNotification,
+  logActivityInternal as logActivity,
   notifyAdminsAndEmployees,
-} from "@/server/actions/notifications";
+} from "@/lib/notifications/internal";
 import { uploadDataUrl } from "@/lib/supabase/storage";
 import { env } from "@/lib/env";
 import { PRINTING_PIPELINE_STATUSES } from "@/lib/orders/status-flow";

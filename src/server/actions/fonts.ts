@@ -155,27 +155,15 @@ export async function uploadFontFile(fontId: string, base64: string, fileName: s
   const admin = createAdminClient();
   if (!admin) throw new Error("Supabase not configured");
 
+  const { validateFontBase64 } = await import("@/lib/upload/validate");
+  const raw = base64.includes(",") ? base64.split(",")[1] ?? base64 : base64;
+  const validated = validateFontBase64(raw, fileName);
+  if (!validated.ok) throw new Error(validated.error);
+
   const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
-  if (!FONT_EXTENSIONS.has(ext)) {
-    throw new Error("Supported formats: .woff2, .woff, .ttf, .otf");
-  }
-
-  const match = base64.match(/^data:([^;]+);base64,(.+)$/);
-  const buffer = match
-    ? Buffer.from(match[2], "base64")
-    : Buffer.from(base64, "base64");
-
-  const contentType =
-    ext === "woff2"
-      ? "font/woff2"
-      : ext === "woff"
-        ? "font/woff"
-        : ext === "otf"
-          ? "font/otf"
-          : "font/ttf";
-
+  const buffer = Buffer.from(raw, "base64");
   const path = `${fontId}/${Date.now()}.${ext}`;
-  const { publicUrl } = await uploadBuffer(admin, "fonts", path, buffer, contentType, {
+  const { publicUrl } = await uploadBuffer(admin, "fonts", path, buffer, validated.contentType, {
     upsert: true,
   });
 

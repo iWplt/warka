@@ -121,6 +121,11 @@ export async function requireAuth(): Promise<Profile> {
 export async function requireRole(roles: UserRole[]): Promise<Profile> {
   const profile = await requireAuth();
   if (!roles.includes(profile.role)) {
+    const { logSecurityEvent } = await import("@/lib/security/audit-log");
+    logSecurityEvent("permission.denied", {
+      role: profile.role,
+      required: roles.join(","),
+    });
     throw new PermissionError("Insufficient role");
   }
   return profile;
@@ -133,7 +138,14 @@ export async function requirePermission(
   if (profile.role === "admin") return profile;
 
   const allowed = await hasPermission(profile.id, permission);
-  if (!allowed) throw new PermissionError(`Missing permission: ${permission}`);
+  if (!allowed) {
+    const { logSecurityEvent } = await import("@/lib/security/audit-log");
+    logSecurityEvent("permission.denied", {
+      role: profile.role,
+      permission,
+    });
+    throw new PermissionError(`Missing permission: ${permission}`);
+  }
   return profile;
 }
 

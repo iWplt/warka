@@ -14,6 +14,8 @@ const envSchema = z.object({
   LOCAL_ADMIN_PASSWORD: z.string().min(1).optional(),
   LOCAL_AUTH_SECRET: z.string().min(8).optional(),
   NEXT_PUBLIC_LOCAL_AUTH_ENABLED: z.enum(["true", "false"]).optional(),
+  STUDENT_AUTH_PEPPER: z.string().min(16).optional(),
+  CRON_SECRET: z.string().min(16).optional(),
 });
 
 export const env = envSchema.parse({
@@ -30,6 +32,8 @@ export const env = envSchema.parse({
   LOCAL_ADMIN_PASSWORD: process.env.LOCAL_ADMIN_PASSWORD,
   LOCAL_AUTH_SECRET: process.env.LOCAL_AUTH_SECRET,
   NEXT_PUBLIC_LOCAL_AUTH_ENABLED: process.env.NEXT_PUBLIC_LOCAL_AUTH_ENABLED,
+  STUDENT_AUTH_PEPPER: process.env.STUDENT_AUTH_PEPPER,
+  CRON_SECRET: process.env.CRON_SECRET,
 });
 
 export function getSupabaseConfig() {

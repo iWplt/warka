@@ -2,9 +2,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   validateLogoDataUrl,
   validatePreviewDataUrl,
+  validateProductImageDataUrl,
 } from "@/lib/upload/validate";
+import { logSecurityEvent } from "@/lib/security/audit-log";
 
-export type UploadValidationKind = "logo" | "preview";
+export type UploadValidationKind = "logo" | "preview" | "product";
 
 export function parseDataUrl(dataUrl: string): {
   buffer: Buffer;
@@ -18,11 +20,17 @@ export function parseDataUrl(dataUrl: string): {
   };
 }
 
-function assertValidDataUrl(dataUrl: string, kind?: UploadValidationKind) {
-  if (!kind) return;
+function assertValidDataUrl(dataUrl: string, kind: UploadValidationKind = "logo") {
   const result =
-    kind === "logo" ? validateLogoDataUrl(dataUrl) : validatePreviewDataUrl(dataUrl);
-  if (!result.ok) throw new Error(result.error);
+    kind === "product"
+      ? validateProductImageDataUrl(dataUrl)
+      : kind === "preview"
+        ? validatePreviewDataUrl(dataUrl)
+        : validateLogoDataUrl(dataUrl);
+  if (!result.ok) {
+    logSecurityEvent("upload.rejected", { reason: result.error });
+    throw new Error(result.error);
+  }
 }
 
 export async function uploadBuffer(
@@ -37,7 +45,7 @@ export async function uploadBuffer(
     contentType,
     upsert: options?.upsert ?? true,
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("Upload failed");
 
   const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   const isPublic =
@@ -56,7 +64,11 @@ export async function uploadDataUrl(
   dataUrl: string,
   options?: { upsert?: boolean; validation?: UploadValidationKind }
 ): Promise<{ path: string; publicUrl: string | null }> {
-  assertValidDataUrl(dataUrl, options?.validation);
+  // Always validate — default to logo limits; callers should pass the right kind
+  const kind: UploadValidationKind =
+    options?.validation ??
+    (bucket === "product-images" ? "product" : bucket === "designs" ? "preview" : "logo");
+  assertValidDataUrl(dataUrl, kind);
   const parsed = parseDataUrl(dataUrl);
   if (!parsed) throw new Error("Invalid data URL");
   return uploadBuffer(supabase, bucket, path, parsed.buffer, parsed.contentType, options);
@@ -68,5 +80,5 @@ export async function removeStorageObject(
   path: string
 ): Promise<void> {
   const { error } = await supabase.storage.from(bucket).remove([path]);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("Could not remove file");
 }

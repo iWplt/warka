@@ -52,7 +52,8 @@ export const authConfig: NextAuthConfig = {
   ],
   session: {
     strategy: "jwt",
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: 60 * 60 * 8,
+    updateAge: 60 * 60,
   },
   pages: {
     signIn: "/login",

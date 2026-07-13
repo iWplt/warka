@@ -5,7 +5,11 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createPublicClient } from "@/lib/supabase/public";
 import { getCurrentProfile, requireAuth, requireRole } from "@/lib/auth/guards";
-import { createNotification, logActivity, notifyAdminsAndEmployees } from "@/server/actions/notifications";
+import {
+  createNotificationInternal as createNotification,
+  logActivityInternal as logActivity,
+  notifyAdminsAndEmployees,
+} from "@/lib/notifications/internal";
 import type { PaymentStatus } from "@/types/database";
 
 const paymentSchema = z.object({

@@ -1,6 +1,10 @@
 import type { Profile, UserRole } from "@/types/database";
+import { isProductionRuntime } from "@/lib/security/is-production";
 
 export const LOCAL_SESSION_COOKIE = "local_ems_session";
+
+/** Session lifetime: 8 hours (was 7 days). */
+export const LOCAL_SESSION_MAX_AGE_SEC = 60 * 60 * 8;
 
 export type LocalSessionPayload = {
   sub: string;
@@ -10,15 +14,32 @@ export type LocalSessionPayload = {
 };
 
 function getSecret(): string {
-  return process.env.LOCAL_AUTH_SECRET ?? "local-dev-secret-do-not-use-in-production";
+  const secret = process.env.LOCAL_AUTH_SECRET;
+  if (secret && secret.length >= 16) return secret;
+
+  if (isProductionRuntime()) {
+    throw new Error("LOCAL_AUTH_SECRET must be set in production (min 16 chars)");
+  }
+
+  return "local-dev-secret-do-not-use-in-production";
 }
 
 function getLocalUsername(): string {
-  return process.env.LOCAL_ADMIN_USERNAME ?? "admin";
+  const user = process.env.LOCAL_ADMIN_USERNAME;
+  if (user) return user;
+  if (isProductionRuntime()) {
+    throw new Error("LOCAL_ADMIN_USERNAME must be set when local auth is enabled in production");
+  }
+  return "admin";
 }
 
 function getLocalPassword(): string {
-  return process.env.LOCAL_ADMIN_PASSWORD ?? "admin123";
+  const pass = process.env.LOCAL_ADMIN_PASSWORD;
+  if (pass && pass.length >= 8) return pass;
+  if (isProductionRuntime()) {
+    throw new Error("LOCAL_ADMIN_PASSWORD must be set (min 8 chars) when local auth is enabled in production");
+  }
+  return "admin123";
 }
 
 export function isLocalAuthEnabled(): boolean {
@@ -27,6 +48,10 @@ export function isLocalAuthEnabled(): boolean {
   const hasSupabase =
     Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
     Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  // Never auto-enable local auth in production without explicit flag
+  if (isProductionRuntime() && !hasSupabase) {
+    return process.env.LOCAL_AUTH_ENABLED === "true";
+  }
   return !hasSupabase;
 }
 
@@ -76,7 +101,12 @@ async function hmacSign(data: string): Promise<string> {
 
 async function hmacVerify(data: string, signature: string): Promise<boolean> {
   const expected = await hmacSign(data);
-  return expected === signature;
+  if (expected.length !== signature.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < expected.length; i++) {
+    mismatch |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
+  }
+  return mismatch === 0;
 }
 
 export async function createLocalSessionToken(
@@ -84,7 +114,7 @@ export async function createLocalSessionToken(
 ): Promise<string> {
   const body: LocalSessionPayload = {
     ...payload,
-    exp: payload.exp ?? Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7,
+    exp: payload.exp ?? Math.floor(Date.now() / 1000) + LOCAL_SESSION_MAX_AGE_SEC,
   };
   const data = Buffer.from(JSON.stringify(body)).toString("base64url");
   const sig = await hmacSign(data);

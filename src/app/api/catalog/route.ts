@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getProductsCatalog } from "@/server/actions/products";
 import { env } from "@/lib/env";
 import { WARKA_BRAND_NAME } from "@/lib/constants/brand";
+import { checkRateLimit, rateLimitKey } from "@/lib/security/rate-limit";
+import { resolveCorsOrigin } from "@/lib/security/origin";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +13,37 @@ function absoluteUrl(base: string, path: string | null | undefined): string {
   return `${base}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
-export async function GET() {
+function corsHeaders(request: Request): HeadersInit {
+  const origin = resolveCorsOrigin(request.headers.get("origin"));
+  const headers: Record<string, string> = {
+    "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+    Vary: "Origin",
+  };
+  if (origin) {
+    headers["Access-Control-Allow-Origin"] = origin;
+    headers["Access-Control-Allow-Methods"] = "GET, OPTIONS";
+    headers["Access-Control-Allow-Headers"] = "Content-Type";
+  }
+  return headers;
+}
+
+export async function OPTIONS(request: Request) {
+  return new NextResponse(null, { status: 204, headers: corsHeaders(request) });
+}
+
+export async function GET(request: Request) {
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    "unknown";
+  const rl = checkRateLimit(rateLimitKey("catalog", ip), 120, 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { ...corsHeaders(request), "Retry-After": String(rl.retryAfterSec) } }
+    );
+  }
+
   const products = await getProductsCatalog();
   const baseUrl = env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
 
@@ -29,12 +61,5 @@ export async function GET() {
     product_type: product.product_type,
   }));
 
-  return NextResponse.json(
-    { data },
-    {
-      headers: {
-        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
-      },
-    }
-  );
+  return NextResponse.json({ data }, { headers: corsHeaders(request) });
 }

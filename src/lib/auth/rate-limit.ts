@@ -35,6 +35,8 @@ export function recordAuthFailure(
   entry.failures += 1;
 }
 
+// Note: callers should also call logSecurityEvent("auth.login_failed")
+
 export function clearAuthAttempts(key: string): void {
   attempts.delete(key);
 }

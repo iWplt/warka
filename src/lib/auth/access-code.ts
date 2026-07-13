@@ -1,5 +1,5 @@
 import { createHmac, randomInt } from "crypto";
-import { getServiceRoleKey } from "@/lib/env";
+import { isProductionRuntime } from "@/lib/security/is-production";
 
 const STUDENT_CODE_PREFIX = "WARKA";
 const REP_CODE_PREFIX = "REP";
@@ -38,11 +38,15 @@ export function generateRepInviteCode(): string {
 }
 
 function getAuthPepper(): string {
-  return (
-    process.env.STUDENT_AUTH_PEPPER ??
-    getServiceRoleKey()?.slice(0, 32) ??
-    "warka-dev-pepper-change-in-production"
-  );
+  const pepper = process.env.STUDENT_AUTH_PEPPER;
+  if (pepper && pepper.length >= 16) return pepper;
+
+  if (isProductionRuntime()) {
+    throw new Error("STUDENT_AUTH_PEPPER must be set in production (min 16 chars)");
+  }
+
+  // Dev-only fallback — never use service role key as pepper (key rotation breaks passwords)
+  return "warka-dev-pepper-change-in-production";
 }
 
 export function studentAuthEmail(accessCode: string): string {

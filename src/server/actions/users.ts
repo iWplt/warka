@@ -5,7 +5,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentProfile, requireRole } from "@/lib/auth/guards";
-import { logActivity } from "@/server/actions/notifications";
+import { logActivityInternal as logActivity } from "@/lib/notifications/internal";
 import type { PermissionKey, Profile, UserRole } from "@/types/database";
 import { ALL_PERMISSIONS } from "@/types/database";
 
