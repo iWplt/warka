@@ -18,7 +18,7 @@ import {
 import { uploadDataUrl } from "@/lib/supabase/storage";
 import { env } from "@/lib/env";
 import { PRINTING_PIPELINE_STATUSES } from "@/lib/orders/status-flow";
-import { nextStatusAfterDeposit, canStudentEditOrder, canEmbroideryEditOrder } from "@/lib/orders/state-machine";
+import { canStudentEditOrder, canEmbroideryEditOrder } from "@/lib/orders/state-machine";
 import { EMBROIDERY_QUEUE_STATUSES } from "@/lib/orders/status-flow";
 import {
   assertEmbroideryFieldUpdatesAllowed,
