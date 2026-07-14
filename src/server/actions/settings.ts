@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requireRole } from "@/lib/auth/guards";
+import { PermissionError, requireRole } from "@/lib/auth/guards";
 import {
   DEFAULT_BATCH_DEFAULTS,
   DEFAULT_DEPOSIT_SETTINGS,
@@ -234,11 +234,35 @@ export async function updateProductEmbroideryPositions(
 }
 
 export async function updateBatchSettings(batchId: string, settings: BatchSettings) {
-  await requireRole(["admin", "representative"]);
-  const admin = createAdminClient();
-  if (!admin) throw new Error("Supabase not configured");
+  const profile = await requireRole(["admin", "representative"]);
 
-  const { error } = await admin
+  // User-scoped client so RLS (batches_rep) applies as defense in depth —
+  // never use the service-role client here.
+  const supabase = await createClient();
+  if (!supabase) throw new Error("Supabase not configured");
+
+  const { data: batch, error: fetchError } = await supabase
+    .from("batches")
+    .select("id, representative_id, settings")
+    .eq("id", batchId)
+    .single();
+
+  if (fetchError || !batch) {
+    throw new PermissionError("Batch not found or access denied");
+  }
+
+  if (
+    profile.role === "representative" &&
+    batch.representative_id !== profile.id
+  ) {
+    throw new PermissionError("You can only manage your own batches");
+  }
+
+  if (profile.role === "representative" && settings.locked_fields) {
+    throw new PermissionError("Only admin can change locked batch fields");
+  }
+
+  const { error } = await supabase
     .from("batches")
     .update({
       settings,
@@ -249,6 +273,7 @@ export async function updateBatchSettings(batchId: string, settings: BatchSettin
   if (error) throw new Error(error.message);
   revalidatePath("/admin/batches");
   revalidatePath(`/admin/batches/${batchId}`);
+  revalidatePath(`/representative/batches/${batchId}`);
 }
 
 export async function getSizePolicies(): Promise<Record<ProductType, ProductSizePolicy>> {
