@@ -313,9 +313,7 @@
     display: none;
   }
 
-  .landing-page .hero-mesh-orb {
-    display: none;
-  }
+  /* Keep glass solid on landing for paint performance; mesh orbs stay enabled */
 
   .glass-panel,
   .glass-panel-strong,

@@ -33,6 +33,8 @@ import {
   ScrollRevealStagger,
   SectionHeading,
 } from "@/components/ui/scroll-reveal";
+import { KineticText } from "@/components/ui/kinetic-text";
+import { CountUp } from "@/components/ui/count-up";
 import { SeasonalBanner } from "@/components/features/landing/seasonal-banner";
 import { LandingBundlesSection } from "@/components/features/landing/landing-bundles-section";
 import { filterFeaturedProducts } from "@/lib/products/dedupe-catalog";
@@ -206,6 +208,12 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
       <SeasonalBanner />
 
       <section id="home" className="relative overflow-hidden bg-warka-bg">
+        <div className="pointer-events-none absolute inset-0" aria-hidden>
+          <div className="hero-mesh-base opacity-80" />
+          <div className="hero-mesh-orb hero-mesh-orb-a" />
+          <div className="hero-mesh-orb hero-mesh-orb-b" />
+          <div className="hero-mesh-orb hero-mesh-orb-c" />
+        </div>
         <div className="pointer-events-none absolute top-0 start-0 hidden h-64 w-64 opacity-10 sm:block">
           <svg viewBox="0 0 200 200" fill="none" className="h-full w-full" aria-hidden>
             <path d="M20 180 Q 10 100, 80 50 Q 50 80, 20 180" fill="#5C5C47" />
@@ -214,10 +222,10 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
           </svg>
         </div>
 
-        <div className="page-container py-4 sm:py-10 lg:py-16">
+        <div className="page-container relative py-4 sm:py-10 lg:py-16">
           <div className="grid grid-cols-1 items-center gap-4 sm:gap-6 lg:grid-cols-2 lg:gap-12">
             <div className="relative order-1 lg:order-2 lg:col-start-2 lg:row-start-1 lg:ps-4">
-              <div className="relative overflow-hidden rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.10)]">
+              <div className="relative overflow-hidden rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 hover:-translate-y-1 hover:shadow-card-hover">
                 <Image
                   src={heroImage}
                   alt={t("hero.imageAlt")}
@@ -240,9 +248,11 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
               <div className="mb-3">
                 <CountdownTimer targetDate={new Date("2026-07-15T23:59:59")} />
               </div>
-              <h1 className="text-display mb-4 text-warka-text">
-                {t("hero.title")}
-              </h1>
+              <KineticText
+                text={t("hero.title")}
+                as="h1"
+                className="text-display mb-4 text-warka-text"
+              />
               <p className="page-description mb-5 max-w-lg sm:mb-8">
                 {t("hero.subtitle")}
               </p>
@@ -275,17 +285,26 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
 
               <div className="mt-4 flex items-center justify-center gap-3 border-t border-warka-border pt-3 sm:mt-8 sm:justify-start sm:gap-8 sm:border-0 sm:pt-0">
                 <div className="text-center sm:text-start">
-                  <div className="text-price text-xl sm:text-2xl">2.4k+</div>
+                  <div className="text-price text-xl sm:text-2xl">
+                    <CountUp value={2400} />
+                    <span>+</span>
+                  </div>
                   <div className="text-caption mt-1">{t("hero.statOrders")}</div>
                 </div>
                 <div className="h-8 w-px bg-warka-border" />
                 <div className="text-center sm:text-start">
-                  <div className="text-price text-xl sm:text-2xl">98%</div>
+                  <div className="text-price text-xl sm:text-2xl">
+                    <CountUp value={98} />
+                    <span>%</span>
+                  </div>
                   <div className="text-caption mt-1">{t("hero.statSatisfaction")}</div>
                 </div>
                 <div className="h-8 w-px bg-warka-border" />
                 <div className="text-center sm:text-start">
-                  <div className="text-price text-xl sm:text-2xl">48h</div>
+                  <div className="text-price text-xl sm:text-2xl">
+                    <CountUp value={48} />
+                    <span>h</span>
+                  </div>
                   <div className="text-caption mt-1">{t("hero.statDelivery")}</div>
                 </div>
               </div>

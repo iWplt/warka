@@ -24,8 +24,26 @@ type FadeUpProps = {
 export function FadeUp({
   children,
   className,
+  delay = 0,
+  duration = 0.55,
 }: FadeUpProps) {
-  return <div className={className}>{children}</div>;
+  const reducedMotion = useReducedMotion();
+
+  if (reducedMotion) {
+    return <div className={className}>{children}</div>;
+  }
+
+  return (
+    <motion.div
+      className={className}
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration, delay, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
 type ScrollRevealProps = {
@@ -35,12 +53,30 @@ type ScrollRevealProps = {
   y?: number;
 };
 
-/** Scroll-safe wrapper — no opacity/transform animation (prevents scroll flicker). */
+/** Scroll reveal for marketing blocks — restored motion with reduced-motion fallback. */
 export function ScrollReveal({
   children,
   className,
+  delay = 0,
+  y = 28,
 }: ScrollRevealProps) {
-  return <div className={cn(className)}>{children}</div>;
+  const reducedMotion = useReducedMotion();
+
+  if (reducedMotion) {
+    return <div className={cn(className)}>{children}</div>;
+  }
+
+  return (
+    <motion.div
+      className={cn(className)}
+      initial={{ opacity: 0, y }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.18, margin: "0px 0px -8% 0px" }}
+      transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
 type RevealStaggerProps = {
@@ -52,8 +88,28 @@ type RevealStaggerProps = {
 export function RevealStagger({
   children,
   className,
+  stagger = 0.09,
 }: RevealStaggerProps) {
-  return <div className={className}>{children}</div>;
+  const reducedMotion = useReducedMotion();
+
+  if (reducedMotion) {
+    return <div className={className}>{children}</div>;
+  }
+
+  return (
+    <motion.div
+      className={className}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, amount: 0.12 }}
+      variants={{
+        hidden: {},
+        show: { transition: { staggerChildren: stagger, delayChildren: 0.04 } },
+      }}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
 export function RevealStaggerItem({
@@ -63,7 +119,27 @@ export function RevealStaggerItem({
   children: ReactNode;
   className?: string;
 }) {
-  return <div className={className}>{children}</div>;
+  const reducedMotion = useReducedMotion();
+
+  if (reducedMotion) {
+    return <div className={className}>{children}</div>;
+  }
+
+  return (
+    <motion.div
+      className={className}
+      variants={{
+        hidden: { opacity: 0, y: 22 },
+        show: {
+          opacity: 1,
+          y: 0,
+          transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+        },
+      }}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
 type TiltCardProps = {
