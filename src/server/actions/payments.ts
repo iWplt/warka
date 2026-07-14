@@ -89,7 +89,7 @@ export async function recordPayment(input: z.infer<typeof paymentSchema>) {
 
 /** Admin confirms the student's deposit receipt — locks the order and marks deposit paid. */
 export async function approveOrderDeposit(orderId: string) {
-  const profile = await requireRole("admin");
+  const profile = await requireRole(["admin"]);
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase not configured");
 
