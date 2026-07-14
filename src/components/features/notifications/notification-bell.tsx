@@ -9,7 +9,7 @@ import {
   markNotificationRead,
   markAllNotificationsRead,
 } from "@/server/actions/notifications";
-import type { Notification, NotificationType } from "@/types/database";
+import type { Notification, NotificationType, OrderStatus } from "@/types/database";
 import { Link } from "@/i18n/routing";
 
 const POLL_INTERVAL_MS = 30_000;
@@ -28,12 +28,27 @@ const NOTIFICATION_TYPES: NotificationType[] = [
   "general",
 ];
 
+const ORDER_STATUSES: OrderStatus[] = [
+  "new",
+  "pending_review",
+  "designing",
+  "awaiting_approval",
+  "needs_modification",
+  "ready_for_printing",
+  "printing",
+  "printed",
+  "ready_for_delivery",
+  "delivered",
+  "cancelled",
+];
+
 type NotificationBellProps = {
   userId: string;
 };
 
 export function NotificationBell({ userId }: NotificationBellProps) {
   const t = useTranslations("notifications");
+  const statusT = useTranslations("orderStatus");
   const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -62,6 +77,15 @@ export function NotificationBell({ userId }: NotificationBellProps) {
       window.clearInterval(clock);
     };
   }, [loadNotifications]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
   const toggleOpen = () => {
     setOpen((prev) => {
@@ -102,6 +126,14 @@ export function NotificationBell({ userId }: NotificationBellProps) {
     return notification.title;
   };
 
+  const bodyFor = (notification: Notification) => {
+    if (!notification.body) return null;
+    if (ORDER_STATUSES.includes(notification.body as OrderStatus)) {
+      return statusT(notification.body as OrderStatus);
+    }
+    return notification.body;
+  };
+
   return (
     <div className="relative">
       <Button
@@ -124,71 +156,76 @@ export function NotificationBell({ userId }: NotificationBellProps) {
         <>
           <button
             type="button"
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 z-40 bg-black/20 sm:bg-transparent"
             onClick={() => setOpen(false)}
             aria-label={t("close")}
           />
-          <div className="absolute end-0 top-full z-50 mt-2 w-80 rounded-2xl border border-border bg-card shadow-tint-lg">
-            <div className="flex items-center justify-between border-b border-border p-3">
+          <div
+            className={
+              "fixed inset-x-3 top-[4.5rem] z-50 max-h-[min(70dvh,28rem)] overflow-hidden rounded-2xl border border-border bg-card shadow-tint-lg sm:absolute sm:inset-x-auto sm:end-0 sm:top-full sm:mt-2 sm:w-80 sm:max-h-80"
+            }
+          >
+            <div className="flex items-center justify-between gap-2 border-b border-border p-3">
               <span className="font-semibold">{t("title")}</span>
               {unread > 0 && (
                 <button
                   type="button"
                   onClick={handleMarkAll}
-                  className="text-xs text-primary hover:underline"
+                  className="shrink-0 text-xs text-primary hover:underline"
                 >
                   {t("markAllRead")}
                 </button>
               )}
             </div>
-            <div className="max-h-80 overflow-y-auto">
+            <div className="max-h-[min(calc(70dvh-3.5rem),24rem)] overflow-y-auto sm:max-h-[calc(20rem-3.25rem)]">
               {notifications.length === 0 ? (
                 <p className="p-4 text-center text-sm text-muted-foreground">
                   {t("noNotifications")}
                 </p>
               ) : (
-                notifications.map((notification) => (
-                  <div
-                    key={notification.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => {
-                      if (!notification.read) void handleRead(notification.id);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !notification.read) {
-                        void handleRead(notification.id);
-                      }
-                    }}
-                    className={`border-b border-glass-border p-3 text-sm last:border-0 ${
-                      !notification.read ? "bg-primary/5" : ""
-                    }`}
-                  >
-                    <div className="flex items-start gap-2">
-                      <Package className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium">{labelFor(notification)}</p>
-                        {notification.body && (
-                          <p className="mt-1 line-clamp-2 text-muted-foreground">
-                            {notification.body}
+                notifications.map((notification) => {
+                  const body = bodyFor(notification);
+                  return (
+                    <div
+                      key={notification.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => {
+                        if (!notification.read) void handleRead(notification.id);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !notification.read) {
+                          void handleRead(notification.id);
+                        }
+                      }}
+                      className={`border-b border-glass-border p-3 text-sm last:border-0 ${
+                        !notification.read ? "bg-primary/5" : ""
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <Package className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium">{labelFor(notification)}</p>
+                          {body && (
+                            <p className="mt-1 line-clamp-2 text-muted-foreground">{body}</p>
+                          )}
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {formatTime(notification.created_at)}
                           </p>
-                        )}
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {formatTime(notification.created_at)}
-                        </p>
-                        {notification.link && (
-                          <Link
-                            href={notification.link}
-                            onClick={() => handleRead(notification.id)}
-                            className="mt-1 inline-block text-xs text-primary hover:underline"
-                          >
-                            {t("view")}
-                          </Link>
-                        )}
+                          {notification.link && (
+                            <Link
+                              href={notification.link}
+                              onClick={() => handleRead(notification.id)}
+                              className="mt-1 inline-block text-xs text-primary hover:underline"
+                            >
+                              {t("view")}
+                            </Link>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

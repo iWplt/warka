@@ -5,6 +5,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { Crosshair, Loader2, MapPin, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { geoErrorMessage, requestDeviceLocation } from "@/lib/delivery/geolocation";
 import { isValidDeliveryCoords } from "@/lib/delivery/location-utils";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +21,11 @@ type MapLocationPickerProps = {
 
 const DEFAULT_CENTER = { lat: 33.3152, lng: 44.3661 };
 
+/** Carto tiles are more reliable on mobile Safari than osm.org direct tiles. */
+const TILE_URL = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+const TILE_ATTR =
+  '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OSM</a> &copy; <a href="https://carto.com/" target="_blank" rel="noreferrer">CARTO</a>';
+
 export function MapLocationPicker({
   open,
   onOpenChange,
@@ -33,6 +39,7 @@ export function MapLocationPicker({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import("leaflet").Map | null>(null);
   const markerRef = useRef<import("leaflet").Marker | null>(null);
+  const initGenRef = useRef(0);
 
   const [draftLat, setDraftLat] = useState<number | null>(initialLat ?? null);
   const [draftLng, setDraftLng] = useState<number | null>(initialLng ?? null);
@@ -43,34 +50,39 @@ export function MapLocationPicker({
     if (!open) return;
 
     let cancelled = false;
+    const gen = ++initGenRef.current;
     setLoadingMap(true);
 
     void (async () => {
       const L = (await import("leaflet")).default;
       await import("leaflet/dist/leaflet.css");
 
-      if (cancelled || !mapContainerRef.current) return;
+      if (cancelled || gen !== initGenRef.current || !mapContainerRef.current) return;
 
-      const startLat = initialLat ?? defaultCenter.lat;
-      const startLng = initialLng ?? defaultCenter.lng;
-      const startZoom = initialLat != null ? 16 : 12;
-
+      // Destroy any prior instance and wipe leftover Leaflet DOM (Strict Mode / remount).
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
         markerRef.current = null;
       }
+      mapContainerRef.current.innerHTML = "";
+
+      const startLat = initialLat ?? defaultCenter.lat;
+      const startLng = initialLng ?? defaultCenter.lng;
+      const startZoom = initialLat != null ? 16 : 12;
 
       const map = L.map(mapContainerRef.current, {
         center: [startLat, startLng],
         zoom: startZoom,
         zoomControl: true,
+        attributionControl: true,
       });
+      map.attributionControl.setPrefix(false);
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>',
+      L.tileLayer(TILE_URL, {
+        attribution: TILE_ATTR,
         maxZoom: 19,
+        subdomains: "abcd",
       }).addTo(map);
 
       const icon = L.divIcon({
@@ -102,9 +114,13 @@ export function MapLocationPicker({
       syncCoords(startLat, startLng);
       setLoadingMap(false);
 
-      requestAnimationFrame(() => {
-        map.invalidateSize();
-      });
+      const refreshSize = () => {
+        if (cancelled || gen !== initGenRef.current || !mapRef.current) return;
+        mapRef.current.invalidateSize({ animate: false });
+      };
+      requestAnimationFrame(refreshSize);
+      window.setTimeout(refreshSize, 120);
+      window.setTimeout(refreshSize, 350);
     })();
 
     return () => {
@@ -114,49 +130,36 @@ export function MapLocationPicker({
         mapRef.current = null;
         markerRef.current = null;
       }
+      if (mapContainerRef.current) {
+        mapContainerRef.current.innerHTML = "";
+      }
     };
   }, [open, defaultCenter.lat, defaultCenter.lng, initialLat, initialLng]);
 
-  const useMyLocation = () => {
-    if (!navigator.geolocation) {
-      toast.error(isAr ? "المتصفح لا يدعم تحديد الموقع" : "Geolocation is not supported");
+  const useMyLocation = async () => {
+    setLocating(true);
+    const result = await requestDeviceLocation();
+    if (!result.ok) {
+      toast.error(geoErrorMessage(result.messageKey, isAr));
+      setLocating(false);
       return;
     }
-
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        if (!isValidDeliveryCoords(latitude, longitude)) {
-          toast.error(
-            isAr
-              ? "GPS ما رجّع موقع دقيق — حدّد يدوياً على الخريطة"
-              : "GPS location inaccurate — pick manually on the map"
-          );
-          setLocating(false);
-          return;
-        }
-        markerRef.current?.setLatLng([latitude, longitude]);
-        mapRef.current?.setView([latitude, longitude], 17, { animate: true });
-        setDraftLat(latitude);
-        setDraftLng(longitude);
-        toast.success(
-          isAr
-            ? "تم جلب موقعك — حرّك الدبوس إذا كان فيه خطأ"
-            : "Location loaded — drag the pin if it looks wrong"
-        );
-        setLocating(false);
-      },
-      () => {
-        toast.error(
-          isAr
-            ? "تعذّر الوصول للموقع — حدّد يدوياً على الخريطة"
-            : "Could not get GPS — pick manually on the map"
-        );
-        setLocating(false);
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+    if (!isValidDeliveryCoords(result.lat, result.lng)) {
+      toast.error(geoErrorMessage("inaccurate", isAr));
+      setLocating(false);
+      return;
+    }
+    markerRef.current?.setLatLng([result.lat, result.lng]);
+    mapRef.current?.setView([result.lat, result.lng], 17, { animate: true });
+    mapRef.current?.invalidateSize({ animate: false });
+    setDraftLat(result.lat);
+    setDraftLng(result.lng);
+    toast.success(
+      isAr
+        ? "تم جلب موقعك — حرّك الدبوس إذا كان فيه خطأ"
+        : "Location loaded — drag the pin if it looks wrong"
     );
+    setLocating(false);
   };
 
   const handleConfirm = () => {
@@ -174,13 +177,15 @@ export function MapLocationPicker({
         <Dialog.Overlay className="fixed inset-0 z-[70] bg-black/55 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <Dialog.Content
           className={cn(
-            "fixed left-1/2 top-1/2 z-[71] flex max-h-[min(88dvh,720px)] w-[min(calc(100vw-1.5rem),640px)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-warka-border bg-card shadow-tint-lg outline-none",
+            "fixed z-[71] flex flex-col overflow-hidden border border-warka-border bg-card shadow-tint-lg outline-none",
+            "inset-x-0 bottom-0 top-[max(0.75rem,env(safe-area-inset-top))] max-h-[min(96dvh,920px)] rounded-t-2xl",
+            "sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-h-[min(88dvh,720px)] sm:w-[min(calc(100vw-1.5rem),640px)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl",
             "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
             "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
           )}
         >
           <div className="flex items-start justify-between gap-3 border-b border-warka-border px-4 py-3 sm:px-5">
-            <div>
+            <div className="min-w-0">
               <Dialog.Title className="text-base font-bold text-warka-text">
                 {isAr ? "تحديد موقع التوصيل على الخريطة" : "Pick delivery location on map"}
               </Dialog.Title>
@@ -198,8 +203,8 @@ export function MapLocationPicker({
             </Dialog.Close>
           </div>
 
-          <div className="relative min-h-[min(52dvh,420px)] flex-1 bg-warka-bg">
-            <div ref={mapContainerRef} className="absolute inset-0 z-0 min-h-[280px]" />
+          <div className="relative min-h-[min(48dvh,380px)] flex-1 bg-warka-bg">
+            <div ref={mapContainerRef} className="absolute inset-0 z-0 min-h-[240px]" />
             {loadingMap && (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-card/70">
                 <Loader2 className="size-8 animate-spin text-warka-primary" />
@@ -207,7 +212,7 @@ export function MapLocationPicker({
             )}
           </div>
 
-          <div className="@container space-y-3 border-t border-warka-border px-4 py-3 sm:px-5">
+          <div className="space-y-3 border-t border-warka-border px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5">
             {draftLat != null && draftLng != null && (
               <p className="flex items-center gap-2 text-xs text-warka-text-secondary" dir="ltr">
                 <MapPin className="size-3.5 shrink-0 text-warka-primary" />
@@ -215,12 +220,12 @@ export function MapLocationPicker({
               </p>
             )}
 
-            <div className="flex flex-col gap-2 @sm:flex-row @sm:items-stretch">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
               <Button
                 type="button"
                 variant="outline"
-                className="min-h-11 h-auto w-full touch-manipulation gap-2 border-warka-primary/40 px-4 py-2.5 text-center text-warka-primary @sm:min-w-0 @sm:flex-1"
-                onClick={useMyLocation}
+                className="min-h-11 h-auto w-full touch-manipulation gap-2 border-warka-primary/40 px-4 py-2.5 text-center text-warka-primary sm:min-w-0 sm:flex-1"
+                onClick={() => void useMyLocation()}
                 disabled={locating || loadingMap}
               >
                 {locating ? (
@@ -233,7 +238,7 @@ export function MapLocationPicker({
               <Button
                 type="button"
                 variant="accent"
-                className="min-h-11 h-auto w-full touch-manipulation px-4 py-2.5 text-center @sm:min-w-0 @sm:flex-1"
+                className="min-h-11 h-auto w-full touch-manipulation px-4 py-2.5 text-center sm:min-w-0 sm:flex-1"
                 onClick={handleConfirm}
                 disabled={loadingMap || draftLat == null}
               >

@@ -11,6 +11,10 @@ type LocationMapPreviewProps = {
   className?: string;
 };
 
+const TILE_URL = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+const TILE_ATTR =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; CARTO';
+
 export function LocationMapPreview({
   latitude,
   longitude,
@@ -20,22 +24,25 @@ export function LocationMapPreview({
   const isAr = locale === "ar";
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import("leaflet").Map | null>(null);
+  const initGenRef = useRef(0);
 
   useEffect(() => {
     if (!containerRef.current) return;
 
     let cancelled = false;
+    const gen = ++initGenRef.current;
 
     void (async () => {
       const L = (await import("leaflet")).default;
       await import("leaflet/dist/leaflet.css");
 
-      if (cancelled || !containerRef.current) return;
+      if (cancelled || gen !== initGenRef.current || !containerRef.current) return;
 
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
       }
+      containerRef.current.innerHTML = "";
 
       const map = L.map(containerRef.current, {
         center: [latitude, longitude],
@@ -49,11 +56,12 @@ export function LocationMapPreview({
         touchZoom: false,
         attributionControl: true,
       });
+      map.attributionControl.setPrefix(false);
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+      L.tileLayer(TILE_URL, {
+        attribution: TILE_ATTR,
         maxZoom: 19,
+        subdomains: "abcd",
       }).addTo(map);
 
       const icon = L.divIcon({
@@ -66,7 +74,12 @@ export function LocationMapPreview({
       L.marker([latitude, longitude], { icon, interactive: false }).addTo(map);
 
       mapRef.current = map;
-      requestAnimationFrame(() => map.invalidateSize());
+      requestAnimationFrame(() => map.invalidateSize({ animate: false }));
+      window.setTimeout(() => {
+        if (!cancelled && gen === initGenRef.current && mapRef.current) {
+          mapRef.current.invalidateSize({ animate: false });
+        }
+      }, 200);
     })();
 
     return () => {
@@ -74,6 +87,9 @@ export function LocationMapPreview({
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
+      }
+      if (containerRef.current) {
+        containerRef.current.innerHTML = "";
       }
     };
   }, [latitude, longitude]);

@@ -664,6 +664,20 @@
     border: none !important;
   }
 
+  /* Keep a single clean attribution chip on mobile maps */
+  .leaflet-container .leaflet-control-attribution {
+    max-width: min(70vw, 14rem);
+    margin: 0 !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10px !important;
+  }
+
+  .leaflet-container .leaflet-control-attribution a {
+    color: inherit;
+  }
+
   /* Site footer — explicit colors so text stays readable if theme utilities fail to compile */
   .site-footer {
     background-color: #1f1f1f;

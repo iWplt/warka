@@ -36,7 +36,7 @@ export function DashboardShell({ profile, children }: DashboardShellProps) {
 
         <DashboardHeader profile={profile} />
 
-        <main className="relative flex-1 overflow-auto px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8">{children}</main>
+        <main className="relative flex-1 overflow-y-auto overflow-x-hidden px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8">{children}</main>
       </div>
     </div>
   );

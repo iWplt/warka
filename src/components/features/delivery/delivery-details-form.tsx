@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { IRAQI_GOVERNORATES } from "@/lib/constants/iraq-market";
+import { geoErrorMessage, requestDeviceLocation } from "@/lib/delivery/geolocation";
 import {
   coordsFromDelivery,
   getGovernorateMapCenter,
@@ -160,44 +161,30 @@ export function DeliveryDetailsForm({
 
   const hasValidLocation = isValidDeliveryCoords(details.latitude, details.longitude);
 
-  const captureLocation = () => {
-    if (!navigator.geolocation) {
-      toast.error(isAr ? "المتصفح لا يدعم تحديد الموقع" : "Geolocation is not supported");
+  const captureLocation = async () => {
+    setLocating(true);
+    const result = await requestDeviceLocation();
+    if (!result.ok) {
+      toast.error(geoErrorMessage(result.messageKey, isAr));
+      if (result.messageKey !== "unsupported") {
+        setMapPickerOpen(true);
+      }
+      setLocating(false);
       return;
     }
-
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        if (!isValidDeliveryCoords(latitude, longitude)) {
-          toast.error(
-            isAr
-              ? "GPS ما رجّع موقع دقيق — افتح الخريطة وحدّد مكانك"
-              : "GPS did not return an accurate location — pick on the map"
-          );
-          setMapPickerOpen(true);
-          setLocating(false);
-          return;
-        }
-        saveCoords(latitude, longitude);
-        toast.success(
-          isAr
-            ? "تم جلب موقعك — افتح الخريطة إذا تحتاج تصحّحه"
-            : "Location captured — open the map to adjust if needed"
-        );
-        setLocating(false);
-      },
-      () => {
-        toast.error(
-          isAr
-            ? "تعذّر الوصول للموقع — فعّل GPS أو اكتب العنوان يدوياً"
-            : "Could not get location — enable GPS or type the address"
-        );
-        setLocating(false);
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+    if (!isValidDeliveryCoords(result.lat, result.lng)) {
+      toast.error(geoErrorMessage("inaccurate", isAr));
+      setMapPickerOpen(true);
+      setLocating(false);
+      return;
+    }
+    saveCoords(result.lat, result.lng);
+    toast.success(
+      isAr
+        ? "تم جلب موقعك — افتح الخريطة إذا تحتاج تصحّحه"
+        : "Location captured — open the map to adjust if needed"
     );
+    setLocating(false);
   };
 
   const selectClass =
