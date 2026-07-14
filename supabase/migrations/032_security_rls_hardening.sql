@@ -16,13 +16,13 @@ AS $$
 $$;
 
 CREATE OR REPLACE FUNCTION public.get_user_role()
-RETURNS text
+RETURNS public.user_role
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT role::text FROM public.profiles WHERE id = auth.uid() LIMIT 1;
+  SELECT role FROM public.profiles WHERE id = auth.uid() LIMIT 1;
 $$;
 
 DO $$

@@ -1,5 +1,4 @@
 import { createHmac, randomInt } from "crypto";
-import { isProductionRuntime } from "@/lib/security/is-production";
 
 const STUDENT_CODE_PREFIX = "WARKA";
 const REP_CODE_PREFIX = "REP";
@@ -39,14 +38,10 @@ export function generateRepInviteCode(): string {
 
 function getAuthPepper(): string {
   const pepper = process.env.STUDENT_AUTH_PEPPER;
-  if (pepper && pepper.length >= 16) return pepper;
-
-  if (isProductionRuntime()) {
-    throw new Error("STUDENT_AUTH_PEPPER must be set in production (min 16 chars)");
+  if (!pepper || pepper.length < 16) {
+    throw new Error("STUDENT_AUTH_PEPPER must be set (min 16 chars)");
   }
-
-  // Dev-only fallback — never use service role key as pepper (key rotation breaks passwords)
-  return "warka-dev-pepper-change-in-production";
+  return pepper;
 }
 
 export function studentAuthEmail(accessCode: string): string {

@@ -34,9 +34,7 @@ function stripLocale(pathname: string): { locale: string; path: string } {
 }
 
 function isLocalAuthEnabled(): boolean {
-  if (process.env.LOCAL_AUTH_ENABLED === "true") return true;
-  if (process.env.LOCAL_AUTH_ENABLED === "false") return false;
-  return !getSupabaseConfig();
+  return process.env.LOCAL_AUTH_ENABLED === "true";
 }
 
 async function getLocalSessionRole(

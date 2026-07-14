@@ -43,16 +43,7 @@ function getLocalPassword(): string {
 }
 
 export function isLocalAuthEnabled(): boolean {
-  if (process.env.LOCAL_AUTH_ENABLED === "true") return true;
-  if (process.env.LOCAL_AUTH_ENABLED === "false") return false;
-  const hasSupabase =
-    Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
-    Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-  // Never auto-enable local auth in production without explicit flag
-  if (isProductionRuntime() && !hasSupabase) {
-    return process.env.LOCAL_AUTH_ENABLED === "true";
-  }
-  return !hasSupabase;
+  return process.env.LOCAL_AUTH_ENABLED === "true";
 }
 
 export function validateLocalCredentials(
