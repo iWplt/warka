@@ -129,6 +129,33 @@ export function primaryNameFromPayload(payload: CustomizationPayload): string {
   return nameZone?.text_value?.trim() ?? "";
 }
 
+/** Write the student embroidery name into the primary name zone (keeps page + studio in sync). */
+export function applyPrimaryNameToPayload(
+  payload: CustomizationPayload,
+  profile: ProductCustomizationProfile,
+  name: string
+): CustomizationPayload {
+  const zones = zonesForStyle(profile.zones, payload.style_id ?? null);
+  const target =
+    zones.find((z) => z.content_type === "name_major") ??
+    zones.find((z) => z.zone_key === "left_front" || z.zone_key === "side_band");
+  if (!target) return payload;
+
+  const existing = payload.zones.find((s) => s.zone_id === target.id);
+  const nextSel: ZoneSelection = {
+    zone_id: target.id,
+    zone_key: target.zone_key,
+    zone_label_ar: target.zone_label_ar,
+    content_type: target.content_type,
+    ...existing,
+    text_value: name,
+  };
+  const nextZones = existing
+    ? payload.zones.map((s) => (s.zone_id === target.id ? { ...s, ...nextSel } : s))
+    : [...payload.zones, nextSel];
+  return { ...payload, zones: nextZones };
+}
+
 export function profileHasEngine(profile: ProductCustomizationProfile | null | undefined): boolean {
   return Boolean(profile && (profile.zones.length > 0 || profile.styles.length > 0));
 }

@@ -37,6 +37,7 @@ import {
 } from "@/components/features/customization/customization-studio-modal";
 import { CustomizationVisualPreview } from "@/components/features/customization/customization-visual-preview";
 import {
+  applyPrimaryNameToPayload,
   primaryNameFromPayload,
   profileHasEngine,
   zonesForStyle,
@@ -159,6 +160,34 @@ export function ProductDetailView({
     (z) => z.text_value?.trim() || z.option_id || z.image_data_url
   ).length;
   const selectedFontMeta = selectedFont ? findFontByFamily(fonts, selectedFont) : null;
+
+  const handleStudentNameChange = (name: string) => {
+    setStudentName(name);
+    if (usesEngine && customizationProfile) {
+      const embroidered = resolveEmbroideryDisplayName(name, diacriticsMode);
+      setCustomization((prev) =>
+        applyPrimaryNameToPayload(prev, customizationProfile, embroidered)
+      );
+    }
+  };
+
+  const handleDiacriticsModeChange = (mode: DiacriticsMode) => {
+    setDiacriticsMode(mode);
+    if (usesEngine && customizationProfile && studentName.trim()) {
+      const embroidered = resolveEmbroideryDisplayName(studentName, mode);
+      setCustomization((prev) =>
+        applyPrimaryNameToPayload(prev, customizationProfile, embroidered)
+      );
+    }
+  };
+
+  const handleCustomizationChange = (payload: CustomizationPayload) => {
+    setCustomization(payload);
+    const fromEngine = primaryNameFromPayload(payload);
+    if (fromEngine && fromEngine !== studentName.trim()) {
+      setStudentName(fromEngine);
+    }
+  };
 
   const cartItem = {
     catalogProductId: product.id,
@@ -324,7 +353,7 @@ export function ProductDetailView({
             />
           )}
 
-          {usesEngine && customizationProfile ? (
+          {usesEngine && customizationProfile && (
             <>
               <CustomizationStudioTrigger
                 locale={locale === "ar" ? "ar" : "en"}
@@ -353,7 +382,7 @@ export function ProductDetailView({
                 baseImage={activeImage}
                 profile={customizationProfile}
                 customization={customization}
-                onCustomizationChange={setCustomization}
+                onCustomizationChange={handleCustomizationChange}
                 sashColorHex={selectedVariant?.hex ?? null}
                 fonts={fonts}
                 selectedFont={selectedFont}
@@ -370,9 +399,9 @@ export function ProductDetailView({
                 onCustomReferenceChange={setCustomReferenceImage}
               />
             </>
-          ) : (
-            <>
-          {embroideryPositions.length > 0 && (
+          )}
+
+          {!usesEngine && embroideryPositions.length > 0 && (
             <EmbroideryPositionsPicker
               positions={embroideryPositions}
               selectedKey={selectedEmbroidery}
@@ -383,13 +412,17 @@ export function ProductDetailView({
 
           <WarkaCard className="overflow-hidden p-0">
             <div className="border-b border-warka-border/50 bg-warka-primary/5 px-4 py-3 sm:px-6 sm:py-4">
-              <h2 className="text-base font-bold text-warka-text">
+              <h2 className="section-title">
                 {locale === "ar" ? "الاسم والتطريز" : "Name & embroidery"}
               </h2>
               <p className="mt-1 text-xs text-warka-text-muted">
                 {locale === "ar"
-                  ? "اكتب اسمك، اختر الخط، وشوف المعاينة — ثم حدّد الكمية."
-                  : "Enter your name, pick a font, preview — then set quantity."}
+                  ? usesEngine
+                    ? "اكتب اسمك هنا مباشرة — الشكل والنقشات من استوديو التخصيص أعلاه."
+                    : "اكتب اسمك، اختر الخط، وشوف المعاينة — ثم حدّد الكمية."
+                  : usesEngine
+                    ? "Enter your name here — styles and patterns are in the studio above."
+                    : "Enter your name, pick a font, preview — then set quantity."}
               </p>
             </div>
 
@@ -398,19 +431,21 @@ export function ProductDetailView({
                 <NameDiacriticsControls
                   baseName={studentName}
                   mode={diacriticsMode}
-                  onBaseNameChange={setStudentName}
-                  onModeChange={setDiacriticsMode}
+                  onBaseNameChange={handleStudentNameChange}
+                  onModeChange={handleDiacriticsModeChange}
                   locale={locale === "ar" ? "ar" : "en"}
                 />
               </div>
 
-              <div className="bg-warka-bg/30 px-4 py-4 sm:px-6 sm:py-5">
-                <DecorationUploadField
-                  imageUrl={decorationImageDataUrl}
-                  onChange={setDecorationImageDataUrl}
-                  locale={locale === "ar" ? "ar" : "en"}
-                />
-              </div>
+              {!usesEngine && (
+                <div className="bg-warka-bg/30 px-4 py-4 sm:px-6 sm:py-5">
+                  <DecorationUploadField
+                    imageUrl={decorationImageDataUrl}
+                    onChange={setDecorationImageDataUrl}
+                    locale={locale === "ar" ? "ar" : "en"}
+                  />
+                </div>
+              )}
 
               {fonts.length > 0 && (
                 <div className="px-4 py-4 sm:px-6 sm:py-5">
@@ -446,8 +481,6 @@ export function ProductDetailView({
               </div>
             </div>
           </WarkaCard>
-            </>
-          )}
 
           <WarkaCard className="p-4 sm:p-6">
             <h2 className="mb-3 text-sm font-semibold text-warka-text">
