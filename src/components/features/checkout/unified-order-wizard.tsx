@@ -988,7 +988,6 @@ function EmbroideryStep({
           sashColorHex={sashColorHex ?? line.colorHex}
           fontFamily={line.fontFamily || "Cairo, sans-serif"}
           locale={locale}
-          className="max-lg:max-h-[min(52vh,420px)]"
         />
 
         <CustomizationStudioTrigger
@@ -1004,7 +1003,6 @@ function EmbroideryStep({
           fontLabel={selectedFontMeta ? fontDisplayName(selectedFontMeta, locale) : null}
           zonesFilled={zonesFilled}
           zonesTotal={engineZones.length}
-          thumbnailUrl={line.image}
         />
 
         <CustomizationStudioModal

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { Expand, ImageIcon } from "lucide-react";
+import { Expand } from "lucide-react";
 import { OptionPreviewModal } from "@/components/features/customization/option-preview-modal";
 import { resolveCatalogPreview } from "@/lib/customization/engine";
 import type { CustomizationPayload, ProductCustomizationProfile } from "@/types/customization";
@@ -24,13 +24,12 @@ type CustomizationVisualPreviewProps = {
 
 /**
  * Shows admin-uploaded catalog images for the selected style / pattern / decoration.
- * Does NOT overlay live embroidery text (that preview was inaccurate).
+ * Caption lives under the image (no overlapping overlay text).
  */
 export function CustomizationVisualPreview({
   baseImage,
   profile,
   customization,
-  sashColorHex,
   locale,
   className,
   variant = "default",
@@ -48,56 +47,15 @@ export function CustomizationVisualPreview({
   const focused = focusChipId ? chips.find((c) => c.id === focusChipId) : null;
   const displayImage = focused?.imageUrl ?? heroImage;
   const activeStyle = profile.styles.find((s) => s.id === customization.style_id);
-
-  const previewBody = (
-    <div
-      className={cn(
-        "relative w-full overflow-hidden rounded-2xl bg-media-bg shadow-inner",
-        isStudio
-          ? "mx-auto max-h-[min(28dvh,220px)] aspect-[5/4] sm:max-h-[min(34dvh,280px)] lg:max-h-none lg:aspect-[4/5]"
-          : "aspect-[4/5]"
-      )}
-    >
-      <Image
-        src={displayImage}
-        alt={focused?.label ?? (isAr ? "صورة المنتج / الخيار" : "Product / option image")}
-        fill
-        className={cn(
-          "transition-opacity duration-300",
-          isStudio ? "object-contain p-1.5" : "object-contain p-2 sm:object-cover sm:p-0"
-        )}
-        sizes="(max-width: 768px) 100vw, 400px"
-        priority
-        unoptimized={displayImage.startsWith("data:")}
-      />
-
-      {sashColorHex && (
-        <div
-          className="pointer-events-none absolute inset-0 mix-blend-multiply opacity-[0.08]"
-          style={{ backgroundColor: sashColorHex }}
-          aria-hidden
-        />
-      )}
-
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent px-3 pb-3 pt-10">
-        <p className="text-[11px] font-medium leading-snug text-white/95 sm:text-xs">
-          {focused?.label ??
-            (activeStyle
-              ? isAr
-                ? activeStyle.style_name_ar
-                : activeStyle.style_name_en ?? activeStyle.style_name_ar
-              : isAr
-                ? "صورة المنتج"
-                : "Product image")}
-        </p>
-        <p className="mt-0.5 text-[10px] leading-snug text-white/75">
-          {isAr
-            ? "صورة مرفوعة من المتجر لهذا الخيار — مو معاينة حية"
-            : "Store image for this option — not a live embroidery mockup"}
-        </p>
-      </div>
-    </div>
-  );
+  const caption =
+    focused?.label ??
+    (activeStyle
+      ? isAr
+        ? activeStyle.style_name_ar
+        : activeStyle.style_name_en ?? activeStyle.style_name_ar
+      : isAr
+        ? "صورة المنتج"
+        : "Product image");
 
   return (
     <>
@@ -116,62 +74,72 @@ export function CustomizationVisualPreview({
           </button>
         </div>
 
-        {previewBody}
+        <div
+          className={cn(
+            "relative w-full overflow-hidden rounded-2xl border border-warka-border/60 bg-media-bg",
+            isStudio
+              ? "mx-auto aspect-[5/4] max-h-[min(30dvh,240px)] sm:max-h-[min(36dvh,280px)] lg:max-h-none lg:aspect-[4/5]"
+              : "aspect-[4/5] max-h-[min(56dvh,480px)] sm:max-h-none"
+          )}
+        >
+          <Image
+            src={displayImage}
+            alt={caption}
+            fill
+            className="object-contain p-2"
+            sizes="(max-width: 768px) 100vw, 400px"
+            priority
+            unoptimized={displayImage.startsWith("data:")}
+          />
+        </div>
 
-        {chips.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-warka-text-secondary">
-              {isAr ? "الخيارات المختارة (اضغط للعرض)" : "Selected options (tap to view)"}
-            </p>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {chips.map((chip) => {
-                const active = (focused?.id ?? chips[chips.length - 1]?.id) === chip.id;
-                return (
-                  <button
-                    key={chip.id}
-                    type="button"
-                    onClick={() => setFocusChipId(chip.id)}
-                    className={cn(
-                      "flex w-[5.5rem] shrink-0 flex-col overflow-hidden rounded-xl border-2 bg-card text-start transition-colors",
-                      active
-                        ? "border-warka-primary ring-2 ring-warka-primary/20"
-                        : "border-warka-border hover:border-warka-primary/40"
-                    )}
-                  >
-                    <div className="relative aspect-square bg-media-bg">
-                      <Image
-                        src={chip.imageUrl}
-                        alt=""
-                        fill
-                        className="object-cover"
-                        sizes="88px"
-                        unoptimized={chip.imageUrl.startsWith("data:")}
-                      />
-                    </div>
-                    <span className="line-clamp-2 min-h-[2.25rem] px-1.5 py-1.5 text-[10px] font-medium leading-tight text-warka-text">
-                      {chip.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {chips.length === 0 && (
-          <p className="flex items-start gap-2 text-xs leading-relaxed text-warka-text-muted">
-            <ImageIcon className="mt-0.5 size-3.5 shrink-0 text-warka-primary" />
-            {isAr
-              ? "اختر شكلاً أو زخرفة من الاستوديو — تظهر هنا صورة الأدمن لكل خيار."
-              : "Pick a style or decoration in the studio — each admin image appears here."}
+        <div className="space-y-0.5 px-0.5">
+          <p className="text-sm font-semibold leading-snug text-warka-text">{caption}</p>
+          <p className="text-xs leading-relaxed text-warka-text-muted">
+            {isAr ? "صورة المتجر لهذا الخيار" : "Store photo for this option"}
           </p>
+        </div>
+
+        {chips.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto pb-0.5">
+            {chips.map((chip) => {
+              const active = (focused?.id ?? chips[chips.length - 1]?.id) === chip.id;
+              return (
+                <button
+                  key={chip.id}
+                  type="button"
+                  onClick={() => setFocusChipId(chip.id)}
+                  className={cn(
+                    "flex max-w-[7.5rem] shrink-0 flex-col overflow-hidden rounded-xl border-2 bg-card text-start",
+                    active
+                      ? "border-warka-primary"
+                      : "border-warka-border hover:border-warka-primary/40"
+                  )}
+                >
+                  <div className="relative aspect-square w-16 bg-media-bg sm:w-20">
+                    <Image
+                      src={chip.imageUrl}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      sizes="80px"
+                      unoptimized={chip.imageUrl.startsWith("data:")}
+                    />
+                  </div>
+                  <span className="line-clamp-2 px-1.5 py-1 text-[10px] font-medium leading-tight text-warka-text">
+                    {chip.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         )}
       </div>
 
       <OptionPreviewModal
         open={fullscreen}
         onOpenChange={setFullscreen}
-        title={focused?.label ?? (isAr ? "معاينة الصورة" : "Image preview")}
+        title={caption}
         imageUrl={displayImage}
         locale={locale}
       />

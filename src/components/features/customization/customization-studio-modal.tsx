@@ -223,62 +223,59 @@ export function CustomizationStudioTrigger({
 }: CustomizationStudioTriggerProps) {
   const isAr = locale === "ar";
   const complete = zonesTotal > 0 && zonesFilled >= Math.min(zonesTotal, 1);
+  // Avoid a second copy of the same product photo when the big preview is already above.
+  const showThumb = Boolean(thumbnailUrl);
 
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "group flex w-full touch-manipulation flex-col overflow-hidden rounded-2xl border-2 text-start shadow-sm transition-all active:scale-[0.99]",
+        "group flex w-full touch-manipulation items-center gap-3 overflow-hidden rounded-2xl border-2 px-4 py-3.5 text-start shadow-sm transition-all active:scale-[0.99]",
         complete
-          ? "border-warka-primary/40 bg-gradient-to-b from-warka-primary/5 to-card hover:border-warka-primary/60"
-          : "border-amber-500/40 bg-gradient-to-b from-amber-500/5 to-card hover:border-amber-500/60",
+          ? "border-warka-primary/40 bg-warka-primary/5 hover:border-warka-primary/60"
+          : "border-amber-500/40 bg-amber-500/5 hover:border-amber-500/60",
         className
       )}
     >
-      <div className="flex items-stretch gap-0">
-        {thumbnailUrl && (
-          <div
-            className="relative w-20 shrink-0 self-stretch bg-media-bg sm:w-24"
-            style={{
-              backgroundImage: `url(${thumbnailUrl})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-card/20" />
-          </div>
-        )}
-        <div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5 px-3 py-3 sm:px-4 sm:py-4">
-          <span className="flex items-center gap-2 text-sm font-bold leading-snug text-warka-text">
-            <Sparkles className="size-4 shrink-0 text-warka-primary" />
-            <span className="min-w-0">{isAr ? "تخصيص التطريز والزخرفة" : "Customize embroidery & decoration"}</span>
-          </span>
-          <span className="text-xs leading-relaxed text-warka-text-muted">
-            {isAr
-              ? "افتح الاستوديو واختر الشكل والزخرفة — تظهر صور الأدمن لكل خيار"
-              : "Open the studio — admin photos appear for each style and decoration"}
-          </span>
-          <div className="flex flex-col gap-1.5">
+      {showThumb && (
+        <div
+          className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-media-bg"
+          style={{
+            backgroundImage: `url(${thumbnailUrl})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+          aria-hidden
+        />
+      )}
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <p className="flex items-center gap-2 text-sm font-bold leading-snug text-warka-text">
+          <Sparkles className="size-4 shrink-0 text-warka-primary" aria-hidden />
+          {isAr ? "فتح استوديو التخصيص" : "Open customization studio"}
+        </p>
+        <p className="text-xs leading-relaxed text-warka-text-muted">
+          {isAr ? "اختر الشكل والزخرفة والخط" : "Choose style, decoration, and font"}
+        </p>
+        {(styleLabel || fontLabel || zonesTotal > 0) && (
+          <div className="flex flex-wrap gap-1.5 pt-0.5">
             {styleLabel && (
-              <span className="block w-fit max-w-full break-words rounded-lg bg-warka-bg px-2 py-1 text-[11px] font-medium leading-snug text-warka-text">
+              <span className="max-w-full break-words rounded-md bg-warka-bg px-2 py-0.5 text-[11px] font-medium leading-snug text-warka-text">
                 {styleLabel}
               </span>
             )}
-            <div className="flex flex-wrap gap-1.5">
-              {fontLabel && (
-                <span className="rounded-lg bg-warka-bg px-2 py-1 text-[11px] font-medium leading-snug text-warka-text">
-                  {fontLabel}
-                </span>
-              )}
-              {zonesTotal > 0 && (
-                <span className="rounded-lg bg-warka-primary/10 px-2 py-1 text-[11px] font-medium leading-snug text-warka-primary">
-                  {isAr ? `${zonesFilled}/${zonesTotal} مناطق` : `${zonesFilled}/${zonesTotal} zones`}
-                </span>
-              )}
-            </div>
+            {fontLabel && (
+              <span className="rounded-md bg-warka-bg px-2 py-0.5 text-[11px] font-medium leading-snug text-warka-text">
+                {fontLabel}
+              </span>
+            )}
+            {zonesTotal > 0 && (
+              <span className="rounded-md bg-warka-primary/10 px-2 py-0.5 text-[11px] font-medium leading-snug text-warka-primary">
+                {isAr ? `${zonesFilled}/${zonesTotal} مناطق` : `${zonesFilled}/${zonesTotal} zones`}
+              </span>
+            )}
           </div>
-        </div>
+        )}
       </div>
     </button>
   );

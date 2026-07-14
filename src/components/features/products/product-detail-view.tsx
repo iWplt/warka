@@ -40,7 +40,6 @@ import {
   applyPrimaryNameToPayload,
   primaryNameFromPayload,
   profileHasEngine,
-  resolveCatalogPreview,
   zonesForStyle,
 } from "@/lib/customization/engine";
 import type { CustomizationPayload } from "@/types/customization";
@@ -160,17 +159,6 @@ export function ProductDetailView({
   const zonesFilled = customization.zones.filter(
     (z) => z.text_value?.trim() || z.option_id || z.image_data_url
   ).length;
-  const catalogPreview = useMemo(() => {
-    if (!usesEngine || !customizationProfile) {
-      return { heroImage: activeImage, chips: [] as const };
-    }
-    return resolveCatalogPreview(
-      customizationProfile,
-      customization,
-      activeImage,
-      locale === "ar" ? "ar" : "en"
-    );
-  }, [usesEngine, customizationProfile, customization, activeImage, locale]);
   const selectedFontMeta = selectedFont ? findFontByFamily(fonts, selectedFont) : null;
 
   const handleStudentNameChange = (name: string) => {
@@ -372,7 +360,6 @@ export function ProductDetailView({
                 }
                 zonesFilled={zonesFilled}
                 zonesTotal={engineZones.length}
-                thumbnailUrl={catalogPreview.heroImage}
               />
               <CustomizationStudioModal
                 open={studioOpen}
