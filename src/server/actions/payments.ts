@@ -87,6 +87,90 @@ export async function recordPayment(input: z.infer<typeof paymentSchema>) {
   return { paymentStatus, paidSoFar };
 }
 
+/** Admin confirms the student's deposit receipt — locks the order and marks deposit paid. */
+export async function approveOrderDeposit(orderId: string) {
+  const profile = await requireRole("admin");
+  const supabase = await createClient();
+  if (!supabase) throw new Error("Supabase not configured");
+
+  const { data: order } = await supabase
+    .from("orders")
+    .select("id, order_number, student_id, deposit_required, deposit_paid_at, total")
+    .eq("id", orderId)
+    .single();
+
+  if (!order) throw new Error("Order not found");
+  if (order.deposit_paid_at) {
+    return { alreadyPaid: true as const };
+  }
+
+  const { data: pending } = await supabase
+    .from("payments")
+    .select("id, amount, notes")
+    .eq("order_id", orderId)
+    .eq("payment_status", "unpaid")
+    .ilike("notes", "%Deposit%")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const amount = Number(pending?.amount ?? order.deposit_required ?? 0);
+  const paidStatus: PaymentStatus =
+    amount >= Number(order.total) ? "paid" : amount > 0 ? "partial" : "unpaid";
+
+  if (pending?.id) {
+    await supabase
+      .from("payments")
+      .update({
+        payment_status: paidStatus,
+        notes: `${pending.notes ?? "Deposit"} | approved_by:${profile.id}`,
+      })
+      .eq("id", pending.id);
+  } else if (amount > 0) {
+    await supabase.from("payments").insert({
+      order_id: orderId,
+      amount,
+      method: "cash",
+      payment_status: paidStatus,
+      recorded_by: profile.id,
+      notes: "Deposit (arabon) — admin approved",
+    });
+  }
+
+  await supabase
+    .from("orders")
+    .update({
+      deposit_paid_at: new Date().toISOString(),
+      is_locked: true,
+      status: "pending_review",
+    })
+    .eq("id", orderId);
+
+  await supabase.from("order_status_history").insert({
+    order_id: orderId,
+    from_status: "pending_review",
+    to_status: "pending_review",
+    changed_by: profile.id,
+    notes: "Deposit approved by admin — order locked",
+  });
+
+  if (order.student_id) {
+    await createNotification(
+      order.student_id,
+      "payment_received",
+      `Deposit approved: ${order.order_number}`,
+      String(amount),
+      `/student/orders/${orderId}`
+    );
+  }
+
+  await logActivity(profile.id, "approve_deposit", "order", orderId, { amount });
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/admin/payments");
+  revalidatePath("/admin/orders");
+  return { ok: true as const };
+}
+
 export async function getPayments(orderId?: string) {
   const profile = await getCurrentProfile();
   if (!profile) return [];

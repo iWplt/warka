@@ -25,6 +25,7 @@ import {
   PaymentMethodsStep,
   type PaymentMethodId,
 } from "@/components/payment/payment-methods-step";
+import { toDbPaymentMethod, iraqiPaymentLabel } from "@/lib/payment/iraqi-methods";
 import { DeliveryDetailsForm } from "@/components/features/delivery/delivery-details-form";
 import { formatDeliveryNote, isDeliveryComplete } from "@/lib/delivery/format-delivery-note";
 import { IRAQI_GOVERNORATES } from "@/lib/constants/iraq-market";
@@ -119,6 +120,8 @@ export function UnifiedOrderWizard({
     getCustomizationForLine,
     paymentMethod,
     setPaymentMethod,
+    depositReceiptDataUrl,
+    setDepositReceiptDataUrl,
     depositConfirmed,
     setDepositConfirmed,
     reset: resetWizard,
@@ -312,11 +315,7 @@ export function UnifiedOrderWizard({
     setStep,
   ]);
 
-  const mapPaymentMethod = (id: PaymentMethodId): "cash" | "bank_transfer" | "zain_cash" => {
-    if (id === "cod") return "cash";
-    if (id === "asia_hawala" || id === "card") return "bank_transfer";
-    return "zain_cash";
-  };
+  const mapPaymentMethod = (id: PaymentMethodId) => toDbPaymentMethod(id);
 
   const goNext = () => {
     if (step === 2) {
@@ -397,6 +396,8 @@ export function UnifiedOrderWizard({
         type: "individual",
         pay_deposit: true,
         deposit_method: mapPaymentMethod(paymentMethod),
+        deposit_channel: paymentMethod,
+        deposit_receipt_data_url: depositReceiptDataUrl,
         notes: [deliveryNote, orderNotes.trim() || null].filter(Boolean).join("\n"),
         student_profile: {
           full_name: studentData.full_name.trim(),
@@ -545,34 +546,40 @@ export function UnifiedOrderWizard({
       )}
 
       {step === 7 && (
-        <WarkaCard className="space-y-4">
-          <WarkaCardTitle>{isAr ? "دفع العربون" : "Pay deposit"}</WarkaCardTitle>
-          <p className="text-sm text-warka-text-secondary">
-            {isAr
-              ? "الطلب يُثبّت فقط بعد دفع العربون. المبلغ المتبقي يُدفع لاحقاً."
-              : "Your order is confirmed only after the deposit is paid. Balance due later."}
-          </p>
-          <div className="rounded-xl border border-warka-primary/20 bg-warka-primary/5 p-4">
-            <p className="text-sm text-warka-text-muted">{isAr ? "العربون المطلوب" : "Required deposit"}</p>
-            <p className="text-2xl font-bold text-warka-primary">{formatIqd(depositAmount, locale)}</p>
-            <p className="mt-1 text-xs text-warka-text-muted">
-              {isAr ? "الإجمالي:" : "Total:"} {formatIqd(total, locale)}
+        <div className="space-y-4">
+          <WarkaCard className="space-y-3">
+            <WarkaCardTitle>{isAr ? "دفع العربون" : "Pay deposit"}</WarkaCardTitle>
+            <p className="text-sm leading-relaxed text-warka-text-secondary">
+              {isAr
+                ? "اختر طريقة الدفع العراقية، ادفع العربون، ارفع صورة الإيصال. الطلب يبقى بانتظار موافقة الأدمن قبل إكمال المراحل."
+                : "Choose an Iraqi payment method, pay the deposit, upload the receipt. The order stays pending until admin approves."}
             </p>
-          </div>
+            <div className="rounded-xl border border-warka-primary/20 bg-warka-primary/5 p-4">
+              <p className="text-sm text-warka-text-muted">{isAr ? "العربون المطلوب" : "Required deposit"}</p>
+              <p className="text-2xl font-bold text-warka-primary">{formatIqd(depositAmount, locale)}</p>
+              <p className="mt-1 text-xs text-warka-text-muted">
+                {isAr ? "الإجمالي:" : "Total:"} {formatIqd(total, locale)}
+              </p>
+            </div>
+          </WarkaCard>
           <PaymentMethodsStep
             locale={isAr ? "ar" : "en"}
             selectedMethod={paymentMethod}
             onSelect={setPaymentMethod}
+            receiptDataUrl={depositReceiptDataUrl}
+            onReceiptChange={setDepositReceiptDataUrl}
             onPaid={() => setDepositConfirmed(true)}
             total={depositAmount}
           />
           {depositConfirmed && (
-            <p className="flex items-center gap-2 text-sm font-medium text-[#4CAF50]">
-              <Lock className="size-4" />
-              {isAr ? "تم تأكيد العربون — جاهز للإرسال" : "Deposit confirmed — ready to submit"}
+            <p className="flex items-center gap-2 rounded-xl border border-[#4CAF50]/30 bg-[#4CAF50]/10 px-3 py-2.5 text-sm font-medium text-[#2e7d32]">
+              <Lock className="size-4 shrink-0" />
+              {isAr
+                ? `جاهز للإرسال — ${iraqiPaymentLabel(paymentMethod, true)}`
+                : `Ready to submit — ${iraqiPaymentLabel(paymentMethod, false)}`}
             </p>
           )}
-        </WarkaCard>
+        </div>
       )}
 
       {step === 8 && (

@@ -16,7 +16,7 @@ import { OrderCustomerSummary } from "@/components/features/orders/order-custome
 import { OrderItemsDetailPanel } from "@/components/features/orders/order-items-detail-panel";
 import { OrderStudentEditLog } from "@/components/features/orders/order-student-edit-log";
 import { LivePreview } from "@/components/features/design/live-preview";
-import { Lock, Pencil, CheckCircle2 } from "lucide-react";
+import { Lock, Pencil, CheckCircle2, Banknote } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import {
   canStudentEditOrder,
@@ -29,6 +29,7 @@ import {
   cancelOrderByStudent,
   unlockOrderForAdmin,
 } from "@/server/actions/orders";
+import { approveOrderDeposit } from "@/server/actions/payments";
 import type { OrderItemMedia } from "@/lib/orders/order-item-details";
 import type { OrderDetailStudent } from "@/lib/orders/parse-order-notes";
 import type { TemplateConfig } from "@/types/database";
@@ -122,6 +123,18 @@ export function OrderDetailView({
     }
   };
 
+  const handleApproveDeposit = async () => {
+    try {
+      await approveOrderDeposit(order.id);
+      toast.success(
+        locale === "ar" ? "تمت الموافقة على العربون" : "Deposit approved"
+      );
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("common.error"));
+    }
+  };
+
   const handleNote = async () => {
     if (!note.trim()) return;
     await addOrderNote(order.id, note);
@@ -168,6 +181,32 @@ export function OrderDetailView({
                 ? "شاهد صور المنتج الفعلي أدناه قبل الاستلام."
                 : "View your finished product photos below before pickup."}
             </p>
+          </div>
+        )}
+
+        {canManage && !order.deposit_paid_at && Number(order.deposit_required) > 0 && (
+          <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h2 className="flex items-center gap-2 font-semibold text-warka-text">
+                  <Banknote className="size-5 text-amber-700" />
+                  {locale === "ar" ? "عربون بانتظار الموافقة" : "Deposit awaiting approval"}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {locale === "ar"
+                    ? `المطلوب: ${Number(order.deposit_required).toLocaleString()} د.ع — راجع المدفوعات والإيصال ثم وافق.`
+                    : `Required: ${Number(order.deposit_required).toLocaleString()} IQD — review payment/receipt then approve.`}
+                </p>
+                {payments.some((p) => p.notes?.includes("receipt:")) && (
+                  <p className="mt-2 text-xs text-warka-text-muted" dir="ltr">
+                    {payments.find((p) => p.notes?.includes("Deposit"))?.notes}
+                  </p>
+                )}
+              </div>
+              <Button type="button" onClick={() => void handleApproveDeposit()}>
+                {locale === "ar" ? "الموافقة على العربون" : "Approve deposit"}
+              </Button>
+            </div>
           </div>
         )}
 

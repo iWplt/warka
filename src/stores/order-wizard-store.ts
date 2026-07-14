@@ -63,6 +63,7 @@ type OrderWizardState = {
   embroideryByLine: Record<string, LineEmbroideryDraft>;
   customizationByLine: Record<string, CustomizationPayload | null>;
   paymentMethod: PaymentMethodId;
+  depositReceiptDataUrl: string | null;
   depositConfirmed: boolean;
   setStep: (step: number) => void;
   setStudentData: (data: Partial<WizardStudentData>) => void;
@@ -73,6 +74,7 @@ type OrderWizardState = {
   setCustomizationForLine: (lineId: string, payload: CustomizationPayload | null) => void;
   getCustomizationForLine: (lineId: string) => CustomizationPayload | null;
   setPaymentMethod: (method: PaymentMethodId) => void;
+  setDepositReceiptDataUrl: (url: string | null) => void;
   setDepositConfirmed: (value: boolean) => void;
   reset: () => void;
 };
@@ -102,6 +104,7 @@ export const useOrderWizardStore = create<OrderWizardState>()(
       embroideryByLine: {},
       customizationByLine: {},
       paymentMethod: "zain_cash",
+      depositReceiptDataUrl: null,
       depositConfirmed: false,
       setStep: (step) => set({ step }),
       setStudentData: (data) =>
@@ -124,6 +127,7 @@ export const useOrderWizardStore = create<OrderWizardState>()(
         })),
       getCustomizationForLine: (lineId) => get().customizationByLine[lineId] ?? null,
       setPaymentMethod: (paymentMethod) => set({ paymentMethod }),
+      setDepositReceiptDataUrl: (depositReceiptDataUrl) => set({ depositReceiptDataUrl }),
       setDepositConfirmed: (depositConfirmed) => set({ depositConfirmed }),
       reset: () =>
         set({
@@ -134,9 +138,10 @@ export const useOrderWizardStore = create<OrderWizardState>()(
           embroideryByLine: {},
           customizationByLine: {},
           paymentMethod: "zain_cash",
+          depositReceiptDataUrl: null,
           depositConfirmed: false,
         }),
     }),
-    { name: "warka-order-wizard-v1" }
+    { name: "warka-order-wizard-v2" }
   )
 );

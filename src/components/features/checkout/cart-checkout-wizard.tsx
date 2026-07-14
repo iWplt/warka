@@ -22,7 +22,7 @@ import {
   PaymentMethodsStep,
   type PaymentMethodId,
 } from "@/components/payment/payment-methods-step";
-import { COD_FEE_IQD, IRAQI_GOVERNORATES } from "@/lib/constants/iraq-market";
+import { IRAQI_GOVERNORATES } from "@/lib/constants/iraq-market";
 import { formatIqd } from "@/lib/format/currency";
 import { getSizeOptions, productNeedsSize } from "@/lib/cart/sizes";
 import { validateImageFile } from "@/lib/upload/validate";
@@ -78,7 +78,8 @@ export function CartCheckoutWizard({ profile }: CartCheckoutWizardProps) {
     preferred_date: "",
   });
   const [orderNotes, setOrderNotes] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodId>("cod");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodId>("zain_cash");
+  const [paymentReceipt, setPaymentReceipt] = useState<string | null>(null);
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
 
   useEffect(() => {
@@ -141,8 +142,7 @@ export function CartCheckoutWizard({ profile }: CartCheckoutWizardProps) {
     setStep((s) => Math.min(5, s + 1));
   };
 
-  const totalWithCod =
-    paymentMethod === "cod" ? total + COD_FEE_IQD : total;
+  const totalWithCod = total;
 
   const handleSubmit = async () => {
     if (items.length === 0) return;
@@ -439,6 +439,8 @@ export function CartCheckoutWizard({ profile }: CartCheckoutWizardProps) {
           locale={locale === "ar" ? "ar" : "en"}
           selectedMethod={paymentMethod}
           onSelect={setPaymentMethod}
+          receiptDataUrl={paymentReceipt}
+          onReceiptChange={setPaymentReceipt}
           onPaid={() => setPaymentConfirmed(true)}
           total={totalWithCod}
         />
@@ -455,12 +457,7 @@ export function CartCheckoutWizard({ profile }: CartCheckoutWizardProps) {
             {formatIqd(totalWithCod, locale)}
           </p>
           <p className="text-sm text-warka-text-secondary">
-            {locale === "ar" ? "طريقة الدفع:" : "Payment:"}{" "}
-            {paymentMethod === "cod"
-              ? locale === "ar"
-                ? "الدفع عند الاستلام"
-                : "Cash on delivery"
-              : paymentMethod}
+            {locale === "ar" ? "طريقة الدفع:" : "Payment:"} {paymentMethod}
             {paymentConfirmed ? " ✓" : ""}
           </p>
           <p className="text-sm text-warka-text-secondary">

@@ -32,9 +32,12 @@ export function nextStatusAfterDeposit(): OrderStatus {
 }
 
 export function statusLabelForStudent(
-  order: Pick<Order, "status" | "deposit_paid_at">,
+  order: Pick<Order, "status" | "deposit_paid_at" | "deposit_required">,
   locale: "ar" | "en"
 ): string {
+  if (!order.deposit_paid_at && Number(order.deposit_required) > 0) {
+    return locale === "ar" ? "بانتظار موافقة العربون" : "Awaiting deposit approval";
+  }
   if (!order.deposit_paid_at && order.status === "new") {
     return locale === "ar" ? "بانتظار العربون" : "Awaiting deposit";
   }

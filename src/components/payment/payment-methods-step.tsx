@@ -1,25 +1,54 @@
 "use client";
 
-import { CreditCard, Truck } from "lucide-react";
+import { Upload } from "lucide-react";
 import { toast } from "sonner";
 import { WarkaCard, WarkaCardTitle } from "@/components/ui/warka-card";
-import { AsiaHawalaMock } from "@/components/payment/asia-hawala-mock";
-import { SuperQiMock } from "@/components/payment/super-qi-mock";
-import { ZainCashMock } from "@/components/payment/zain-cash-mock";
-import { COD_FEE_IQD } from "@/lib/constants/iraq-market";
+import { Button } from "@/components/ui/button";
+import { PaymentMethodLogo } from "@/components/payment/payment-method-logos";
+import {
+  IRAQI_PAYMENT_METHODS,
+  iraqiPaymentLabel,
+  type IraqiPaymentMethodId,
+} from "@/lib/payment/iraqi-methods";
 import { formatIqd } from "@/lib/format/currency";
 import { cn } from "@/lib/utils";
 
-export type PaymentMethodId = "cod" | "super_qi" | "zain_cash" | "asia_hawala" | "card";
+export type PaymentMethodId = IraqiPaymentMethodId;
 
 export type PaymentMethodsStepProps = {
   locale: "ar" | "en";
   selectedMethod: PaymentMethodId;
   onSelect: (method: PaymentMethodId) => void;
+  /** Called when student confirms method + receipt (cash may skip receipt). */
   onPaid?: (method: PaymentMethodId) => void;
   total: number;
+  receiptDataUrl: string | null;
+  onReceiptChange: (url: string | null) => void;
   className?: string;
   disabled?: boolean;
+};
+
+const METHOD_HINT: Record<IraqiPaymentMethodId, { ar: string; en: string }> = {
+  zain_cash: {
+    ar: "حوّل العربون عبر زين كاش ثم ارفع صورة الإيصال",
+    en: "Send the deposit via Zain Cash, then upload the receipt",
+  },
+  super_qi: {
+    ar: "ادفع عبر SuperQi ثم ارفع لقطة الشاشة",
+    en: "Pay with SuperQi, then upload a screenshot",
+  },
+  fib: {
+    ar: "حوّل عبر تطبيق FIB ثم ارفع إثبات التحويل",
+    en: "Transfer via FIB app, then upload proof",
+  },
+  asiapay: {
+    ar: "ادفع عبر آسيا بي / حوالة ثم ارفع الإيصال",
+    en: "Pay via AsiaPay / hawala, then upload the receipt",
+  },
+  cash: {
+    ar: "دفع نقدي عند الاستلام أو في المحل — يفضّل إرفاق صورة إن وُجدت",
+    en: "Pay cash in person — optional receipt photo",
+  },
 };
 
 export function PaymentMethodsStep({
@@ -28,158 +57,157 @@ export function PaymentMethodsStep({
   onSelect,
   onPaid,
   total,
+  receiptDataUrl,
+  onReceiptChange,
   className,
   disabled,
 }: PaymentMethodsStepProps) {
   const isAr = locale === "ar";
+  const needsReceipt = selectedMethod !== "cash";
 
-  const handleOnlinePaid = (method: PaymentMethodId) => {
-    onPaid?.(method);
+  const handleFile = (file: File | undefined) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error(isAr ? "ارفع صورة فقط" : "Upload an image only");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(isAr ? "الحد الأقصى 5 ميجا" : "Max size 5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") onReceiptChange(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
-  const handleCodConfirm = () => {
+  const handleConfirm = () => {
+    if (needsReceipt && !receiptDataUrl) {
+      toast.error(
+        isAr ? "ارفع صورة إيصال الدفع أولاً" : "Upload a payment receipt first"
+      );
+      return;
+    }
     toast.success(
-      isAr ? "تم اختيار الدفع عند الاستلام" : "Cash on delivery selected",
-      {
-        description: isAr
-          ? `رسوم التوصيل: ${formatIqd(COD_FEE_IQD, locale)}`
-          : `Delivery fee: ${formatIqd(COD_FEE_IQD, locale)}`,
-      }
+      isAr
+        ? "تم تسجيل طريقة الدفع — الطلب بانتظار موافقة الأدمن على العربون"
+        : "Payment method saved — awaiting admin deposit approval"
     );
-    onPaid?.("cod");
+    onPaid?.(selectedMethod);
   };
 
   return (
     <WarkaCard className={cn("space-y-4", className)}>
-      <WarkaCardTitle>
-        {isAr ? "طريقة الدفع" : "Payment method"}
-      </WarkaCardTitle>
-
-      <div
-        className={cn(
-          "rounded-2xl border-2 bg-card p-4 transition-all",
-          selectedMethod === "cod"
-            ? "border-warka-primary shadow-card"
-            : "border-warka-border hover:border-warka-primary/40"
-        )}
-      >
-        <label className="flex cursor-pointer items-start gap-3">
-          <input
-            type="radio"
-            name="payment-method"
-            checked={selectedMethod === "cod"}
-            onChange={() => onSelect("cod")}
-            disabled={disabled}
-            className="mt-1 size-4 accent-warka-primary"
-          />
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-warka-primary/10 text-warka-primary">
-                <Truck className="size-4" />
-              </span>
-              <div>
-                <p className="font-semibold text-warka-text">
-                  {isAr ? "الدفع عند الاستلام" : "Cash on delivery"}
-                </p>
-                <p className="text-xs text-warka-text-muted">
-                  {isAr ? "الخيار الافتراضي" : "Default option"}
-                </p>
-              </div>
-            </div>
-
-            {selectedMethod === "cod" && (
-              <div className="mt-4 space-y-2 border-t border-warka-border pt-4">
-                <p className="text-sm text-warka-text-secondary">
-                  {isAr
-                    ? `رسوم التوصيل عند الاستلام: ${formatIqd(COD_FEE_IQD, locale)}`
-                    : `COD delivery fee: ${formatIqd(COD_FEE_IQD, locale)}`}
-                </p>
-                <p className="text-sm font-bold text-warka-primary">
-                  {isAr ? "الإجمالي:" : "Total:"} {formatIqd(total + COD_FEE_IQD, locale)}
-                </p>
-                <button
-                  type="button"
-                  disabled={disabled}
-                  onClick={handleCodConfirm}
-                  className="mt-2 w-full rounded-lg bg-warka-primary py-2.5 text-sm font-semibold text-white transition-colors hover:bg-warka-primary-dark disabled:opacity-50"
-                >
-                  {isAr ? "تأكيد الدفع عند الاستلام" : "Confirm COD"}
-                </button>
-              </div>
-            )}
-          </div>
-        </label>
+      <div>
+        <WarkaCardTitle>{isAr ? "طريقة دفع العربون" : "Deposit payment method"}</WarkaCardTitle>
+        <p className="mt-1 text-sm text-warka-text-muted">
+          {isAr
+            ? "اختر الطريقة، أتمّ الدفع، ثم ارفع صورة الإيصال ليوافق الأدمن."
+            : "Pick a method, pay, then upload the receipt for admin approval."}
+        </p>
       </div>
 
-      <SuperQiMock
-        selected={selectedMethod === "super_qi"}
-        onSelect={() => onSelect("super_qi")}
-        locale={locale}
-        amount={total}
-        disabled={disabled}
-        onPaid={() => handleOnlinePaid("super_qi")}
-      />
-
-      <ZainCashMock
-        selected={selectedMethod === "zain_cash"}
-        onSelect={() => onSelect("zain_cash")}
-        locale={locale}
-        amount={total}
-        disabled={disabled}
-        onPaid={() => handleOnlinePaid("zain_cash")}
-      />
-
-      <AsiaHawalaMock
-        selected={selectedMethod === "asia_hawala"}
-        onSelect={() => onSelect("asia_hawala")}
-        locale={locale}
-        amount={total}
-        disabled={disabled}
-        onPaid={() => handleOnlinePaid("asia_hawala")}
-      />
-
-      <div
-        className={cn(
-          "rounded-2xl border-2 border-dashed bg-warka-bg/50 p-4 transition-all",
-          selectedMethod === "card"
-            ? "border-warka-primary shadow-card"
-            : "border-warka-border hover:border-warka-primary/40"
-        )}
-      >
-        <label className="flex cursor-pointer items-start gap-3">
-          <input
-            type="radio"
-            name="payment-method"
-            checked={selectedMethod === "card"}
-            onChange={() => onSelect("card")}
-            disabled={disabled}
-            className="mt-1 size-4 accent-warka-primary"
-          />
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-warka-text/5 text-warka-text">
-                <CreditCard className="size-4" />
-              </span>
-              <div>
-                <p className="font-semibold text-warka-text">
-                  {isAr ? "بطاقة ائتمان" : "Credit / debit card"}
+      <div className="grid gap-3">
+        {IRAQI_PAYMENT_METHODS.map((method) => {
+          const selected = selectedMethod === method;
+          return (
+            <button
+              key={method}
+              type="button"
+              disabled={disabled}
+              onClick={() => onSelect(method)}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-2xl border-2 p-3 text-start transition-all touch-manipulation",
+                selected
+                  ? "border-warka-primary bg-warka-primary/5 shadow-sm"
+                  : "border-warka-border bg-card hover:border-warka-primary/40",
+                disabled && "opacity-50"
+              )}
+            >
+              <PaymentMethodLogo method={method} />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold leading-snug text-warka-text">
+                  {iraqiPaymentLabel(method, isAr)}
                 </p>
-                <p className="text-xs text-warka-text-muted">
-                  {isAr ? "Stripe — قريباً" : "Stripe — coming soon"}
+                <p className="mt-0.5 text-xs leading-relaxed text-warka-text-muted">
+                  {isAr ? METHOD_HINT[method].ar : METHOD_HINT[method].en}
                 </p>
               </div>
-            </div>
-
-            {selectedMethod === "card" && (
-              <div className="mt-4 rounded-xl border border-warka-border bg-card p-4 text-center text-sm text-warka-text-muted">
-                {isAr
-                  ? "الدفع بالبطاقة سيتوفر قريباً عبر Stripe."
-                  : "Card payments via Stripe will be available soon."}
-              </div>
-            )}
-          </div>
-        </label>
+              <span
+                className={cn(
+                  "size-4 shrink-0 rounded-full border-2",
+                  selected
+                    ? "border-warka-primary bg-warka-primary"
+                    : "border-warka-border bg-card"
+                )}
+                aria-hidden
+              />
+            </button>
+          );
+        })}
       </div>
+
+      <div className="rounded-xl border border-warka-primary/20 bg-warka-primary/5 p-4">
+        <p className="text-xs text-warka-text-muted">{isAr ? "مبلغ العربون" : "Deposit amount"}</p>
+        <p className="text-xl font-bold text-warka-primary">{formatIqd(total, locale)}</p>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-sm font-semibold text-warka-text">
+          {isAr
+            ? needsReceipt
+              ? "صورة إيصال الدفع *"
+              : "صورة إثبات (اختياري)"
+            : needsReceipt
+              ? "Payment receipt photo *"
+              : "Proof photo (optional)"}
+        </p>
+        {receiptDataUrl ? (
+          <div className="relative overflow-hidden rounded-xl border border-warka-border">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={receiptDataUrl} alt="" className="max-h-48 w-full object-contain bg-media-bg" />
+            <button
+              type="button"
+              className="absolute end-2 top-2 rounded-lg bg-card/95 px-2 py-1 text-xs font-medium text-destructive"
+              onClick={() => onReceiptChange(null)}
+              disabled={disabled}
+            >
+              {isAr ? "حذف" : "Remove"}
+            </button>
+          </div>
+        ) : (
+          <label
+            className={cn(
+              "flex min-h-[7rem] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-warka-border bg-warka-bg/40 px-4 py-6 text-center transition-colors hover:border-warka-primary/40",
+              disabled && "pointer-events-none opacity-50"
+            )}
+          >
+            <Upload className="size-6 text-warka-primary" />
+            <span className="text-sm font-medium text-warka-text">
+              {isAr ? "اضغط لرفع صورة الإيصال" : "Tap to upload receipt"}
+            </span>
+            <span className="text-xs text-warka-text-muted">PNG / JPG — max 5MB</span>
+            <input
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              disabled={disabled}
+              onChange={(e) => handleFile(e.target.files?.[0])}
+            />
+          </label>
+        )}
+      </div>
+
+      <Button
+        type="button"
+        size="lg"
+        className="w-full min-h-11"
+        disabled={disabled || (needsReceipt && !receiptDataUrl)}
+        onClick={handleConfirm}
+      >
+        {isAr ? "تأكيد وإرسال للعربون للمراجعة" : "Confirm — send deposit for review"}
+      </Button>
     </WarkaCard>
   );
 }

@@ -2,7 +2,11 @@ import type { CartLineItem } from "@/stores/cart-store";
 
 const WIZARD_STEP_COUNT = 8;
 
-/** Step 1 requires cart items; deeper steps require prior wizard progress. */
+/**
+ * Max step the student may open.
+ * Deposit step (7) is reachable after review (6).
+ * Submit (8) requires depositConfirmed (receipt + method).
+ */
 export function getMaxAllowedWizardStep(
   items: CartLineItem[],
   options?: {
@@ -17,10 +21,10 @@ export function getMaxAllowedWizardStep(
   let max = 2;
   if (options?.hasStudentName && options?.deliveryComplete) max = 3;
   if (max >= 3 && options?.allSized) max = 4;
-  if (max >= 4) max = 5;
-  if (max >= 5) max = 6;
-  if (max >= 6 && options?.depositConfirmed) max = 7;
-  if (max >= 7) max = WIZARD_STEP_COUNT;
+  if (max >= 4) max = 5; // logo
+  if (max >= 5) max = 6; // review
+  if (max >= 6) max = 7; // deposit — always after review
+  if (max >= 7 && options?.depositConfirmed) max = WIZARD_STEP_COUNT; // submit
 
   return max;
 }

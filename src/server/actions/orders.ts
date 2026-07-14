@@ -99,6 +99,11 @@ const createOrderSchema = z.object({
     .optional(),
   pay_deposit: z.boolean().optional(),
   deposit_method: z.enum(["cash", "bank_transfer", "zain_cash"]).optional(),
+  /** UI channel label (SuperQi, FIB, …) stored in payment notes */
+  deposit_channel: z
+    .enum(["zain_cash", "super_qi", "fib", "asiapay", "cash"])
+    .optional(),
+  deposit_receipt_data_url: z.string().optional().nullable(),
 });
 
 export async function submitOrderWithDeposit(
@@ -562,18 +567,47 @@ export async function createOrder(input: z.infer<typeof createOrderSchema>) {
   const orderUpdate: Record<string, unknown> = { qr_code_path: qrPath };
 
   if (withDeposit && data.deposit_method) {
+    let receiptPath: string | null = null;
+    if (data.deposit_receipt_data_url) {
+      try {
+        const uploaded = await uploadDataUrl(
+          supabase,
+          "logos",
+          `deposits/${order.id}/receipt-${Date.now()}.jpg`,
+          data.deposit_receipt_data_url,
+          { validation: "logo" }
+        );
+        receiptPath = uploaded.path;
+      } catch {
+        // Keep order going even if receipt upload fails — notes still mention method
+        receiptPath = null;
+      }
+    }
+
+    const channel = data.deposit_channel ?? data.deposit_method;
+    const receiptNote = receiptPath
+      ? `receipt:${receiptPath}`
+      : data.deposit_receipt_data_url
+        ? "receipt:inline-upload-failed"
+        : "receipt:none";
+
     await supabase.from("payments").insert({
       order_id: order.id,
       amount: depositRequired,
       method: data.deposit_method,
-      payment_status: depositRequired >= subtotal ? "paid" : "partial",
+      // Unpaid until admin approves the deposit receipt
+      payment_status: "unpaid",
       recorded_by: profile.id,
-      notes: "Deposit (arabon)",
+      notes: [
+        "Deposit (arabon) — awaiting admin approval",
+        `channel:${channel}`,
+        receiptNote,
+      ].join(" | "),
     });
 
-    orderUpdate.deposit_paid_at = new Date().toISOString();
-    orderUpdate.is_locked = true;
-    finalStatus = nextStatusAfterDeposit();
+    // Do NOT set deposit_paid_at yet — admin must approve
+    orderUpdate.is_locked = false;
+    finalStatus = "pending_review";
   }
 
   orderUpdate.status = finalStatus;
@@ -584,12 +618,16 @@ export async function createOrder(input: z.infer<typeof createOrderSchema>) {
     from_status: "new",
     to_status: finalStatus,
     changed_by: profile.id,
-    notes: withDeposit ? "Deposit paid — order confirmed" : "Submitted for review",
+    notes: withDeposit
+      ? "Submitted with deposit receipt — awaiting admin approval"
+      : "Submitted for review",
   });
 
   await notifyAdminsAndEmployees(
     data.type === "group" ? "new_group_order" : "new_order",
-    `New order ${order.order_number}`,
+    withDeposit
+      ? `New order ${order.order_number} — deposit awaiting approval`
+      : `New order ${order.order_number}`,
     data.notes ?? "",
     "orders:view",
     `/admin/orders/${order.id}`,
@@ -612,13 +650,14 @@ export async function createOrder(input: z.infer<typeof createOrderSchema>) {
 
   if (withDeposit && orderPayload.student_id) {
     queueWhatsAppNotification({
-      eventType: "order_confirmed",
+      eventType: "deposit_reminder",
       orderId: order.id,
       studentId: orderPayload.student_id as string,
       variables: {
         order_number: order.order_number,
         deposit_amount: String(depositRequired),
         order_link: `/student/orders/${order.id}`,
+        days_waiting: "0",
       },
     });
   }
