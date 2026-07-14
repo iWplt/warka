@@ -3,7 +3,8 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getSupabaseConfig } from "@/lib/env";
+import { getSupabaseConfig, isBootstrapAllowed } from "@/lib/env";
+import { logSecurityEvent } from "@/lib/security/audit-log";
 
 const bootstrapSchema = z.object({
   email: z.string().email(),
@@ -15,10 +16,14 @@ const bootstrapSchema = z.object({
 export type SetupStatus = {
   ready: boolean;
   needsBootstrap: boolean;
-  reason?: "no-config" | "admin-exists";
+  reason?: "no-config" | "admin-exists" | "bootstrap-disabled";
 };
 
 export async function getSetupStatus(): Promise<SetupStatus> {
+  if (!isBootstrapAllowed()) {
+    return { ready: true, needsBootstrap: false, reason: "bootstrap-disabled" };
+  }
+
   if (!getSupabaseConfig()) {
     return { ready: false, needsBootstrap: false, reason: "no-config" };
   }
@@ -47,14 +52,19 @@ export async function getSetupStatus(): Promise<SetupStatus> {
 }
 
 export async function bootstrapFirstAdmin(formData: FormData) {
+  const locale = (formData.get("locale") as string) || "ar";
+
+  if (!isBootstrapAllowed()) {
+    logSecurityEvent("permission.denied", { scope: "bootstrap", reason: "disabled" });
+    redirect(`/${locale}/login`);
+  }
+
   const parsed = bootstrapSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
     fullName: formData.get("fullName"),
     locale: formData.get("locale") ?? "ar",
   });
-
-  const locale = (formData.get("locale") as string) || "ar";
 
   if (!parsed.success) {
     redirect(`/${locale}/setup?error=invalid`);

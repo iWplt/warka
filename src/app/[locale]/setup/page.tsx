@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { getSetupStatus } from "@/server/actions/setup";
 import { SetupForm } from "@/components/features/auth/setup-form";
-import { getSupabaseConfig } from "@/lib/env";
+import { getSupabaseConfig, isBootstrapAllowed } from "@/lib/env";
 import { redirect } from "next/navigation";
 
 export default async function SetupPage({
@@ -10,6 +10,11 @@ export default async function SetupPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+
+  // Production default: bootstrap is off unless ALLOW_BOOTSTRAP=true
+  if (!isBootstrapAllowed()) {
+    redirect(`/${locale}/login`);
+  }
 
   if (!getSupabaseConfig()) {
     redirect(`/${locale}/login?error=config`);

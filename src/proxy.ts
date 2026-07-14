@@ -2,7 +2,7 @@ import createIntlMiddleware from "next-intl/middleware";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "@/i18n/routing";
-import { getSupabaseConfig, isPrismaAuthEnabled } from "@/lib/env";
+import { getSupabaseConfig, isBootstrapAllowed, isPrismaAuthEnabled } from "@/lib/env";
 import { handlePrismaAuthMiddleware } from "@/lib/auth/prisma-middleware";
 import {
   LOCAL_SESSION_COOKIE,
@@ -66,10 +66,16 @@ export async function proxy(request: NextRequest) {
   const isAuthPath = AUTH_PATHS.some((p) => path.startsWith(p));
   const isSetupPath = path.startsWith("/setup");
 
-  if (isSetupPath && getSupabaseConfig()) {
-    const hasAdmin = await adminExists();
-    if (hasAdmin === true) {
+  // Hard-block /setup unless ALLOW_BOOTSTRAP=true (then still closes once an admin exists)
+  if (isSetupPath) {
+    if (!isBootstrapAllowed()) {
       return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+    }
+    if (getSupabaseConfig()) {
+      const hasAdmin = await adminExists();
+      if (hasAdmin === true) {
+        return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+      }
     }
   }
 

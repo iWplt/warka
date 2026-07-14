@@ -16,6 +16,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_LOCAL_AUTH_ENABLED: z.enum(["true", "false"]).optional(),
   STUDENT_AUTH_PEPPER: z.string().min(16).optional(),
   CRON_SECRET: z.string().min(16).optional(),
+  ALLOW_BOOTSTRAP: z.enum(["true", "false"]).optional(),
 });
 
 export const env = envSchema.parse({
@@ -34,6 +35,7 @@ export const env = envSchema.parse({
   NEXT_PUBLIC_LOCAL_AUTH_ENABLED: process.env.NEXT_PUBLIC_LOCAL_AUTH_ENABLED,
   STUDENT_AUTH_PEPPER: process.env.STUDENT_AUTH_PEPPER,
   CRON_SECRET: process.env.CRON_SECRET,
+  ALLOW_BOOTSTRAP: process.env.ALLOW_BOOTSTRAP,
 });
 
 export function getSupabaseConfig() {
@@ -53,4 +55,9 @@ export function getServiceRoleKey(): string | null {
 
 export function isPrismaAuthEnabled(): boolean {
   return process.env.USE_PRISMA_AUTH === "true";
+}
+
+/** First-admin bootstrap is off unless explicitly ALLOW_BOOTSTRAP=true. */
+export function isBootstrapAllowed(): boolean {
+  return process.env.ALLOW_BOOTSTRAP === "true";
 }
