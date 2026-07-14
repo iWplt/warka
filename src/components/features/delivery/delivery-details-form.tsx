@@ -164,26 +164,23 @@ export function DeliveryDetailsForm({
   const captureLocation = async () => {
     setLocating(true);
     const result = await requestDeviceLocation();
+    if (result.ok && isValidDeliveryCoords(result.lat, result.lng)) {
+      saveCoords(result.lat, result.lng);
+      toast.success(
+        isAr
+          ? "تم جلب موقعك — افتح الخريطة إذا تحتاج تصحّحه"
+          : "Location captured — open the map to adjust if needed"
+      );
+      setLocating(false);
+      return;
+    }
     if (!result.ok) {
       toast.error(geoErrorMessage(result.messageKey, isAr));
-      if (result.messageKey !== "unsupported") {
-        setMapPickerOpen(true);
-      }
-      setLocating(false);
-      return;
-    }
-    if (!isValidDeliveryCoords(result.lat, result.lng)) {
+    } else {
       toast.error(geoErrorMessage("inaccurate", isAr));
-      setMapPickerOpen(true);
-      setLocating(false);
-      return;
     }
-    saveCoords(result.lat, result.lng);
-    toast.success(
-      isAr
-        ? "تم جلب موقعك — افتح الخريطة إذا تحتاج تصحّحه"
-        : "Location captured — open the map to adjust if needed"
-    );
+    // Open map so the browser can prompt again / user can pick with live preview
+    setMapPickerOpen(true);
     setLocating(false);
   };
 
@@ -371,7 +368,7 @@ export function DeliveryDetailsForm({
               type="button"
               variant="outline"
               className="min-h-11 h-auto w-full touch-manipulation gap-2 border-warka-primary/40 px-4 py-2.5 text-center text-warka-primary hover:bg-warka-primary/10 @sm:min-w-0 @sm:flex-1"
-              onClick={captureLocation}
+              onClick={() => void captureLocation()}
               disabled={locating}
             >
               {locating ? (

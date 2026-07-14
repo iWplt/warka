@@ -10,7 +10,8 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(), payment=()",
+    // self = this site may request location (required for delivery map GPS)
+    value: "camera=(), microphone=(), geolocation=(self), payment=()",
   },
   {
     key: "Strict-Transport-Security",
@@ -22,9 +23,10 @@ const securityHeaders = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://plus.unsplash.com",
+      // Map tiles (Leaflet) + product images
+      "img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://plus.unsplash.com https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://*.openstreetmap.fr https://server.arcgisonline.com",
       "font-src 'self' data: https://*.supabase.co",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://*.openstreetmap.fr https://server.arcgisonline.com",
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self'",

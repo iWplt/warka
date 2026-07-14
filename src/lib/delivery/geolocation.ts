@@ -1,6 +1,15 @@
+export type GeoMessageKey =
+  | "unsupported"
+  | "denied"
+  | "unavailable"
+  | "timeout"
+  | "inaccurate";
+
 export type GeoResult =
   | { ok: true; lat: number; lng: number; accuracy: number }
-  | { ok: false; code: number; messageKey: "unsupported" | "denied" | "unavailable" | "timeout" | "inaccurate" };
+  | { ok: false; code: number; messageKey: GeoMessageKey };
+
+export type GeoPermissionState = "granted" | "denied" | "prompt" | "unknown";
 
 function positionOptions(highAccuracy: boolean, timeoutMs: number): PositionOptions {
   return {
@@ -45,9 +54,27 @@ function getPositionOnce(options: PositionOptions): Promise<GeoResult> {
   });
 }
 
+/** Query Permissions API when available (Chrome/Android/desktop). */
+export async function getGeolocationPermissionState(): Promise<GeoPermissionState> {
+  if (typeof navigator === "undefined" || !navigator.permissions?.query) {
+    return "unknown";
+  }
+  try {
+    const status = await navigator.permissions.query({
+      name: "geolocation" as PermissionName,
+    });
+    if (status.state === "granted" || status.state === "denied" || status.state === "prompt") {
+      return status.state;
+    }
+    return "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
 /**
- * iOS Safari often fails with enableHighAccuracy + short timeouts.
- * Try network/cell first, then a high-accuracy retry.
+ * Request device GPS. Triggers the browser permission dialog when state is "prompt".
+ * Tries network/cell first, then high-accuracy — works better across Android/iOS/desktop.
  */
 export async function requestDeviceLocation(): Promise<GeoResult> {
   if (typeof navigator === "undefined" || !navigator.geolocation) {
@@ -61,36 +88,34 @@ export async function requestDeviceLocation(): Promise<GeoResult> {
   const high = await getPositionOnce(positionOptions(true, 20_000));
   if (high.ok) return high;
 
-  // Prefer the more specific denial/timeout from either attempt
   if (low.messageKey === "timeout" || high.messageKey === "timeout") {
     return { ok: false, code: 3, messageKey: "timeout" };
   }
   return high.messageKey !== "unavailable" ? high : low;
 }
 
-export function geoErrorMessage(
-  key: "unsupported" | "denied" | "unavailable" | "timeout" | "inaccurate",
-  isAr: boolean
-): string {
+export function geoErrorMessage(key: GeoMessageKey, isAr: boolean): string {
   if (key === "unsupported") {
-    return isAr ? "المتصفح لا يدعم تحديد الموقع" : "Geolocation is not supported";
+    return isAr
+      ? "هذا المتصفح لا يدعم تحديد الموقع — حدّد يدوياً على الخريطة"
+      : "This browser does not support location — pick manually on the map";
   }
   if (key === "denied") {
     return isAr
-      ? "صلاحية الموقع مرفوضة — من إعدادات Safari فعّل الموقع لهذا الموقع، أو حدّد يدوياً على الخريطة"
-      : "Location permission denied — enable it in Safari settings, or pick manually on the map";
+      ? "صلاحية الموقع مرفوضة — اسمح بالوصول للموقع من إعدادات المتصفح لهذا الموقع، ثم اضغط «جلب موقعي» مرة ثانية"
+      : "Location permission denied — allow location for this site in browser settings, then tap “Use my GPS” again";
   }
   if (key === "timeout") {
     return isAr
-      ? "انتهت مهلة GPS — تأكد أن خدمات الموقع شغّالة، أو حدّد يدوياً على الخريطة"
-      : "GPS timed out — turn on Location Services, or pick manually on the map";
+      ? "انتهت مهلة تحديد الموقع — تأكد أن GPS / الموقع شغّال، أو حدّد يدوياً على الخريطة"
+      : "Location timed out — turn on GPS / Location, or pick manually on the map";
   }
   if (key === "inaccurate") {
     return isAr
-      ? "GPS ما رجّع موقع دقيق — حدّد يدوياً على الخريطة"
-      : "GPS location inaccurate — pick manually on the map";
+      ? "الموقع غير دقيق — حرّك الدبوس أو اضغط على مكانك على الخريطة"
+      : "Location inaccurate — drag the pin or tap your spot on the map";
   }
   return isAr
-    ? "تعذّر الوصول للموقع — حدّد يدوياً على الخريطة"
-    : "Could not get GPS — pick manually on the map";
+    ? "تعذّر جلب الموقع — اسمح بالصلاحية أو حدّد يدوياً على الخريطة"
+    : "Could not get location — allow permission or pick manually on the map";
 }

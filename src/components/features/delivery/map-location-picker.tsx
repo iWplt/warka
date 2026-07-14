@@ -5,7 +5,12 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { Crosshair, Loader2, MapPin, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { geoErrorMessage, requestDeviceLocation } from "@/lib/delivery/geolocation";
+import {
+  geoErrorMessage,
+  getGeolocationPermissionState,
+  requestDeviceLocation,
+  type GeoMessageKey,
+} from "@/lib/delivery/geolocation";
 import { isValidDeliveryCoords } from "@/lib/delivery/location-utils";
 import { cn } from "@/lib/utils";
 
@@ -17,14 +22,18 @@ type MapLocationPickerProps = {
   initialLng?: number | null;
   defaultCenter?: { lat: number; lng: number };
   onConfirm: (lat: number, lng: number) => void;
+  /** When true, request GPS as soon as the map opens (after user tapped open/GPS). */
+  autoLocate?: boolean;
 };
 
 const DEFAULT_CENTER = { lat: 33.3152, lng: 44.3661 };
 
-/** Carto tiles are more reliable on mobile Safari than osm.org direct tiles. */
 const TILE_URL = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
 const TILE_ATTR =
   '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OSM</a> &copy; <a href="https://carto.com/" target="_blank" rel="noreferrer">CARTO</a>';
+
+const TILE_FALLBACK_URL =
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}";
 
 export function MapLocationPicker({
   open,
@@ -34,24 +43,34 @@ export function MapLocationPicker({
   initialLng,
   defaultCenter = DEFAULT_CENTER,
   onConfirm,
+  autoLocate = true,
 }: MapLocationPickerProps) {
   const isAr = locale === "ar";
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import("leaflet").Map | null>(null);
   const markerRef = useRef<import("leaflet").Marker | null>(null);
   const initGenRef = useRef(0);
+  const autoLocateAttemptedRef = useRef(false);
 
   const [draftLat, setDraftLat] = useState<number | null>(initialLat ?? null);
   const [draftLng, setDraftLng] = useState<number | null>(initialLng ?? null);
   const [locating, setLocating] = useState(false);
   const [loadingMap, setLoadingMap] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
+  const [geoHint, setGeoHint] = useState<GeoMessageKey | null>(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      autoLocateAttemptedRef.current = false;
+      setGeoHint(null);
+      setMapReady(false);
+      return;
+    }
 
     let cancelled = false;
     const gen = ++initGenRef.current;
     setLoadingMap(true);
+    setMapReady(false);
 
     void (async () => {
       const L = (await import("leaflet")).default;
@@ -59,7 +78,6 @@ export function MapLocationPicker({
 
       if (cancelled || gen !== initGenRef.current || !mapContainerRef.current) return;
 
-      // Destroy any prior instance and wipe leftover Leaflet DOM (Strict Mode / remount).
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
@@ -79,11 +97,25 @@ export function MapLocationPicker({
       });
       map.attributionControl.setPrefix(false);
 
-      L.tileLayer(TILE_URL, {
+      const primaryTiles = L.tileLayer(TILE_URL, {
         attribution: TILE_ATTR,
         maxZoom: 19,
         subdomains: "abcd",
-      }).addTo(map);
+        crossOrigin: true,
+      });
+
+      let usedFallback = false;
+      primaryTiles.on("tileerror", () => {
+        if (usedFallback || cancelled || gen !== initGenRef.current || !mapRef.current) return;
+        usedFallback = true;
+        map.removeLayer(primaryTiles);
+        L.tileLayer(TILE_FALLBACK_URL, {
+          attribution: "Tiles &copy; Esri",
+          maxZoom: 19,
+          crossOrigin: true,
+        }).addTo(map);
+      });
+      primaryTiles.addTo(map);
 
       const icon = L.divIcon({
         className: "warka-map-pin",
@@ -113,6 +145,7 @@ export function MapLocationPicker({
       markerRef.current = marker;
       syncCoords(startLat, startLng);
       setLoadingMap(false);
+      setMapReady(true);
 
       const refreshSize = () => {
         if (cancelled || gen !== initGenRef.current || !mapRef.current) return;
@@ -121,6 +154,7 @@ export function MapLocationPicker({
       requestAnimationFrame(refreshSize);
       window.setTimeout(refreshSize, 120);
       window.setTimeout(refreshSize, 350);
+      window.setTimeout(refreshSize, 700);
     })();
 
     return () => {
@@ -136,31 +170,87 @@ export function MapLocationPicker({
     };
   }, [open, defaultCenter.lat, defaultCenter.lng, initialLat, initialLng]);
 
-  const useMyLocation = async () => {
+  const applyLocation = (lat: number, lng: number) => {
+    markerRef.current?.setLatLng([lat, lng]);
+    mapRef.current?.setView([lat, lng], 17, { animate: true });
+    mapRef.current?.invalidateSize({ animate: false });
+    setDraftLat(lat);
+    setDraftLng(lng);
+    setGeoHint(null);
+  };
+
+  const useMyLocation = async (opts?: { quiet?: boolean }) => {
     setLocating(true);
+    setGeoHint(null);
     const result = await requestDeviceLocation();
     if (!result.ok) {
-      toast.error(geoErrorMessage(result.messageKey, isAr));
+      setGeoHint(result.messageKey);
+      if (!opts?.quiet) {
+        toast.error(geoErrorMessage(result.messageKey, isAr));
+      }
       setLocating(false);
       return;
     }
     if (!isValidDeliveryCoords(result.lat, result.lng)) {
-      toast.error(geoErrorMessage("inaccurate", isAr));
+      setGeoHint("inaccurate");
+      if (!opts?.quiet) toast.error(geoErrorMessage("inaccurate", isAr));
       setLocating(false);
       return;
     }
-    markerRef.current?.setLatLng([result.lat, result.lng]);
-    mapRef.current?.setView([result.lat, result.lng], 17, { animate: true });
-    mapRef.current?.invalidateSize({ animate: false });
-    setDraftLat(result.lat);
-    setDraftLng(result.lng);
-    toast.success(
-      isAr
-        ? "تم جلب موقعك — حرّك الدبوس إذا كان فيه خطأ"
-        : "Location loaded — drag the pin if it looks wrong"
-    );
+    applyLocation(result.lat, result.lng);
+    if (!opts?.quiet) {
+      toast.success(
+        isAr
+          ? "تم جلب موقعك — حرّك الدبوس إذا كان فيه خطأ"
+          : "Location loaded — drag the pin if it looks wrong"
+      );
+    }
     setLocating(false);
   };
+
+  // After map is ready: ask for location permission (browser dialog) if we don't already have coords.
+  useEffect(() => {
+    if (!open || !mapReady || !autoLocate) return;
+    if (autoLocateAttemptedRef.current) return;
+    if (isValidDeliveryCoords(initialLat ?? null, initialLng ?? null)) return;
+
+    autoLocateAttemptedRef.current = true;
+    let cancelled = false;
+
+    void (async () => {
+      const permission = await getGeolocationPermissionState();
+      if (cancelled) return;
+      if (permission === "denied") {
+        setGeoHint("denied");
+        return;
+      }
+      setLocating(true);
+      setGeoHint(null);
+      const result = await requestDeviceLocation();
+      if (cancelled) return;
+      if (!result.ok) {
+        setGeoHint(result.messageKey);
+        setLocating(false);
+        return;
+      }
+      if (!isValidDeliveryCoords(result.lat, result.lng)) {
+        setGeoHint("inaccurate");
+        setLocating(false);
+        return;
+      }
+      markerRef.current?.setLatLng([result.lat, result.lng]);
+      mapRef.current?.setView([result.lat, result.lng], 17, { animate: true });
+      mapRef.current?.invalidateSize({ animate: false });
+      setDraftLat(result.lat);
+      setDraftLng(result.lng);
+      setGeoHint(null);
+      setLocating(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, mapReady, autoLocate, initialLat, initialLng]);
 
   const handleConfirm = () => {
     if (draftLat == null || draftLng == null) {
@@ -191,8 +281,8 @@ export function MapLocationPicker({
               </Dialog.Title>
               <Dialog.Description className="mt-1 text-xs leading-relaxed text-warka-text-muted">
                 {isAr
-                  ? "اضغط على المكان الصحيح أو اسحب الدبوس — مفيد إذا GPS زاحف أو مو دقيق."
-                  : "Tap the correct spot or drag the pin — useful when GPS is off or inaccurate."}
+                  ? "اسمح بالوصول للموقع لمعاينة مكانك، أو اضغط/اسحب على الخريطة يدوياً."
+                  : "Allow location to preview your spot, or tap/drag on the map manually."}
               </Dialog.Description>
             </div>
             <Dialog.Close
@@ -213,6 +303,19 @@ export function MapLocationPicker({
           </div>
 
           <div className="space-y-3 border-t border-warka-border px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5">
+            {geoHint && (
+              <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-xs leading-relaxed text-destructive">
+                <p>{geoErrorMessage(geoHint, isAr)}</p>
+                {geoHint === "denied" && (
+                  <p className="mt-1.5 text-warka-text-muted">
+                    {isAr
+                      ? "Android / Chrome: أيقونة القفل بجانب الرابط ← أذونات الموقع ← سماح. ثم اضغط «جلب موقعي»."
+                      : "Android/Chrome: lock icon near the URL → Site settings → Location → Allow, then tap Use my GPS."}
+                  </p>
+                )}
+              </div>
+            )}
+
             {draftLat != null && draftLng != null && (
               <p className="flex items-center gap-2 text-xs text-warka-text-secondary" dir="ltr">
                 <MapPin className="size-3.5 shrink-0 text-warka-primary" />
@@ -233,7 +336,13 @@ export function MapLocationPicker({
                 ) : (
                   <Crosshair className="size-4" />
                 )}
-                {isAr ? "جلب موقعي (GPS)" : "Use my GPS"}
+                {locating
+                  ? isAr
+                    ? "جاري طلب الموقع…"
+                    : "Requesting location…"
+                  : isAr
+                    ? "جلب موقعي (GPS)"
+                    : "Use my GPS"}
               </Button>
               <Button
                 type="button"
