@@ -650,7 +650,7 @@ export async function createOrder(input: z.infer<typeof createOrderSchema>) {
 
   if (withDeposit && orderPayload.student_id) {
     queueWhatsAppNotification({
-      eventType: "deposit_reminder",
+      eventType: "payment_reminder",
       orderId: order.id,
       studentId: orderPayload.student_id as string,
       variables: {
