@@ -48,34 +48,32 @@ export function CartPageClient() {
   return (
     <div className="bg-warka-bg pb-32 md:pb-16">
       <div className="border-b border-warka-border bg-gradient-to-b from-white to-warka-bg">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="page-container py-6 sm:py-8">
           <Link
             href="/products"
-            className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-warka-text-secondary hover:text-warka-primary"
+            className="text-body-sm mb-4 inline-flex items-center gap-2 font-medium text-warka-text-secondary hover:text-warka-primary"
           >
             <ArrowLeft className="size-4 rtl:rotate-180" />
             {t("continueShopping")}
           </Link>
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-warka-primary">
-                WARKA
-              </p>
-              <h1 className="mt-1 font-display text-3xl font-bold text-warka-text">{t("title")}</h1>
-              <p className="mt-2 text-sm text-warka-text-secondary">
+              <p className="text-eyebrow">WARKA</p>
+              <h1 className="page-title mt-1 font-display">{t("title")}</h1>
+              <p className="page-description mt-2">
                 {t("itemCount", { count })}
               </p>
             </div>
-            <div className="hidden rounded-2xl border border-warka-border bg-card px-5 py-3 shadow-card md:block">
-              <p className="text-xs text-warka-text-muted">{t("subtotal")}</p>
-              <p className="text-xl font-bold text-warka-primary">{formatIqd(total, locale)}</p>
+            <div className="hidden rounded-[var(--radius-card)] border border-warka-border bg-card px-5 py-3 shadow-card md:block">
+              <p className="text-caption">{t("subtotal")}</p>
+              <p className="text-price mt-0.5 text-xl text-warka-primary">{formatIqd(total, locale)}</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <section className="mb-8">
+      <div className="page-container py-6 sm:py-8">
+        <section className="mb-6 sm:mb-8">
           <DeliveryDetailsForm locale={locale === "ar" ? "ar" : "en"} />
         </section>
 

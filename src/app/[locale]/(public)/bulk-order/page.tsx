@@ -19,8 +19,8 @@ export default async function BulkOrderPage() {
   return (
     <div className="bg-warka-bg pb-24 md:pb-16">
       <div className="border-b border-warka-border bg-card">
-        <div className="mx-auto max-w-5xl px-4 py-4 sm:px-6 lg:px-8">
-          <nav className="text-xs text-warka-text-muted">
+        <div className="mx-auto max-w-5xl px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
+          <nav className="text-caption">
             <Link href="/" className="hover:text-warka-text">
               {isAr ? "الرئيسية" : "Home"}
             </Link>
@@ -32,7 +32,7 @@ export default async function BulkOrderPage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <SectionHeading
           title={isAr ? "طلب جماعي للجامعات" : "University bulk orders"}
           subtitle={
@@ -42,13 +42,13 @@ export default async function BulkOrderPage() {
           }
         />
 
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <WarkaCard className="flex flex-col items-start justify-between gap-4 border-[#25D366]/30 bg-[#25D366]/5 sm:flex-row sm:items-center">
             <div>
-              <p className="font-semibold text-warka-text">
+              <p className="section-title">
                 {isAr ? "تفضّل التواصل المباشر؟" : "Prefer to talk directly?"}
               </p>
-              <p className="mt-1 text-sm text-warka-text-secondary">
+              <p className="page-description mt-1">
                 {isAr
                   ? "فريقنا جاهز على واتساب للرد على استفسارات الطلبات الجماعية."
                   : "Our team is on WhatsApp for bulk order inquiries."}
@@ -58,7 +58,7 @@ export default async function BulkOrderPage() {
               href={buildWhatsAppUrl(whatsappMessage)}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-xl bg-[#25D366] px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-[#25D366] px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
             >
               <MessageCircle className="size-4" />
               {isAr ? "واتساب WARKA" : "WARKA WhatsApp"}

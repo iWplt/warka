@@ -63,14 +63,14 @@ export function ComparePageClient() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4 sm:mb-8">
           <div>
-            <h1 className="flex items-center gap-2 text-2xl font-bold text-warka-text lg:text-3xl">
-              <GitCompareArrows className="size-7 text-warka-primary" />
+            <h1 className="page-title flex items-center gap-2">
+              <GitCompareArrows className="size-6 text-warka-primary sm:size-7" />
               {isAr ? "مقارنة المنتجات" : "Compare products"}
             </h1>
-            <p className="mt-1 text-sm text-warka-text-secondary">
+            <p className="page-description mt-1">
               {isAr
                 ? `قارن حتى ${MAX_COMPARE_ITEMS} منتجات جنباً إلى جنب`
                 : `Compare up to ${MAX_COMPARE_ITEMS} products side by side`}

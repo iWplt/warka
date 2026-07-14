@@ -122,29 +122,29 @@ export function ProductCard({
           )}
         </Link>
 
-        <div className="flex flex-1 flex-col p-3 sm:p-5">
+        <div className="flex flex-1 flex-col p-3.5 sm:p-5">
           {categoryLabel && (
-            <p className="hidden text-xs font-medium uppercase tracking-wide text-warka-primary sm:block">
+            <p className="text-caption hidden uppercase tracking-wide text-warka-primary sm:block">
               {categoryLabel}
             </p>
           )}
           <Link href={href}>
-            <h3 className="mt-0 line-clamp-2 text-sm font-semibold text-warka-text transition-colors group-hover:text-warka-primary sm:mt-1 sm:text-base">
+            <h3 className="section-title mt-0 line-clamp-2 transition-colors group-hover:text-warka-primary sm:mt-1">
               {name}
             </h3>
           </Link>
 
-          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-warka-text-secondary sm:mt-2 sm:text-sm">
+          <p className="text-body-sm mt-1.5 line-clamp-2 sm:mt-2">
             {shortDesc}
           </p>
 
           {fabricSummary && (
-            <p className="mt-1 hidden text-xs font-medium text-warka-text-muted sm:mt-2 sm:block">
+            <p className="text-caption mt-1.5 hidden sm:mt-2 sm:block">
               {isAr ? "الأقمشة:" : "Fabrics:"} {fabricSummary}
             </p>
           )}
 
-          <p className="mt-2 text-base font-bold text-warka-primary sm:mt-3 sm:text-lg">
+          <p className="text-price mt-2.5 text-base text-warka-primary sm:mt-3 sm:text-lg">
             {isCustom && !product.price
               ? isAr
                 ? "حسب الطلب"
@@ -152,18 +152,18 @@ export function ProductCard({
               : formatIqd(price, locale)}
           </p>
 
-          <div className="mt-auto space-y-1.5 pt-3 sm:space-y-2 sm:pt-4">
+          <div className="mt-auto space-y-2 pt-3 sm:pt-4">
             <Link
               href={href}
-              className="block w-full rounded-xl border-2 border-warka-primary py-2 text-center text-xs font-semibold text-warka-primary transition-colors hover:bg-warka-primary/5 sm:py-2.5 sm:text-sm"
+              className="block w-full rounded-lg border border-warka-primary py-2.5 text-center text-sm font-semibold text-warka-primary transition-colors hover:bg-warka-primary/5"
             >
               {isAr ? "عرض التفاصيل" : "View details"}
             </Link>
             <Link
               href={orderHref}
-              className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-warka-primary py-2 text-xs font-semibold text-white transition-colors hover:bg-warka-primary-dark sm:gap-2 sm:py-2.5 sm:text-sm"
+              className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-warka-primary py-2.5 text-sm font-semibold text-white transition-colors hover:bg-warka-primary-dark"
             >
-              <Zap className="size-3.5 sm:size-4" />
+              <Zap className="size-4" />
               {isAr ? "اطلب الآن" : "Order now"}
             </Link>
           </div>

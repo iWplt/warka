@@ -48,14 +48,14 @@ export function SectionHeading({
   return (
     <ScrollReveal
       className={cn(
-        "mb-8",
-        align === "center" ? "text-center" : "text-right",
+        "mb-6 sm:mb-8",
+        align === "center" ? "text-center" : "text-start",
         className
       )}
     >
-      <h2 className="mb-2 text-3xl font-bold text-warka-text lg:text-4xl">{title}</h2>
+      <h2 className="text-h2 text-warka-text">{title}</h2>
       {subtitle ? (
-        <p className="text-sm leading-relaxed text-warka-text-secondary">{subtitle}</p>
+        <p className="page-description mx-auto mt-2 text-pretty sm:mt-3">{subtitle}</p>
       ) : null}
     </ScrollReveal>
   );

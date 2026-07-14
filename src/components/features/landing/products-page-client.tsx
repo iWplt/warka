@@ -34,8 +34,8 @@ export function ProductsPageClient({ sections, isAuthenticated = false }: Produc
   return (
     <div className="bg-warka-bg pb-24 md:pb-16">
       <div className="border-b border-warka-border bg-warka-surface">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-          <nav className="text-xs text-warka-text-muted">
+        <div className="page-container py-3 sm:py-4">
+          <nav className="text-caption">
             <Link href="/" className="hover:text-warka-text">
               {isAr ? "الرئيسية" : "Home"}
             </Link>
@@ -45,12 +45,12 @@ export function ProductsPageClient({ sections, isAuthenticated = false }: Produc
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-warka-text lg:text-3xl">
+      <div className="page-container py-6 sm:py-8 lg:py-10">
+        <div className="mb-6 text-center sm:mb-8">
+          <h1 className="page-title">
             {isAr ? "منتجاتنا" : "Our products"}
           </h1>
-          <p className="mt-2 text-sm text-warka-text-secondary">
+          <p className="page-description mx-auto mt-2">
             {isAr
               ? `${totalProducts} منتج في ${activeSections.length} أقسام — اختر القسم أو تصفّح المعاينة`
               : `${totalProducts} products in ${activeSections.length} sections — pick a section or browse previews`}
@@ -72,7 +72,7 @@ export function ProductsPageClient({ sections, isAuthenticated = false }: Produc
                   <Link
                     key={category.id}
                     href={`/products/category/${category.slug}`}
-                    className="group flex min-h-[108px] flex-col justify-between rounded-2xl border border-warka-border bg-card p-4 shadow-card transition-all hover:border-warka-primary/40 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
+                    className="group flex min-h-[108px] flex-col justify-between rounded-[var(--radius-card)] border border-warka-border bg-card p-4 shadow-card transition-all hover:border-warka-primary/40 hover:shadow-card-hover"
                   >
                     <div className="flex size-10 items-center justify-center rounded-xl bg-warka-primary/10 text-warka-primary transition-colors group-hover:bg-warka-primary/15">
                       <Package className="size-5" />
@@ -96,7 +96,7 @@ export function ProductsPageClient({ sections, isAuthenticated = false }: Produc
                 return (
                   <section key={category.id} id={category.slug}>
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                      <h2 className="text-lg font-bold text-warka-text sm:text-xl">{title}</h2>
+                      <h2 className="section-title sm:text-lg">{title}</h2>
                       <Link
                         href={`/products/category/${category.slug}`}
                         className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-warka-primary/30 bg-warka-primary/5 px-3 py-1.5 text-xs font-semibold text-warka-primary transition-colors hover:bg-warka-primary/10 sm:text-sm"

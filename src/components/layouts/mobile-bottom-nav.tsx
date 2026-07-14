@@ -83,7 +83,7 @@ export function MobileBottomNav({ profile = null }: MobileBottomNavProps) {
               href={item.href}
               prefetch
               className={cn(
-                "flex min-h-[56px] flex-1 touch-manipulation flex-col items-center justify-center gap-0.5 px-1 py-2 text-[10px] font-medium transition-colors active:scale-[0.98]",
+                "flex min-h-[3.75rem] flex-1 touch-manipulation flex-col items-center justify-center gap-0.5 px-1 py-2 text-[0.6875rem] font-medium leading-tight transition-colors active:scale-[0.98]",
                 active ? "text-warka-primary" : "text-warka-text-secondary"
               )}
             >

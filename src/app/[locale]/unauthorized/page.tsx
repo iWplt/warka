@@ -8,10 +8,10 @@ export default async function UnauthorizedPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-warka-bg p-4 font-arabic">
       <BrandLockup layout="auth" />
-      <h1 className="text-2xl font-bold text-warka-text">{t("unauthorized")}</h1>
+      <h1 className="page-title text-center">{t("unauthorized")}</h1>
       <Link
         href="/login"
-        className="rounded-xl bg-warka-primary px-6 py-3 text-sm font-semibold text-white hover:bg-warka-primary-dark"
+        className="inline-flex min-h-11 items-center justify-center rounded-lg bg-warka-primary px-6 py-3 text-sm font-semibold text-white hover:bg-warka-primary-dark"
       >
         {t("login")}
       </Link>

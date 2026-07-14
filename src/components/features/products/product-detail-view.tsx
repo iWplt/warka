@@ -198,7 +198,7 @@ export function ProductDetailView({
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-3 py-6 sm:px-6 sm:py-10 lg:px-8">
+    <div className="page-container py-6 sm:py-10">
       <div className="grid gap-10 lg:grid-cols-2">
         <div className={cn("space-y-4", usesEngine && "max-lg:space-y-3")}>
           {usesEngine && customizationProfile ? (
@@ -260,8 +260,8 @@ export function ProductDetailView({
 
         <div className="space-y-4 sm:space-y-6">
           <div>
-            <h1 className="text-2xl font-bold text-warka-text lg:text-3xl">{name}</h1>
-            <p className="mt-2 text-xl font-bold text-warka-primary">
+            <h1 className="page-title">{name}</h1>
+            <p className="text-price mt-2 text-xl text-warka-primary">
               {formatIqd(unitPrice, locale)}
               {selectedFabric && selectedFabric.price_adjustment > 0 && (
                 <span className="ms-2 text-sm font-normal text-warka-text-muted">
@@ -269,7 +269,7 @@ export function ProductDetailView({
                 </span>
               )}
             </p>
-            <p className="mt-4 text-sm leading-relaxed text-warka-text-secondary">{description}</p>
+            <p className="page-description mt-4">{description}</p>
           </div>
 
           {product.features.length > 0 && (

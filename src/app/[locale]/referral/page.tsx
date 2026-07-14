@@ -115,12 +115,12 @@ export default function ReferralPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 py-10">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-warka-text">
+      <main className="mx-auto max-w-3xl px-4 py-8 sm:py-10">
+        <div className="mb-6 text-center sm:mb-8">
+          <h1 className="page-title">
             {isAr ? "برنامج الإحالة" : "Referral program"}
           </h1>
-          <p className="mt-2 text-sm text-warka-text-secondary">
+          <p className="page-description mx-auto mt-2">
             {isAr
               ? "شارك رابطك مع زملائك واكسب مكافآت على كل طلب جماعي."
               : "Share your link with classmates and earn rewards on every group order."}
@@ -167,7 +167,7 @@ export default function ReferralPage() {
           {statCards.map((stat) => (
             <WarkaCard key={stat.label} className="text-center">
               <stat.icon className="mx-auto mb-2 size-5 text-warka-primary" />
-              <p className="text-2xl font-bold text-warka-text">{stat.value}</p>
+              <p className="text-price text-xl sm:text-2xl">{stat.value}</p>
               <p className="text-xs text-warka-text-muted">{stat.label}</p>
             </WarkaCard>
           ))}

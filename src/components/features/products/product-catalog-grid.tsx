@@ -61,7 +61,7 @@ export function ProductCatalogGrid({
   const searching = query.trim().length > 0;
 
   return (
-    <div className={cn("space-y-6", className)}>
+    <div className={cn("stack-section", className)}>
       <div className="relative">
         <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-warka-text-muted" />
         <input
@@ -69,11 +69,11 @@ export function ProductCatalogGrid({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={isAr ? "ابحث في هذا القسم…" : "Search in this section…"}
-          className="w-full rounded-xl border border-warka-border bg-card py-2.5 ps-10 pe-4 text-sm text-warka-text outline-none focus:ring-2 focus:ring-warka-primary/25"
+          className="h-10 min-h-10 w-full rounded-lg border border-warka-border bg-card py-2 ps-10 pe-4 text-sm text-warka-text outline-none focus:ring-2 focus:ring-warka-primary/25"
         />
       </div>
 
-      <p className="text-center text-xs text-warka-text-muted sm:text-sm">
+      <p className="text-caption text-center">
         {isAr
           ? `${pagination.total} منتج — ${pagination.pageSize} بكل صفحة`
           : `${pagination.total} products — ${pagination.pageSize} per page`}

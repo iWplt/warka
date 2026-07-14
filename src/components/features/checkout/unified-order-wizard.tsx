@@ -440,13 +440,13 @@ export function UnifiedOrderWizard({
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-warka-primary">WARKA</p>
-        <h1 className="mt-1 text-2xl font-bold text-warka-text">
+    <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <div className="mb-6 sm:mb-8">
+        <p className="text-eyebrow">WARKA</p>
+        <h1 className="page-title mt-1">
           {isAr ? "طلب موحّد" : "Unified order"}
         </h1>
-        <p className="mt-1 text-sm text-warka-text-secondary">
+        <p className="page-description mt-1">
           {isAr
             ? "خطوة بخطوة — بياناتك محفوظة عند الرجوع للخلف"
             : "Step by step — your data is kept when you go back"}

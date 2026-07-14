@@ -167,11 +167,11 @@ export function RegisterForm() {
         </Link>
       </div>
 
-      <div className="rounded-2xl bg-card p-6 shadow-card sm:p-8">
-        <div className="mb-6 flex items-start justify-between">
-          <div className="text-center sm:text-right">
-            <h1 className="mb-1 text-xl font-bold text-warka-text">{t("registerTitle")}</h1>
-            <p className="text-sm font-medium text-warka-text-secondary">
+      <div className="rounded-[var(--radius-card)] border border-warka-border bg-card p-5 shadow-card sm:p-6">
+        <div className="mb-6 flex items-start justify-between gap-3">
+          <div className="min-w-0 text-center sm:text-start">
+            <h1 className="page-title text-xl sm:text-2xl">{t("registerTitle")}</h1>
+            <p className="page-description mt-1">
               {t("registerStep", { step: step + 1, total: steps.length })}
             </p>
           </div>
