@@ -47,26 +47,26 @@ export function DataTable<T>({
   });
 
   return (
-    <div className="space-y-4">
+    <div className="stack-section">
       {searchKey && (
         <Input
           placeholder={searchPlaceholder ?? t("search")}
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
-          className="max-w-sm border-border bg-card"
+          className="max-w-sm"
         />
       )}
 
-      <div className="glass-panel overflow-hidden rounded-xl">
+      <div className="overflow-hidden rounded-[var(--radius-card)] border border-warka-border bg-card shadow-card">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id} className="border-b border-border bg-secondary/40">
+                <tr key={headerGroup.id} className="border-b border-warka-border bg-warka-bg/80">
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground"
+                      className="px-3 py-2.5 text-start text-caption uppercase tracking-wide sm:px-4 sm:py-3"
                     >
                       {header.isPlaceholder
                         ? null
@@ -81,7 +81,7 @@ export function DataTable<T>({
                 <tr>
                   <td
                     colSpan={columns.length}
-                    className="px-4 py-12 text-center text-muted-foreground"
+                    className="px-4 py-12 text-center text-body-sm"
                   >
                     {t("noResults")}
                   </td>
@@ -91,11 +91,11 @@ export function DataTable<T>({
                   <tr
                     key={row.id}
                     className={cn(
-                      "border-b border-border/60 transition-colors last:border-0 hover:bg-secondary/50"
+                      "border-b border-warka-border/60 transition-colors last:border-0 hover:bg-warka-bg/60"
                     )}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-4 py-3">
+                      <td key={cell.id} className="px-3 py-2.5 align-middle sm:px-4 sm:py-3">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     ))}
@@ -107,13 +107,13 @@ export function DataTable<T>({
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-caption">
           {table.getFilteredRowModel().rows.length} rows
         </p>
         <div className="flex gap-2">
           <Button
-            variant="glass"
+            variant="outline"
             size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
@@ -121,7 +121,7 @@ export function DataTable<T>({
             Previous
           </Button>
           <Button
-            variant="glass"
+            variant="outline"
             size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}

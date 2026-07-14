@@ -9,7 +9,7 @@ export function WarkaCard({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-warka-border bg-card p-6 text-card-foreground shadow-card",
+        "rounded-[var(--radius-card)] border border-warka-border bg-card p-4 text-card-foreground shadow-card sm:p-5",
         className
       )}
       {...props}
@@ -25,7 +25,7 @@ export function WarkaCardTitle({
   ...props
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <h3 className={cn("text-base font-bold text-warka-text", className)} {...props}>
+    <h3 className={cn("section-title", className)} {...props}>
       {children}
     </h3>
   );

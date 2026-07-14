@@ -34,7 +34,7 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
     : "";
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between gap-4 border-b border-warka-border bg-card/95 px-4 backdrop-blur-sm lg:px-6">
+    <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-warka-border bg-card/95 px-4 backdrop-blur-sm sm:h-16 sm:gap-4 lg:px-6">
       <div className="flex min-w-0 items-center gap-2">
         <Button
           type="button"
@@ -67,7 +67,7 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
           <input
             type="search"
             placeholder={locale === "ar" ? "ابحث عن طلب، منتج..." : "Search orders, products..."}
-            className="w-full rounded-xl border border-warka-border bg-warka-bg py-2 pr-10 pl-4 text-sm text-warka-text focus:border-warka-primary focus:outline-none focus:ring-2 focus:ring-warka-primary/20"
+            className="h-10 w-full rounded-lg border border-warka-border bg-warka-bg py-2 pe-10 ps-4 text-sm text-warka-text placeholder:text-warka-text-muted focus:border-warka-primary focus:outline-none focus:ring-2 focus:ring-warka-primary/20"
           />
         </div>
       </div>
