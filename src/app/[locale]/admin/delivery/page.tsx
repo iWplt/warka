@@ -8,7 +8,7 @@ export default async function AdminDeliveryPage() {
   const orders = await getOrders({ status: "ready_for_delivery" });
 
   return (
-    <div className="space-y-8">
+    <div className="stack-page">
       <PageHeader title={t("delivery")} />
       <OrdersTable orders={orders} basePath="/admin/orders" />
     </div>

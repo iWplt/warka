@@ -18,7 +18,7 @@ export default async function AdminStudentPage({ params }: AdminStudentPageProps
   if (!data) notFound();
 
   return (
-    <div className="space-y-6">
+    <div className="stack-page">
       <PageHeader title={t("pageTitle")} description={t("pageSubtitle")} />
       <StudentAdminView data={data} />
     </div>

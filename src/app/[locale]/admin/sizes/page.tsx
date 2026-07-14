@@ -11,7 +11,7 @@ export default async function AdminSizesPage() {
   ]);
 
   return (
-    <div className="space-y-8">
+    <div className="stack-page">
       <PageHeader title={t("title")} description={t("subtitle")} />
       <SizesAdminView sizeGuideEntries={sizeGuideEntries} sizePolicies={sizePolicies} />
     </div>

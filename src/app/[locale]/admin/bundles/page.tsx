@@ -5,7 +5,7 @@ export default async function AdminBundlesPage() {
   const [bundles, products] = await Promise.all([getAllBundles(), getProductsForBundlePicker()]);
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="stack-page">
       <BundlesManager bundles={bundles} products={products} />
     </div>
   );

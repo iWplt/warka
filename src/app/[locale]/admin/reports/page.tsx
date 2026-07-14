@@ -9,7 +9,7 @@ export default async function AdminReportsPage() {
   const activity = await getActivityLog(30);
 
   return (
-    <div className="space-y-8">
+    <div className="stack-page">
       <PageHeader title={t("title")} />
       <ReportsView byStatus={byStatus} activity={activity} />
     </div>

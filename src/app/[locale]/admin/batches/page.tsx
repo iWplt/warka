@@ -12,7 +12,7 @@ export default async function AdminBatchesPage() {
   const representatives = await getUsersByRole("representative");
 
   return (
-    <div className="space-y-8">
+    <div className="stack-page">
       <PageHeader title={t("title")} />
       <AdminBatchesManager batches={batches} representatives={representatives} />
     </div>

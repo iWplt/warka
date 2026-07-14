@@ -8,7 +8,7 @@ export default async function AdminTemplatesPage() {
   const templates = await getTemplates();
 
   return (
-    <div className="space-y-8">
+    <div className="stack-page">
       <PageHeader title={t("templates")} />
       <TemplatesManager templates={templates} />
     </div>

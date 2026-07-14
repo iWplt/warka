@@ -14,7 +14,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
   const orders = await getOrders({ archived: showArchived });
 
   return (
-    <div className="space-y-8">
+    <div className="stack-page">
       <PageHeader title={t("title")} />
       <AdminOrdersManager orders={orders} showArchived={showArchived} />
     </div>

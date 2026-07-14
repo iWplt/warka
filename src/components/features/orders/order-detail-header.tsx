@@ -24,18 +24,18 @@ export async function OrderDetailHeader({
   const qrValue = `${appUrl}${qrPath ?? `/admin/orders/${order.id}`}`;
 
   return (
-    <div className="mb-6 grid gap-6 rounded-2xl border border-glass-border glass p-6 lg:grid-cols-[1fr_auto]">
+    <div className="mb-6 grid gap-5 rounded-[var(--radius-card)] border border-warka-border bg-card p-4 shadow-card sm:gap-6 sm:p-5 lg:grid-cols-[1fr_auto] lg:p-6">
       <div>
-        <p className="text-sm text-muted-foreground">{t("orderNumber")}</p>
-        <h1 className="text-h1 font-bold">{order.order_number}</h1>
-        <div className="mt-4 flex flex-wrap items-center gap-3">
+        <p className="text-caption">{t("orderNumber")}</p>
+        <h1 className="page-title mt-1 tracking-tight">{order.order_number}</h1>
+        <div className="mt-3 flex flex-wrap items-center gap-2 sm:mt-4 sm:gap-3">
           <OrderStatusBadge status={order.status} label={statusT(order.status)} />
           {order.student_modified_at && (
-            <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-300">
+            <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
               {locale === "ar" ? "معدّل من الطالب" : "Edited by student"}
             </span>
           )}
-          <span className="text-sm text-muted-foreground">
+          <span className="text-caption">
             {new Date(order.created_at).toLocaleString(locale)}
           </span>
           {showInvoice && (
@@ -45,7 +45,7 @@ export async function OrderDetailHeader({
             />
           )}
         </div>
-        <p className="mt-4 text-lg font-semibold text-accent">
+        <p className="text-price mt-4 text-lg text-warka-primary sm:text-xl">
           {formatIqd(Number(order.total), locale)}
         </p>
       </div>

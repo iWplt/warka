@@ -18,7 +18,7 @@ export default async function AdminDashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="stack-page">
       <PageHeader title={t("welcome")} description={t("overview")} />
       <AdminDashboardView data={data} />
     </div>

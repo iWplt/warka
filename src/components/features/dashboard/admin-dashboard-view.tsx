@@ -54,27 +54,27 @@ export function AdminDashboardView({ data }: AdminDashboardViewProps) {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="stack-section">
       <StatsCards items={statItems} />
 
-      <div className="grid gap-6 xl:grid-cols-3">
-        <div className="rounded-2xl bg-card p-5 shadow-card xl:col-span-2">
-          <h2 className="mb-4 text-base font-bold text-warka-text">{t("ordersByStatus")}</h2>
+      <div className="grid gap-4 sm:gap-5 xl:grid-cols-3">
+        <div className="rounded-[var(--radius-card)] border border-warka-border bg-card p-4 shadow-card sm:p-5 xl:col-span-2">
+          <h2 className="section-title mb-4">{t("ordersByStatus")}</h2>
           <OrdersStatusChart data={chartData} emptyLabel={t("noChartData")} />
         </div>
-        <div className="rounded-2xl bg-card p-5 shadow-card">
-          <h2 className="mb-4 text-base font-bold text-warka-text">{t("paymentOverview")}</h2>
+        <div className="rounded-[var(--radius-card)] border border-warka-border bg-card p-4 shadow-card sm:p-5">
+          <h2 className="section-title mb-4">{t("paymentOverview")}</h2>
           <PaymentOverviewChart data={paymentData} emptyLabel={t("noChartData")} />
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <div className="rounded-2xl bg-card p-5 shadow-card">
-          <h2 className="mb-4 text-base font-bold text-warka-text">{t("recentOrders")}</h2>
+      <div className="grid gap-4 sm:gap-5 xl:grid-cols-2">
+        <div className="rounded-[var(--radius-card)] border border-warka-border bg-card p-4 shadow-card sm:p-5">
+          <h2 className="section-title mb-4">{t("recentOrders")}</h2>
           <RecentOrders orders={data.recentOrders} emptyLabel={t("noRecentOrders")} />
         </div>
-        <div className="rounded-2xl bg-card p-5 shadow-card">
-          <h2 className="mb-4 text-base font-bold text-warka-text">{t("readyForDelivery")}</h2>
+        <div className="rounded-[var(--radius-card)] border border-warka-border bg-card p-4 shadow-card sm:p-5">
+          <h2 className="section-title mb-4">{t("readyForDelivery")}</h2>
           <RecentOrders orders={data.readyForDelivery} emptyLabel={t("noDeliveryQueue")} />
         </div>
       </div>

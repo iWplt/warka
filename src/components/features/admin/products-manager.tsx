@@ -184,7 +184,7 @@ export function ProductsManager({ products, categories }: ProductsManagerProps) 
   }
 
   return (
-    <div className="space-y-6">
+    <div className="stack-page">
       <PageHeader title={t("title")} description={t("subtitle")} />
 
       <div className="flex flex-wrap gap-2">

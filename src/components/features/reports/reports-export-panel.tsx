@@ -115,7 +115,7 @@ export function ReportsExportPanel() {
   };
 
   return (
-    <div className="rounded-2xl border border-glass-border glass p-6">
+    <div className="rounded-[var(--radius-card)] border border-warka-border bg-card p-4 shadow-card sm:p-5">
       <h2 className="mb-4 font-semibold">{t("exportTab")}</h2>
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <div>

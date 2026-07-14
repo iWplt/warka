@@ -9,7 +9,7 @@ export default async function AdminPaymentsPage() {
   const unpaidOrders = await getUnpaidOrders();
 
   return (
-    <div className="space-y-8">
+    <div className="stack-page">
       <PageHeader title={t("payments")} />
       <PaymentsView payments={payments} unpaidOrders={unpaidOrders} />
     </div>

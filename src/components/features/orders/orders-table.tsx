@@ -39,7 +39,7 @@ export function OrdersTable({ orders, basePath, hideStudentColumn = false }: Ord
         <div className="flex flex-col gap-1">
           <Link
             href={`${basePath}/${row.original.id}`}
-            className="font-medium text-primary hover:underline"
+            className="font-semibold text-warka-primary hover:underline"
           >
             {row.original.order_number}
           </Link>
@@ -80,7 +80,9 @@ export function OrdersTable({ orders, basePath, hideStudentColumn = false }: Ord
     {
       accessorKey: "total",
       header: t("common.total"),
-      cell: ({ row }) => formatIqd(Number(row.original.total), locale),
+      cell: ({ row }) => (
+        <span className="text-price">{formatIqd(Number(row.original.total), locale)}</span>
+      ),
     },
     {
       accessorKey: "created_at",

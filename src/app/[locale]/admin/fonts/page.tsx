@@ -8,7 +8,7 @@ export default async function AdminFontsPage() {
   const fonts = await listAllFonts();
 
   return (
-    <div className="space-y-8">
+    <div className="stack-page">
       <PageHeader title={t("fonts")} />
       <FontsManager fonts={fonts} />
     </div>

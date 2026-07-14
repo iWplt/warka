@@ -271,7 +271,7 @@ export function BundlesManager({ bundles, products }: BundlesManagerProps) {
 
   return (
 
-    <div className="space-y-6">
+    <div className="stack-page">
 
       <PageHeader title={t("title")} description={t("subtitle")} />
 

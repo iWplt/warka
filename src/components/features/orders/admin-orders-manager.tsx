@@ -68,24 +68,24 @@ export function AdminOrdersManager({
   }, [orders, statusFilter, typeFilter, debouncedSearch]);
 
   return (
-    <div className="space-y-4">
+    <div className="stack-section">
       <div className="flex flex-wrap gap-2">
         <Link
           href="/admin/orders"
-          className={`rounded-xl px-4 py-2 text-sm font-medium ${
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             !showArchived
-              ? "bg-primary text-primary-foreground"
-              : "bg-foreground/5 text-muted-foreground hover:bg-warka-bg/10"
+              ? "bg-warka-primary text-white"
+              : "bg-warka-bg text-warka-text-secondary hover:bg-warka-bg/80"
           }`}
         >
           {t("activeOrders")}
         </Link>
         <Link
           href="/admin/orders?archived=true"
-          className={`rounded-xl px-4 py-2 text-sm font-medium ${
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             showArchived
-              ? "bg-primary text-primary-foreground"
-              : "bg-foreground/5 text-muted-foreground hover:bg-warka-bg/10"
+              ? "bg-warka-primary text-white"
+              : "bg-warka-bg text-warka-text-secondary hover:bg-warka-bg/80"
           }`}
         >
           {t("archivedOrders")}

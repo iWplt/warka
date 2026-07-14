@@ -10,7 +10,7 @@ export default async function AdminPrintingPage() {
   const all = [...orders, ...printing];
 
   return (
-    <div className="space-y-8">
+    <div className="stack-page">
       <PageHeader title={t("printing")} />
       <OrdersTable orders={all} basePath="/admin/orders" />
     </div>

@@ -42,7 +42,7 @@ export function PaymentsSummary({
       {cards.map((card) => {
         const Icon = card.icon;
         return (
-          <article key={card.label} className="rounded-2xl border border-glass-border glass p-5">
+          <article key={card.label} className="rounded-[var(--radius-card)] border border-warka-border bg-card p-4 shadow-card sm:p-5">
             <div className="flex items-center justify-between">
               <Icon className="size-6 text-primary" aria-hidden />
               <p className="text-xl font-bold tabular-nums">{card.value}</p>

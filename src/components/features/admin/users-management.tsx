@@ -38,9 +38,9 @@ export function UsersManagement({
     tab === "students" ? "student" : tab === "representatives" ? "representative" : "embroidery";
 
   return (
-    <div className="space-y-6">
+    <div className="stack-section">
       {localOnly && (
-        <div className="rounded-2xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm text-foreground">
+        <div className="rounded-[var(--radius-card)] border border-warka-accent/40 bg-warka-accent/15 px-4 py-3 text-body-sm text-warka-text">
           {t("common.localModeUsersHint")}
         </div>
       )}
@@ -148,7 +148,7 @@ function CreateUserForm({
   const inputClass = "w-full rounded-xl border border-glass-border bg-foreground/5 px-4 py-2 text-sm";
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 rounded-2xl glass p-6 sm:grid-cols-2">
+    <form onSubmit={handleSubmit} className="grid gap-4 rounded-[var(--radius-card)] border border-warka-border bg-card p-4 shadow-card sm:grid-cols-2 sm:p-5">
       <input name="full_name" placeholder={t("fullName")} required className={inputClass} />
       <input name="email" type="email" placeholder={t("email")} required className={inputClass} />
       <input name="phone" placeholder={t("phone")} className={inputClass} />

@@ -15,7 +15,7 @@ export default async function AdminUsersPage() {
   ]);
 
   return (
-    <div className="space-y-8">
+    <div className="stack-page">
       <PageHeader title={t("users")} />
       <UsersManagement
         students={students}

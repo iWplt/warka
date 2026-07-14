@@ -13,7 +13,7 @@ export default async function AdminCustomizationPage({
   const products = await getAdminCustomizationProducts();
   if (products.length === 0) {
     return (
-      <div className="p-6 text-center text-muted-foreground">
+      <div className="page-description py-8 text-center">
         No active sash/cap/gown products — add products first.
       </div>
     );
@@ -24,7 +24,7 @@ export default async function AdminCustomizationPage({
   const data = await getAdminCustomizationBundle(productId);
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="stack-page">
       <CustomizationAdminView
         products={products}
         initialProductId={productId}

@@ -15,7 +15,7 @@ export default async function AdminDesignPage() {
   ]);
 
   return (
-    <div className="space-y-8">
+    <div className="stack-page">
       <PageHeader title={navT("design")} description={t("queueHint")} />
 
       <section className="space-y-4">

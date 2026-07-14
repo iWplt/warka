@@ -80,7 +80,7 @@ export function PaymentsView({ payments, unpaidOrders }: PaymentsViewProps) {
       <PaymentsSummary {...summary} />
 
       <div className="grid gap-8 lg:grid-cols-2">
-        <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="rounded-[var(--radius-card)] border border-warka-border bg-card p-4 shadow-card sm:p-5">
           <h2 className="mb-4 font-semibold">{t("payments.recordPayment")}</h2>
           {unpaidOrders.length === 0 ? (
             <EmptyState
@@ -134,7 +134,7 @@ export function PaymentsView({ payments, unpaidOrders }: PaymentsViewProps) {
           )}
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="rounded-[var(--radius-card)] border border-warka-border bg-card p-4 shadow-card sm:p-5">
           <h2 className="mb-4 font-semibold">{t("payments.recentPayments")}</h2>
           {payments.length === 0 ? (
             <EmptyState

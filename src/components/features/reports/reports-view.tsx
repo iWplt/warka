@@ -31,7 +31,7 @@ export function ReportsView({ byStatus, activity }: ReportsViewProps) {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="stack-section">
       <div className="flex flex-wrap gap-2 border-b border-glass-border pb-4">
         {tabs.map((item) => (
           <button
@@ -50,7 +50,7 @@ export function ReportsView({ byStatus, activity }: ReportsViewProps) {
       </div>
 
       {tab === "overview" && (
-        <div className="rounded-2xl border border-glass-border glass p-6">
+        <div className="rounded-[var(--radius-card)] border border-warka-border bg-card p-4 shadow-card sm:p-5">
           <h2 className="mb-4 font-semibold">{t("byStatus")}</h2>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {Object.entries(byStatus).map(([status, count]) => (
@@ -67,7 +67,7 @@ export function ReportsView({ byStatus, activity }: ReportsViewProps) {
       )}
 
       {tab === "activity" && (
-        <div className="rounded-2xl border border-glass-border glass p-6">
+        <div className="rounded-[var(--radius-card)] border border-warka-border bg-card p-4 shadow-card sm:p-5">
           <h2 className="mb-4 font-semibold">{t("adminActivity")}</h2>
           <ActivityLogPanel activity={activity} />
         </div>

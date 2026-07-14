@@ -231,7 +231,7 @@ export function DashboardSidebar({ role, profile }: DashboardSidebarProps) {
               <p className="truncate text-xs font-medium text-white" suppressHydrationWarning>
                 {profile.full_name}
               </p>
-              <p className="truncate text-[11px] text-white/75" suppressHydrationWarning>
+              <p className="truncate text-caption text-white/75" suppressHydrationWarning>
                 {profile.email}
               </p>
             </div>
