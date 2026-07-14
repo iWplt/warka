@@ -159,3 +159,66 @@ export function applyPrimaryNameToPayload(
 export function profileHasEngine(profile: ProductCustomizationProfile | null | undefined): boolean {
   return Boolean(profile && (profile.zones.length > 0 || profile.styles.length > 0));
 }
+
+export type CatalogPreviewChip = {
+  id: string;
+  label: string;
+  imageUrl: string;
+  kind: "style" | "option" | "upload";
+};
+
+/**
+ * Pick the admin-uploaded image for the current selection (no live text overlay).
+ * Priority: selected zone option image → user upload → style preview → product base.
+ */
+export function resolveCatalogPreview(
+  profile: ProductCustomizationProfile,
+  customization: CustomizationPayload,
+  baseImage: string,
+  locale: "ar" | "en" = "ar"
+): { heroImage: string; chips: CatalogPreviewChip[] } {
+  const isAr = locale === "ar";
+  const chips: CatalogPreviewChip[] = [];
+
+  const activeStyle = profile.styles.find((s) => s.id === customization.style_id);
+  if (activeStyle?.preview_image_url?.trim()) {
+    chips.push({
+      id: `style-${activeStyle.id}`,
+      label: isAr
+        ? activeStyle.style_name_ar
+        : activeStyle.style_name_en ?? activeStyle.style_name_ar,
+      imageUrl: activeStyle.preview_image_url.trim(),
+      kind: "style",
+    });
+  }
+
+  for (const sel of customization.zones) {
+    if (sel.option_id) {
+      const opt = profile.options.find((o) => o.id === sel.option_id);
+      const url = opt?.preview_image_url?.trim();
+      if (opt && url) {
+        chips.push({
+          id: `opt-${opt.id}`,
+          label: isAr ? opt.option_name_ar : opt.option_name_en ?? opt.option_name_ar,
+          imageUrl: url,
+          kind: "option",
+        });
+      }
+    }
+    if (sel.image_data_url?.trim()) {
+      chips.push({
+        id: `upload-${sel.zone_id}`,
+        label: sel.zone_label_ar ?? (isAr ? "صورة مرفوعة" : "Uploaded image"),
+        imageUrl: sel.image_data_url.trim(),
+        kind: "upload",
+      });
+    }
+  }
+
+  // Hero: last option/upload (most specific), else style, else base
+  const specific = [...chips].reverse().find((c) => c.kind === "option" || c.kind === "upload");
+  const styleChip = chips.find((c) => c.kind === "style");
+  const heroImage = specific?.imageUrl ?? styleChip?.imageUrl ?? baseImage;
+
+  return { heroImage, chips };
+}

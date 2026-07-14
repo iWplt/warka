@@ -159,7 +159,12 @@ export function ProductCustomizationEngine({
       {profile.gown_additions.length > 0 && (
         <WarkaCard>
           <WarkaCardTitle className="mb-3">{isAr ? "إضافات الروب" : "Gown additions"}</WarkaCardTitle>
-          <div className="flex flex-wrap gap-2">
+          <p className="mb-3 text-xs leading-relaxed text-warka-text-muted">
+            {isAr
+              ? "اضغط للاختيار — كل إضافة تظهر باسمها (وصورتها إن رفعها الأدمن)."
+              : "Tap to select — each addition shows its name (and admin image when available)."}
+          </p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {profile.gown_additions.map((add) => {
               const checked = (value.gown_additions ?? []).includes(add.id);
               return (
@@ -168,11 +173,20 @@ export function ProductCustomizationEngine({
                   type="button"
                   onClick={() => toggleGownAddition(add.id)}
                   className={cn(
-                    "rounded-[10px] border px-3 py-2 text-xs font-medium",
-                    checked ? "border-warka-primary bg-warka-primary text-white" : "border-warka-border bg-card"
+                    "flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-xl border-2 px-2 py-3 text-center transition-colors",
+                    checked
+                      ? "border-warka-primary bg-warka-primary/10 text-warka-text"
+                      : "border-warka-border bg-card text-warka-text hover:border-warka-primary/40"
                   )}
                 >
-                  {isAr ? add.addition_name_ar : add.addition_name_en ?? add.addition_name_ar}
+                  <span className="text-[12px] font-semibold leading-snug">
+                    {isAr ? add.addition_name_ar : add.addition_name_en ?? add.addition_name_ar}
+                  </span>
+                  {checked && (
+                    <span className="text-[10px] font-medium text-warka-primary">
+                      {isAr ? "مختارة" : "Selected"}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -334,13 +348,18 @@ function ZoneEditor({
                 dir="auto"
               />
               {zone.content_type === "name_major" && displayText && (
-                <EmbroideryLivePreview
-                  baseName={displayText}
-                  diacriticsMode="auto"
-                  fontFamily={fontFamily}
-                  locale={locale}
-                  embedded
-                />
+                <div className="rounded-xl border border-warka-border/60 bg-warka-bg/40 p-3">
+                  <p className="mb-2 text-xs font-semibold text-warka-text-muted">
+                    {isAr ? "معاينة الخط فقط (مو على صورة المنتج)" : "Font preview only (not on product photo)"}
+                  </p>
+                  <EmbroideryLivePreview
+                    baseName={displayText}
+                    diacriticsMode="auto"
+                    fontFamily={fontFamily}
+                    locale={locale}
+                    embedded
+                  />
+                </div>
               )}
             </>
           )}

@@ -239,38 +239,44 @@ export function CustomizationStudioTrigger({
       <div className="flex items-stretch gap-0">
         {thumbnailUrl && (
           <div
-            className="relative w-24 shrink-0 bg-media-bg sm:w-28"
-            style={{ backgroundImage: `url(${thumbnailUrl})`, backgroundSize: "cover", backgroundPosition: "center" }}
+            className="relative w-20 shrink-0 self-stretch bg-media-bg sm:w-24"
+            style={{
+              backgroundImage: `url(${thumbnailUrl})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent to-card/20" />
           </div>
         )}
-        <div className="flex min-w-0 flex-1 flex-col justify-center px-4 py-4">
-          <span className="flex items-center gap-2 text-sm font-bold text-warka-text">
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5 px-3 py-3 sm:px-4 sm:py-4">
+          <span className="flex items-center gap-2 text-sm font-bold leading-snug text-warka-text">
             <Sparkles className="size-4 shrink-0 text-warka-primary" />
-            {isAr ? "تخصيص التطريز والزخرفة" : "Customize embroidery & decoration"}
+            <span className="min-w-0">{isAr ? "تخصيص التطريز والزخرفة" : "Customize embroidery & decoration"}</span>
           </span>
-          <span className="mt-1 text-xs leading-relaxed text-warka-text-muted">
+          <span className="text-xs leading-relaxed text-warka-text-muted">
             {isAr
-              ? "اضغط لفتح الاستوديو — المعاينة والخط والنقشات بمكان واحد"
-              : "Tap to open studio — preview, font & patterns in one place"}
+              ? "افتح الاستوديو واختر الشكل والزخرفة — تظهر صور الأدمن لكل خيار"
+              : "Open the studio — admin photos appear for each style and decoration"}
           </span>
-          <div className="mt-2 flex flex-wrap gap-1.5">
+          <div className="flex flex-col gap-1.5">
             {styleLabel && (
-              <span className="rounded-full bg-warka-bg px-2 py-0.5 text-[10px] font-medium text-warka-text">
+              <span className="block w-fit max-w-full break-words rounded-lg bg-warka-bg px-2 py-1 text-[11px] font-medium leading-snug text-warka-text">
                 {styleLabel}
               </span>
             )}
-            {fontLabel && (
-              <span className="rounded-full bg-warka-bg px-2 py-0.5 text-[10px] font-medium text-warka-text">
-                {fontLabel}
-              </span>
-            )}
-            {zonesTotal > 0 && (
-              <span className="rounded-full bg-warka-primary/10 px-2 py-0.5 text-[10px] font-medium text-warka-primary">
-                {isAr ? `${zonesFilled}/${zonesTotal} مناطق` : `${zonesFilled}/${zonesTotal} zones`}
-              </span>
-            )}
+            <div className="flex flex-wrap gap-1.5">
+              {fontLabel && (
+                <span className="rounded-lg bg-warka-bg px-2 py-1 text-[11px] font-medium leading-snug text-warka-text">
+                  {fontLabel}
+                </span>
+              )}
+              {zonesTotal > 0 && (
+                <span className="rounded-lg bg-warka-primary/10 px-2 py-1 text-[11px] font-medium leading-snug text-warka-primary">
+                  {isAr ? `${zonesFilled}/${zonesTotal} مناطق` : `${zonesFilled}/${zonesTotal} zones`}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>

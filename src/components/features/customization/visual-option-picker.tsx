@@ -37,10 +37,12 @@ export function VisualOptionPicker({
 
   return (
     <>
-      {label && <p className="mb-2 text-sm font-semibold text-warka-text">{label}</p>}
+      {label && (
+        <p className="mb-2 text-sm font-semibold leading-snug text-warka-text">{label}</p>
+      )}
       <div
         className={cn(
-          "grid gap-2",
+          "grid gap-3",
           columns === 2 && "grid-cols-2",
           columns === 3 && "grid-cols-2 sm:grid-cols-3",
           columns === 4 && "grid-cols-2 sm:grid-cols-4"
@@ -49,7 +51,7 @@ export function VisualOptionPicker({
         {options.map((opt) => {
           const selected = selectedId === opt.id;
           return (
-            <div key={opt.id} className="group relative">
+            <div key={opt.id} className="group relative min-w-0">
               <button
                 type="button"
                 onClick={() => onSelect(opt.id)}
@@ -60,37 +62,44 @@ export function VisualOptionPicker({
                     : "border-warka-border hover:border-warka-primary/50"
                 )}
               >
-                <div className="relative aspect-square bg-media-bg">
+                <div className="relative aspect-[4/3] bg-media-bg sm:aspect-square">
                   {opt.previewUrl ? (
                     <Image
                       src={opt.previewUrl}
                       alt={opt.label}
                       fill
                       className="object-cover"
-                      sizes="120px"
+                      sizes="(max-width: 640px) 45vw, 160px"
                       unoptimized={opt.previewUrl.startsWith("data:")}
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center bg-gradient-to-br from-warka-bg to-warka-accent/30 text-2xl text-warka-primary/40">
-                      ✦
+                    <div className="flex h-full items-center justify-center bg-gradient-to-br from-warka-bg to-warka-accent/30 px-2 text-center text-xs font-medium text-warka-primary/70">
+                      {opt.label}
                     </div>
                   )}
                 </div>
-                <span className="px-2 py-2 text-[11px] font-medium leading-snug text-warka-text line-clamp-2">
+                <span className="line-clamp-3 min-h-[2.75rem] px-2 py-2 text-[12px] font-semibold leading-snug text-warka-text sm:text-[11px]">
                   {opt.label}
                 </span>
+                {opt.subtitle && (
+                  <span className="line-clamp-2 border-t border-warka-border/50 px-2 pb-2 text-[10px] leading-snug text-warka-text-muted">
+                    {opt.subtitle}
+                  </span>
+                )}
               </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setPreview(opt);
-                }}
-                className="absolute end-1.5 top-1.5 flex size-8 touch-manipulation items-center justify-center rounded-full bg-card/95 text-warka-primary shadow-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
-                aria-label={isAr ? "معاينة" : "Preview"}
-              >
-                <Eye className="size-3.5" />
-              </button>
+              {opt.previewUrl && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPreview(opt);
+                  }}
+                  className="absolute end-1.5 top-1.5 flex size-8 touch-manipulation items-center justify-center rounded-full bg-card/95 text-warka-primary shadow-sm"
+                  aria-label={isAr ? "تكبير الصورة" : "Enlarge image"}
+                >
+                  <Eye className="size-3.5" />
+                </button>
+              )}
             </div>
           );
         })}

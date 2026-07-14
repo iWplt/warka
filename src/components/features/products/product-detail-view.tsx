@@ -40,6 +40,7 @@ import {
   applyPrimaryNameToPayload,
   primaryNameFromPayload,
   profileHasEngine,
+  resolveCatalogPreview,
   zonesForStyle,
 } from "@/lib/customization/engine";
 import type { CustomizationPayload } from "@/types/customization";
@@ -159,6 +160,17 @@ export function ProductDetailView({
   const zonesFilled = customization.zones.filter(
     (z) => z.text_value?.trim() || z.option_id || z.image_data_url
   ).length;
+  const catalogPreview = useMemo(() => {
+    if (!usesEngine || !customizationProfile) {
+      return { heroImage: activeImage, chips: [] as const };
+    }
+    return resolveCatalogPreview(
+      customizationProfile,
+      customization,
+      activeImage,
+      locale === "ar" ? "ar" : "en"
+    );
+  }, [usesEngine, customizationProfile, customization, activeImage, locale]);
   const selectedFontMeta = selectedFont ? findFontByFamily(fonts, selectedFont) : null;
 
   const handleStudentNameChange = (name: string) => {
@@ -231,29 +243,17 @@ export function ProductDetailView({
       <div className="grid gap-10 lg:grid-cols-2">
         <div className={cn("space-y-4", usesEngine && "max-lg:space-y-3")}>
           {usesEngine && customizationProfile ? (
-            <>
-              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-warka-bg shadow-card lg:hidden">
-                <Image
-                  src={activeImage}
-                  alt={name}
-                  fill
-                  className="object-cover"
-                  sizes="100vw"
-                  priority
-                />
-              </div>
-              <div className="hidden lg:block lg:sticky lg:top-20">
-                <CustomizationVisualPreview
-                  baseImage={activeImage}
-                  productType={product.product_type}
-                  profile={customizationProfile}
-                  customization={customization}
-                  sashColorHex={selectedVariant?.hex ?? null}
-                  fontFamily={selectedFont ?? "Cairo, sans-serif"}
-                  locale={locale === "ar" ? "ar" : "en"}
-                />
-              </div>
-            </>
+            <div className="lg:sticky lg:top-20">
+              <CustomizationVisualPreview
+                baseImage={activeImage}
+                productType={product.product_type}
+                profile={customizationProfile}
+                customization={customization}
+                sashColorHex={selectedVariant?.hex ?? null}
+                fontFamily={selectedFont ?? "Cairo, sans-serif"}
+                locale={locale === "ar" ? "ar" : "en"}
+              />
+            </div>
           ) : (
           <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-warka-bg shadow-card lg:sticky lg:top-20">
             <Image
@@ -266,7 +266,7 @@ export function ProductDetailView({
             />
           </div>
           )}
-          {displayImages.length > 1 && (
+          {!usesEngine && displayImages.length > 1 && (
             <div className="flex gap-3 overflow-x-auto pb-1">
               {displayImages.map((src) => (
                 <button
@@ -372,7 +372,7 @@ export function ProductDetailView({
                 }
                 zonesFilled={zonesFilled}
                 zonesTotal={engineZones.length}
-                thumbnailUrl={activeImage}
+                thumbnailUrl={catalogPreview.heroImage}
               />
               <CustomizationStudioModal
                 open={studioOpen}
