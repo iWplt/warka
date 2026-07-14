@@ -5,11 +5,13 @@ alwaysApply: true
 
 # Auto-deploy after changes
 
+User preference (explicit): **after every code change, commit and push to GitHub immediately** so the live Vercel site updates. Do not wait to be asked.
+
 When you finish implementing a requested change in this repository:
 
 1. Commit only the files related to the task (never unrelated WIP or secrets).
-2. Push to the remote branch immediately so Vercel deploys — do not wait for the user to ask.
-3. After push, briefly tell the user the commit is live or deploying on Vercel.
+2. Push to `origin` on the current branch immediately so Vercel redeploys.
+3. After push, briefly tell the user the commit was pushed and Vercel is deploying.
 
 Skip push only if:
 - The user explicitly says not to deploy in that message, or
