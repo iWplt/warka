@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useRouter } from "@/i18n/routing";
@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 import { useCartStore } from "@/stores/cart-store";
 import { useOrderWizardStore } from "@/stores/order-wizard-store";
 import { buildDefaultCartItemFromProduct } from "@/lib/cart/build-item";
+import { clearCartHandoff, readCartHandoff } from "@/lib/cart/persist-flush";
 import { parseStepParam } from "@/lib/orders/wizard-step-guard";
 import { UnifiedOrderWizard } from "@/components/features/checkout/unified-order-wizard";
 import { FontLoader } from "@/components/features/settings/font-loader";
@@ -39,6 +40,11 @@ function CheckoutLoading() {
   );
 }
 
+function isFreshHandoff(): boolean {
+  const handoff = readCartHandoff();
+  return Boolean(handoff && Date.now() - handoff.at < 8000 && handoff.count > 0);
+}
+
 export function CheckoutShell({
   profile,
   initialCatalogProductId,
@@ -53,6 +59,7 @@ export function CheckoutShell({
   const addItem = useCartStore((s) => s.addItem);
   const syncPricesFromCatalog = useCartStore((s) => s.syncPricesFromCatalog);
   const setStep = useOrderWizardStore((s) => s.setStep);
+  const [awaitingHandoff, setAwaitingHandoff] = useState(false);
   const hasHydrated = useSyncExternalStore(
     useCartStore.persist.onFinishHydration,
     () => useCartStore.persist.hasHydrated(),
@@ -115,8 +122,38 @@ export function CheckoutShell({
     locale,
   ]);
 
+  // iOS Buy Now: cart may hydrate empty once before localStorage write is visible — rehydrate + wait
   useEffect(() => {
-    if (!hasHydrated || !wizardHydrated) return;
+    if (!hasHydrated || !fromCart) return;
+    if (cartItems.length > 0) {
+      setAwaitingHandoff(false);
+      clearCartHandoff();
+      return;
+    }
+    if (!isFreshHandoff()) {
+      setAwaitingHandoff(false);
+      return;
+    }
+
+    setAwaitingHandoff(true);
+    void useCartStore.persist.rehydrate();
+
+    const retry = window.setTimeout(() => {
+      void useCartStore.persist.rehydrate();
+    }, 150);
+    const giveUp = window.setTimeout(() => {
+      setAwaitingHandoff(false);
+      clearCartHandoff();
+    }, 2500);
+
+    return () => {
+      window.clearTimeout(retry);
+      window.clearTimeout(giveUp);
+    };
+  }, [hasHydrated, fromCart, cartItems.length]);
+
+  useEffect(() => {
+    if (!hasHydrated || !wizardHydrated || awaitingHandoff) return;
 
     const requestedStep = parseStepParam(searchParams.get("step"));
     if (requestedStep == null || requestedStep <= 1) return;
@@ -125,9 +162,17 @@ export function CheckoutShell({
       setStep(1);
       router.replace("/checkout");
     }
-  }, [hasHydrated, wizardHydrated, cartItems.length, searchParams, setStep, router]);
+  }, [
+    hasHydrated,
+    wizardHydrated,
+    awaitingHandoff,
+    cartItems.length,
+    searchParams,
+    setStep,
+    router,
+  ]);
 
-  if (!hasHydrated || !wizardHydrated) {
+  if (!hasHydrated || !wizardHydrated || awaitingHandoff) {
     return <CheckoutLoading />;
   }
 

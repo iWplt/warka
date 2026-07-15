@@ -164,13 +164,20 @@ export function UnifiedOrderWizard({
     () => useOrderWizardStore.persist.hasHydrated(),
     () => false
   );
+  const cartHydrated = useSyncExternalStore(
+    useCartStore.persist.onFinishHydration,
+    () => useCartStore.persist.hasHydrated(),
+    () => false
+  );
 
   useEffect(() => {
+    // Wait until cart rehydrates — empty-before-hydrate was ejecting iOS Buy Now to /products
+    if (!cartHydrated) return;
     if (items.length === 0) {
       setStep(1);
       router.replace("/products");
     }
-  }, [items.length, router, setStep]);
+  }, [cartHydrated, items.length, router, setStep]);
 
   useEffect(() => {
     setStudentData({
@@ -437,12 +444,18 @@ export function UnifiedOrderWizard({
     }
   };
 
-  if (items.length === 0) {
+  if (!cartHydrated || items.length === 0) {
     return (
       <div className="mx-auto flex min-h-[40vh] max-w-4xl flex-col items-center justify-center gap-3 px-4 py-16">
         <Loader2 className="size-8 animate-spin text-warka-primary" aria-hidden />
         <p className="text-sm text-warka-text-secondary">
-          {isAr ? "جاري التحويل إلى المنتجات…" : "Redirecting to products…"}
+          {!cartHydrated
+            ? isAr
+              ? "جاري تحميل السلة…"
+              : "Loading cart…"
+            : isAr
+              ? "جاري التحويل إلى المنتجات…"
+              : "Redirecting to products…"}
         </p>
       </div>
     );

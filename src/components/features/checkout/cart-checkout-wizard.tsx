@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/i18n/routing";
@@ -94,11 +94,18 @@ export function CartCheckoutWizard({ profile }: CartCheckoutWizardProps) {
     void getPaymentMethodSettings().then(setPaymentMethodSettings);
   }, []);
 
+  const cartHydrated = useSyncExternalStore(
+    useCartStore.persist.onFinishHydration,
+    () => useCartStore.persist.hasHydrated(),
+    () => false
+  );
+
   useEffect(() => {
+    if (!cartHydrated) return;
     if (items.length === 0) {
       router.replace("/cart");
     }
-  }, [items.length, router]);
+  }, [cartHydrated, items.length, router]);
 
   const total = subtotal();
   const activeLine = items.find((l) => l.id === activeLineId) ?? items[0];

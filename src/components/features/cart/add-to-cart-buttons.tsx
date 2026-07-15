@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { TrustBadges } from "@/components/features/cart/trust-badges";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { dispatchCartPulse } from "@/lib/cart/cart-pulse";
+import { flushCartPersist } from "@/lib/cart/persist-flush";
 import { useCartStore, type AddCartItemInput } from "@/stores/cart-store";
 import { cn } from "@/lib/utils";
 
@@ -44,8 +45,15 @@ export function AddToCartButtons({
         transition: { duration: 0.15 },
       };
 
-  const handleAdd = (thenCheckout: boolean) => {
-    const complete = sizeIsComplete ?? Boolean(selectedSize.trim() || customMeasurements.trim());
+  const handleAdd = (
+    thenCheckout: boolean,
+    event?: { preventDefault: () => void; stopPropagation: () => void }
+  ) => {
+    event?.preventDefault();
+    event?.stopPropagation();
+
+    const complete =
+      sizeIsComplete ?? Boolean(selectedSize.trim() || customMeasurements.trim());
     if (requiresSize && !complete) {
       toast.error(
         locale === "ar"
@@ -57,21 +65,31 @@ export function AddToCartButtons({
     setAdding(true);
     try {
       addItem(item);
+      flushCartPersist(useCartStore.getState().items);
       dispatchCartPulse();
       if (!thenCheckout) {
         setAddedFlash(true);
         window.setTimeout(() => setAddedFlash(false), 1500);
-      }
-      if (thenCheckout) {
-        router.push("/checkout?from=cart");
+        toast.success(t("added"), {
+          action: {
+            label: t("viewCart"),
+            onClick: () => router.push("/cart"),
+          },
+        });
         return;
       }
-      toast.success(t("added"), {
-        action: {
-          label: t("viewCart"),
-          onClick: () => router.push("/cart"),
-        },
-      });
+
+      const go = () => {
+        flushCartPersist(useCartStore.getState().items);
+        router.push("/checkout?from=cart");
+      };
+      if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(go);
+        });
+      } else {
+        window.setTimeout(go, 0);
+      }
     } finally {
       setAdding(false);
     }
@@ -83,7 +101,7 @@ export function AddToCartButtons({
         <motion.button
           type="button"
           disabled={adding}
-          onClick={() => handleAdd(false)}
+          onClick={(e) => handleAdd(false, e)}
           {...tapProps}
           className={cn(
             "inline-flex items-center justify-center gap-2 rounded-[10px] border-2 py-3.5 text-sm font-semibold transition-all disabled:opacity-60",
@@ -121,7 +139,7 @@ export function AddToCartButtons({
         <motion.button
           type="button"
           disabled={adding}
-          onClick={() => handleAdd(true)}
+          onClick={(e) => handleAdd(true, e)}
           {...tapProps}
           className="inline-flex items-center justify-center gap-2 rounded-[10px] bg-warka-primary py-3.5 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(0,0,0,0.12)] transition-all hover:bg-warka-primary-dark disabled:opacity-60"
         >
