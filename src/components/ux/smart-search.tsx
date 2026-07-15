@@ -169,8 +169,8 @@ export function SmartSearch({
           </Dialog.Description>
 
           <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-warka-text-muted" />
+            <div className="flex h-10 min-h-10 flex-1 items-center gap-2 rounded-lg border border-warka-border bg-card px-3 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+              <Search className="size-4 shrink-0 text-warka-text-muted" aria-hidden />
               <Input
                 ref={inputRef}
                 value={query}
@@ -182,13 +182,13 @@ export function SmartSearch({
                   placeholder ??
                   (isAr ? "ابحث عن منتجات التخرج..." : "Search graduation products...")
                 }
-                className="border-warka-border ps-10 pe-10"
+                className="h-auto min-h-0 flex-1 border-0 bg-transparent px-0 py-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
               />
               {query && (
                 <button
                   type="button"
                   onClick={() => setQuery("")}
-                  className="absolute end-10 top-1/2 -translate-y-1/2 text-warka-text-muted hover:text-warka-text"
+                  className="shrink-0 text-warka-text-muted hover:text-warka-text"
                   aria-label={isAr ? "مسح" : "Clear"}
                 >
                   <X className="size-4" />

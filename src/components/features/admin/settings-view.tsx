@@ -4,38 +4,19 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { useRouter, Link } from "@/i18n/routing";
-import { Ruler } from "lucide-react";
+import { MessageCircle, Ruler } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { updatePriceCatalog } from "@/server/actions/payments";
 import { DepositSettingsPanel } from "@/components/features/admin/deposit-settings-panel";
-import {
-  MessageTemplatesPanel,
-  MessagingSettingsPanel,
-  NotificationLogPanel,
-} from "@/components/features/admin/messaging-settings-panel";
-import type { MessagingSettings } from "@/lib/messaging/settings";
 import type { DepositSettings } from "@/lib/settings/types";
-import type { MessageTemplate, NotificationLog, PriceCatalogItem } from "@/types/database";
+import type { PriceCatalogItem } from "@/types/database";
 
 type SettingsViewProps = {
   prices: PriceCatalogItem[];
   depositSettings: DepositSettings;
-  messagingSettings: MessagingSettings;
-  messageTemplates: MessageTemplate[];
-  notificationLogs: NotificationLog[];
-  whatsappConfigured: boolean;
-  whatsappProvider: string;
 };
 
-export function SettingsView({
-  prices,
-  depositSettings,
-  messagingSettings,
-  messageTemplates,
-  notificationLogs,
-  whatsappConfigured,
-  whatsappProvider,
-}: SettingsViewProps) {
+export function SettingsView({ prices, depositSettings }: SettingsViewProps) {
   const t = useTranslations("adminSettings");
   const productT = useTranslations("productType");
   const router = useRouter();
@@ -67,6 +48,21 @@ export function SettingsView({
         </div>
       </div>
 
+      <div className="rounded-[var(--radius-card)] border border-warka-primary/20 bg-warka-primary/5 p-4 sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="section-title flex items-center gap-2">
+              <MessageCircle className="size-5 text-warka-primary" />
+              {t("whatsapp")}
+            </h2>
+            <p className="page-description mt-1">{t("whatsappLinkHint")}</p>
+          </div>
+          <Button asChild variant="accent">
+            <Link href="/admin/messages">{t("openWhatsapp")}</Link>
+          </Button>
+        </div>
+      </div>
+
       <div className="rounded-[var(--radius-card)] border border-warka-border bg-card p-4 shadow-card sm:p-5">
         <h2 className="section-title mb-4">{t("priceCatalog")}</h2>
         <div className="space-y-4">
@@ -85,25 +81,6 @@ export function SettingsView({
       <div className="rounded-2xl glass p-6">
         <h2 className="mb-4 font-semibold">{t("deposit")}</h2>
         <DepositSettingsPanel settings={depositSettings} />
-      </div>
-
-      <div className="rounded-2xl glass p-6">
-        <h2 className="mb-4 font-semibold">{t("whatsapp")}</h2>
-        <MessagingSettingsPanel
-          settings={messagingSettings}
-          providerConfigured={whatsappConfigured}
-          providerName={whatsappProvider}
-        />
-      </div>
-
-      <div className="rounded-2xl glass p-6">
-        <h2 className="mb-4 font-semibold">{t("messageTemplates")}</h2>
-        <MessageTemplatesPanel templates={messageTemplates} />
-      </div>
-
-      <div className="rounded-2xl glass p-6">
-        <h2 className="mb-4 font-semibold">{t("notificationLog")}</h2>
-        <NotificationLogPanel logs={notificationLogs} />
       </div>
 
       <div className="rounded-2xl glass p-6">

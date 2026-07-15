@@ -6,6 +6,7 @@ import { Link } from "@/i18n/routing";
 import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { OrdersTable } from "@/components/features/orders/orders-table";
+import { ORDER_STATUS_OPTIONS } from "@/components/features/orders/order-status-select";
 import type { OrderStatus, OrderType } from "@/types/database";
 
 type OrderRow = {
@@ -23,19 +24,7 @@ type AdminOrdersManagerProps = {
   showArchived?: boolean;
 };
 
-const ALL_STATUSES: OrderStatus[] = [
-  "new",
-  "pending_review",
-  "designing",
-  "awaiting_approval",
-  "needs_modification",
-  "ready_for_printing",
-  "printing",
-  "printed",
-  "ready_for_delivery",
-  "delivered",
-  "cancelled",
-];
+const ALL_STATUSES = ORDER_STATUS_OPTIONS;
 
 export function AdminOrdersManager({
   orders,
@@ -122,7 +111,7 @@ export function AdminOrdersManager({
         </Select>
       </div>
 
-      <OrdersTable orders={filtered} basePath="/admin/orders" />
+      <OrdersTable orders={filtered} basePath="/admin/orders" canChangeStatus />
     </div>
   );
 }

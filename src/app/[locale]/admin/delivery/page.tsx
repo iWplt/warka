@@ -10,7 +10,7 @@ export default async function AdminDeliveryPage() {
   return (
     <div className="stack-page">
       <PageHeader title={t("delivery")} />
-      <OrdersTable orders={orders} basePath="/admin/orders" />
+      <OrdersTable orders={orders} basePath="/admin/orders" canChangeStatus />
     </div>
   );
 }

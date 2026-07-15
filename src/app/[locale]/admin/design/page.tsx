@@ -23,7 +23,7 @@ export default async function AdminDesignPage() {
         {designing.length === 0 ? (
           <EmptyState title={t("emptyQueue")} />
         ) : (
-          <OrdersTable orders={designing} basePath="/admin/orders" />
+          <OrdersTable orders={designing} basePath="/admin/orders" canChangeStatus />
         )}
       </section>
 
@@ -32,7 +32,7 @@ export default async function AdminDesignPage() {
         {needsModification.length === 0 ? (
           <EmptyState title={t("emptyModificationQueue")} />
         ) : (
-          <OrdersTable orders={needsModification} basePath="/admin/orders" />
+          <OrdersTable orders={needsModification} basePath="/admin/orders" canChangeStatus />
         )}
       </section>
 

@@ -24,12 +24,12 @@ import {
   orderLockMessage,
 } from "@/lib/orders/state-machine";
 import {
-  updateOrderStatus,
   addOrderNote,
   cancelOrderByStudent,
   unlockOrderForAdmin,
 } from "@/server/actions/orders";
 import { approveOrderDeposit } from "@/server/actions/payments";
+import { OrderStatusSelect } from "@/components/features/orders/order-status-select";
 import type { OrderItemMedia } from "@/lib/orders/order-item-details";
 import type { OrderDetailStudent } from "@/lib/orders/parse-order-notes";
 import type { TemplateConfig } from "@/types/database";
@@ -43,11 +43,6 @@ import type {
 } from "@/types/database";
 import { useState } from "react";
 import { useLocale } from "next-intl";
-
-const STATUSES = [
-  "pending_review", "designing", "awaiting_approval", "needs_modification",
-  "ready_for_printing", "printing", "printed", "ready_for_delivery", "delivered", "cancelled",
-] as const;
 
 type EditLogEntry = {
   id: string;
@@ -87,21 +82,10 @@ export function OrderDetailView({
 }: OrderDetailViewProps) {
   const t = useTranslations();
   const locale = useLocale() as "ar" | "en";
-  const statusT = useTranslations("orderStatus");
   const studentT = useTranslations("studentOrder");
   const router = useRouter();
   const [note, setNote] = useState("");
   const { order, items, history, design, payments, student = null, itemMedia = {}, editLogs = [] } = data;
-
-  const handleStatus = async (status: string) => {
-    try {
-      await updateOrderStatus(order.id, status as typeof STATUSES[number]);
-      toast.success(t("common.success"));
-      router.refresh();
-    } catch {
-      toast.error(t("common.error"));
-    }
-  };
 
   const handleCancel = async () => {
     try {
@@ -340,18 +324,11 @@ export function OrderDetailView({
         {canManage && (
           <div className="rounded-2xl glass p-6">
             <h2 className="mb-4 font-semibold">{t("orders.changeStatus")}</h2>
-            <div className="flex flex-wrap gap-2">
-              {STATUSES.map((s) => (
-                <Button
-                  key={s}
-                  size="sm"
-                  variant={order.status === s ? "default" : "outline"}
-                  onClick={() => handleStatus(s)}
-                >
-                  {statusT(s)}
-                </Button>
-              ))}
-            </div>
+            <OrderStatusSelect
+              orderId={order.id}
+              value={order.status}
+              className="max-w-md"
+            />
             <div className="mt-4 flex gap-2">
               <input
                 value={note}

@@ -51,6 +51,7 @@ export async function updateMessageTemplate(input: z.infer<typeof templateSchema
 
   if (error) throw new Error(error.message);
   revalidatePath("/admin/settings");
+  revalidatePath("/admin/messages");
 }
 
 const messagingSchema = z.object({
@@ -72,6 +73,7 @@ export async function updateMessagingSettings(input: z.infer<typeof messagingSch
 
   if (error) throw new Error(error.message);
   revalidatePath("/admin/settings");
+  revalidatePath("/admin/messages");
 }
 
 export async function getMessagingSettingsForAdmin(): Promise<MessagingSettings> {

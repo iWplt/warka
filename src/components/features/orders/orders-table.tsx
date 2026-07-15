@@ -6,6 +6,7 @@ import { Link } from "@/i18n/routing";
 import { useLocale } from "next-intl";
 import { DataTable } from "@/components/ui/data-table";
 import { OrderStatusBadge } from "@/components/shared";
+import { OrderStatusSelect } from "@/components/features/orders/order-status-select";
 import { formatIqd } from "@/lib/format/currency";
 import type { OrderStatus, OrderType } from "@/types/database";
 
@@ -24,9 +25,16 @@ type OrdersTableProps = {
   orders: OrderRow[];
   basePath: string;
   hideStudentColumn?: boolean;
+  /** Show status dropdown instead of badge (admin / staff). */
+  canChangeStatus?: boolean;
 };
 
-export function OrdersTable({ orders, basePath, hideStudentColumn = false }: OrdersTableProps) {
+export function OrdersTable({
+  orders,
+  basePath,
+  hideStudentColumn = false,
+  canChangeStatus = false,
+}: OrdersTableProps) {
   const t = useTranslations();
   const statusT = useTranslations("orderStatus");
   const locale = useLocale();
@@ -70,12 +78,19 @@ export function OrdersTable({ orders, basePath, hideStudentColumn = false }: Ord
     {
       accessorKey: "status",
       header: t("common.status"),
-      cell: ({ row }) => (
-        <OrderStatusBadge
-          status={row.original.status}
-          label={statusT(row.original.status)}
-        />
-      ),
+      cell: ({ row }) =>
+        canChangeStatus ? (
+          <OrderStatusSelect
+            orderId={row.original.id}
+            value={row.original.status}
+            size="sm"
+          />
+        ) : (
+          <OrderStatusBadge
+            status={row.original.status}
+            label={statusT(row.original.status)}
+          />
+        ),
     },
     {
       accessorKey: "total",

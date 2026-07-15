@@ -43,6 +43,7 @@
     "delivery": "Delivery",
     "payments": "Payments",
     "paymentMethods": "Payment methods",
+    "messages": "WhatsApp messages",
     "reports": "Reports",
     "users": "Users",
     "employees": "Employees",
@@ -161,6 +162,8 @@
     "priceCatalog": "Price catalog",
     "deposit": "Deposit (Arabon)",
     "whatsapp": "WhatsApp notifications",
+    "whatsappLinkHint": "Edit booking confirmation templates, deposit reminders, and the outbound log.",
+    "openWhatsapp": "Open WhatsApp messages",
     "messageTemplates": "Message templates",
     "notificationLog": "Notification log",
     "backup": "Backup",
@@ -171,6 +174,14 @@
     "updated": "Updated",
     "save": "Save",
     "error": "Error"
+  },
+  "adminWhatsapp": {
+    "title": "WhatsApp messages",
+    "subtitle": "Templates sent when a booking is confirmed, a deposit is paid, or the order is ready — edit the Arabic text and turn each event on or off.",
+    "settingsTitle": "Notification settings",
+    "templatesTitle": "Message templates",
+    "templatesHint": "These go out automatically when the matching event happens (order confirmed, deposit, pickup ready, production photos, payment reminder).",
+    "logTitle": "Recent outbound messages"
   },
   "adminBundles": {
     "title": "Bundle management",

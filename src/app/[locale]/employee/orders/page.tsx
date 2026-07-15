@@ -10,7 +10,7 @@ export default async function EmployeeOrdersPage() {
   return (
     <div className="space-y-8">
       <PageHeader title={t("orders")} />
-      <OrdersTable orders={orders} basePath="/employee/orders" />
+      <OrdersTable orders={orders} basePath="/employee/orders" canChangeStatus />
     </div>
   );
 }

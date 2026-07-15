@@ -16,6 +16,8 @@ const SEGMENT_KEYS: Record<string, string> = {
   printing: "nav.printing",
   delivery: "nav.delivery",
   payments: "nav.payments",
+  "payment-methods": "nav.paymentMethods",
+  messages: "nav.messages",
   users: "nav.users",
   reports: "nav.reports",
   settings: "nav.settings",

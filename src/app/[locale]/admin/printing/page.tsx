@@ -12,7 +12,7 @@ export default async function AdminPrintingPage() {
   return (
     <div className="stack-page">
       <PageHeader title={t("printing")} />
-      <OrdersTable orders={all} basePath="/admin/orders" />
+      <OrdersTable orders={all} basePath="/admin/orders" canChangeStatus />
     </div>
   );
 }

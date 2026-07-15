@@ -62,14 +62,14 @@ export function ProductCatalogGrid({
 
   return (
     <div className={cn("stack-section", className)}>
-      <div className="relative">
-        <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-warka-text-muted" />
+      <div className="flex h-10 min-h-10 w-full items-center gap-2 rounded-lg border border-warka-border bg-card px-3 focus-within:ring-2 focus-within:ring-warka-primary/25">
+        <Search className="size-4 shrink-0 text-warka-text-muted" aria-hidden />
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={isAr ? "ابحث في هذا القسم…" : "Search in this section…"}
-          className="h-10 min-h-10 w-full rounded-lg border border-warka-border bg-card py-2 ps-10 pe-4 text-sm text-warka-text outline-none focus:ring-2 focus:ring-warka-primary/25"
+          className="min-w-0 flex-1 border-0 bg-transparent py-2 text-sm text-warka-text outline-none placeholder:text-warka-text-muted"
         />
       </div>
 

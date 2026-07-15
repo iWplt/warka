@@ -28,6 +28,7 @@ import {
   Ruler,
   Layers,
   Wallet,
+  MessageCircle,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/routing";
@@ -65,7 +66,8 @@ type NavLabelKey =
   | "bundles"
   | "customization"
   | "embroideryOrders"
-  | "paymentMethods";
+  | "paymentMethods"
+  | "messages";
 
 type NavItem = {
   href: string;
@@ -87,6 +89,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: "/admin/delivery", labelKey: "delivery", icon: Truck },
   { href: "/admin/payments", labelKey: "payments", icon: CreditCard },
   { href: "/admin/payment-methods", labelKey: "paymentMethods", icon: Wallet },
+  { href: "/admin/messages", labelKey: "messages", icon: MessageCircle },
   { href: "/admin/users", labelKey: "users", icon: Users },
   { href: "/admin/invites", labelKey: "invites", icon: KeyRound },
   { href: "/admin/batches", labelKey: "batches", icon: Package },

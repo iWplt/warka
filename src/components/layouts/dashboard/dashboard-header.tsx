@@ -62,14 +62,14 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
       </div>
 
       <div className="hidden max-w-xs flex-1 px-4 md:block">
-        <div className="relative">
-          <Search className="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-warka-text-muted" />
+        <label className="flex h-10 w-full items-center gap-2 rounded-lg border border-warka-border bg-warka-bg px-3 focus-within:border-warka-primary focus-within:ring-2 focus-within:ring-warka-primary/20">
+          <Search className="size-4 shrink-0 text-warka-text-muted" aria-hidden />
           <input
             type="search"
             placeholder={locale === "ar" ? "ابحث عن طلب، منتج..." : "Search orders, products..."}
-            className="h-10 w-full rounded-lg border border-warka-border bg-warka-bg py-2 pe-10 ps-4 text-sm text-warka-text placeholder:text-warka-text-muted focus:border-warka-primary focus:outline-none focus:ring-2 focus:ring-warka-primary/20"
+            className="min-w-0 flex-1 border-0 bg-transparent py-2 text-sm text-warka-text outline-none placeholder:text-warka-text-muted"
           />
-        </div>
+        </label>
       </div>
 
       <div className="flex shrink-0 items-center gap-1">
