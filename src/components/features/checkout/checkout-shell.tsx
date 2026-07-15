@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useRouter } from "@/i18n/routing";
 import { Loader2 } from "lucide-react";
-import { useCartStore } from "@/stores/cart-store";
+import { useCartStore, useCartHasHydrated } from "@/stores/cart-store";
 import { useOrderWizardStore } from "@/stores/order-wizard-store";
 import { buildDefaultCartItemFromProduct } from "@/lib/cart/build-item";
 import { clearCartHandoff, readCartHandoff } from "@/lib/cart/persist-flush";
@@ -40,11 +40,6 @@ function CheckoutLoading() {
   );
 }
 
-function isFreshHandoff(): boolean {
-  const handoff = readCartHandoff();
-  return Boolean(handoff && Date.now() - handoff.at < 8000 && handoff.count > 0);
-}
-
 export function CheckoutShell({
   profile,
   initialCatalogProductId,
@@ -57,14 +52,11 @@ export function CheckoutShell({
   const fromCart = searchParams.get("from") === "cart";
   const cartItems = useCartStore((s) => s.items);
   const addItem = useCartStore((s) => s.addItem);
+  const restoreItems = useCartStore((s) => s.restoreItems);
   const syncPricesFromCatalog = useCartStore((s) => s.syncPricesFromCatalog);
   const setStep = useOrderWizardStore((s) => s.setStep);
   const [awaitingHandoff, setAwaitingHandoff] = useState(false);
-  const hasHydrated = useSyncExternalStore(
-    useCartStore.persist.onFinishHydration,
-    () => useCartStore.persist.hasHydrated(),
-    () => false
-  );
+  const hasHydrated = useCartHasHydrated();
   const wizardHydrated = useSyncExternalStore(
     useOrderWizardStore.persist.onFinishHydration,
     () => useOrderWizardStore.persist.hasHydrated(),
@@ -122,7 +114,9 @@ export function CheckoutShell({
     locale,
   ]);
 
-  // iOS Buy Now: cart may hydrate empty once before localStorage write is visible — rehydrate + wait
+  // iOS/WebKit: the cart can hydrate empty once before the localStorage write is
+  // visible, or localStorage may be blocked entirely (Private Mode). Recover the
+  // real cart from the session/in-memory handoff before deciding it's empty.
   useEffect(() => {
     if (!hasHydrated || !fromCart) return;
     if (cartItems.length > 0) {
@@ -130,27 +124,27 @@ export function CheckoutShell({
       clearCartHandoff();
       return;
     }
-    if (!isFreshHandoff()) {
+
+    // 1) Try the durable handoff payload (the actual items, not just a count).
+    const handoff = readCartHandoff();
+    if (handoff) {
+      restoreItems(handoff.items);
       setAwaitingHandoff(false);
       return;
     }
 
+    // 2) No handoff yet — give async rehydration one brief chance, then re-check.
     setAwaitingHandoff(true);
     void useCartStore.persist.rehydrate();
-
     const retry = window.setTimeout(() => {
       void useCartStore.persist.rehydrate();
-    }, 150);
-    const giveUp = window.setTimeout(() => {
+      const late = readCartHandoff();
+      if (late) restoreItems(late.items);
       setAwaitingHandoff(false);
-      clearCartHandoff();
-    }, 2500);
+    }, 250);
 
-    return () => {
-      window.clearTimeout(retry);
-      window.clearTimeout(giveUp);
-    };
-  }, [hasHydrated, fromCart, cartItems.length]);
+    return () => window.clearTimeout(retry);
+  }, [hasHydrated, fromCart, cartItems.length, restoreItems]);
 
   useEffect(() => {
     if (!hasHydrated || !wizardHydrated || awaitingHandoff) return;

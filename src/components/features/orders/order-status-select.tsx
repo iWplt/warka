@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronDown } from "lucide-react";
 import { useRouter } from "@/i18n/routing";
 import { toast } from "sonner";
 import { Select } from "@/components/ui/select";
@@ -84,10 +83,6 @@ export function OrderStatusSelect({
           </option>
         ))}
       </Select>
-      <ChevronDown
-        className="pointer-events-none absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-warka-text-muted"
-        aria-hidden
-      />
     </div>
   );
 }

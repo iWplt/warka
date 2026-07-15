@@ -1,29 +1,81 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Minus, Plus, ShoppingBag, Trash2, ArrowLeft, Sparkles, Palette } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/routing";
 import { toast } from "sonner";
-import { useCartStore } from "@/stores/cart-store";
+import { useCartStore, useCartHasHydrated } from "@/stores/cart-store";
 import { useDeliveryStore } from "@/stores/delivery-store";
+import { clearCartHandoff, flushCartPersist, readCartHandoff } from "@/lib/cart/persist-flush";
 import { formatIqd } from "@/lib/format/currency";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DeliveryDetailsForm } from "@/components/features/delivery/delivery-details-form";
 import { isDeliveryComplete } from "@/lib/delivery/format-delivery-note";
 import { cn } from "@/lib/utils";
 
+function CartLineImage({ src, alt }: { src: string; alt: string }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <Image
+      src={failed || !src ? "/assets/landing/product-sash.jpg" : src}
+      alt={alt}
+      fill
+      className="object-cover"
+      sizes="140px"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
+function CartSkeleton() {
+  return (
+    <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6" aria-busy="true" aria-live="polite">
+      <div className="animate-pulse space-y-4">
+        <div className="h-8 w-40 rounded-lg bg-warka-bg" />
+        <div className="h-32 rounded-2xl border border-warka-border bg-warka-bg" />
+        <div className="h-32 rounded-2xl border border-warka-border bg-warka-bg" />
+      </div>
+      <span className="sr-only">…</span>
+    </div>
+  );
+}
+
 export function CartPageClient() {
   const t = useTranslations("cart");
   const locale = useLocale();
   const router = useRouter();
+  const hasHydrated = useCartHasHydrated();
   const items = useCartStore((s) => s.items);
   const subtotal = useCartStore((s) => s.subtotal);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const removeItem = useCartStore((s) => s.removeItem);
+  const restoreItems = useCartStore((s) => s.restoreItems);
+
+  // Recover the cart from the checkout handoff once, when localStorage failed to
+  // rehydrate (Safari Private Mode / WebKit soft-nav). Clear the handoff once the
+  // cart is populated so emptying the cart later never re-restores it.
+  const restoreAttempted = useRef(false);
+  useEffect(() => {
+    if (!hasHydrated) return;
+    if (items.length > 0) {
+      clearCartHandoff();
+      return;
+    }
+    if (restoreAttempted.current) return;
+    restoreAttempted.current = true;
+    const handoff = readCartHandoff();
+    if (handoff) restoreItems(handoff.items);
+  }, [hasHydrated, items.length, restoreItems]);
 
   const total = subtotal();
   const count = items.reduce((n, i) => n + i.quantity, 0);
+
+  // Never show the empty state before we know the real cart state.
+  if (!hasHydrated) {
+    return <CartSkeleton />;
+  }
 
   if (items.length === 0) {
     return (
@@ -91,13 +143,7 @@ export function CartPageClient() {
                 >
                   <div className="flex flex-col gap-4 p-4 sm:flex-row sm:p-5">
                     <div className="relative mx-auto aspect-[4/5] w-full max-w-[140px] shrink-0 overflow-hidden rounded-xl bg-media-bg sm:mx-0">
-                      <Image
-                        src={line.image}
-                        alt={name}
-                        fill
-                        className="object-cover"
-                        sizes="140px"
-                      />
+                      <CartLineImage src={line.image} alt={name} />
                     </div>
 
                     <div className="min-w-0 flex-1">
@@ -217,6 +263,7 @@ export function CartPageClient() {
                       );
                       return;
                     }
+                    flushCartPersist(useCartStore.getState().items);
                     router.push("/checkout?from=cart");
                   }}
                   className={cn(
@@ -252,6 +299,7 @@ export function CartPageClient() {
                 );
                 return;
               }
+              flushCartPersist(useCartStore.getState().items);
               router.push("/checkout?from=cart");
             }}
             className="min-h-12 shrink-0 rounded-xl bg-warka-primary px-6 py-3 text-sm font-semibold text-white whitespace-nowrap"

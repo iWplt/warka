@@ -73,9 +73,14 @@ export const GOVERNORATE_COORDS: Record<
 
 export const COD_FEE_IQD = 5000;
 
-export const WHATSAPP_NUMBER =
-  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "9647700000000";
+/** Business WhatsApp number — env only, no fake fallback. null when unset. */
+export const WHATSAPP_NUMBER: string | null =
+  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim() || null;
 
-export function buildWhatsAppUrl(message: string): string {
+export const HAS_WHATSAPP = Boolean(WHATSAPP_NUMBER);
+
+/** Returns a wa.me link, or null when no business number is configured. */
+export function buildWhatsAppUrl(message: string): string | null {
+  if (!WHATSAPP_NUMBER) return null;
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 }

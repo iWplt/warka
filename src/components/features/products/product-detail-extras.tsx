@@ -81,15 +81,17 @@ export function ProductDetailExtras({
           />
         )}
         <DeliveryDetailsForm locale={isAr ? "ar" : "en"} compact showEstimate />
-        <a
-          href={buildWhatsAppUrl(whatsappMessage)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex w-full items-center justify-center gap-2 rounded-[10px] border-2 border-warka-primary px-6 py-3 text-sm font-semibold text-warka-primary transition-all hover:bg-warka-primary hover:text-white sm:w-auto"
-        >
-          <MessageCircle className="size-4" />
-          {isAr ? "اطلب عبر واتساب" : "Order via WhatsApp"}
-        </a>
+        {buildWhatsAppUrl(whatsappMessage) && (
+          <a
+            href={buildWhatsAppUrl(whatsappMessage) ?? undefined}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-[10px] border-2 border-warka-primary px-6 py-3 text-sm font-semibold text-warka-primary transition-all hover:bg-warka-primary hover:text-white sm:w-auto"
+          >
+            <MessageCircle className="size-4" />
+            {isAr ? "اطلب عبر واتساب" : "Order via WhatsApp"}
+          </a>
+        )}
       </div>
 
       <StickyMobileBar

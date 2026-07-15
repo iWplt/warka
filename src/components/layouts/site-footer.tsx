@@ -50,18 +50,22 @@ export async function SiteFooter() {
           <div>
             <h4 className="mb-4 text-sm font-bold">{t("contactTitle")}</h4>
             <ul className="space-y-3">
-              <li className="flex items-center gap-2 text-sm opacity-75">
-                <Phone className="h-4 w-4 text-warka-accent" />
-                <a href={`tel:${SITE_CONTACT.phoneE164}`} dir="ltr" className="hover:opacity-100">
-                  {SITE_CONTACT.phoneDisplay}
-                </a>
-              </li>
-              <li className="flex items-center gap-2 text-sm opacity-75">
-                <Mail className="h-4 w-4 text-warka-accent" />
-                <a href={`mailto:${SITE_CONTACT.email}`} className="hover:opacity-100">
-                  {SITE_CONTACT.email}
-                </a>
-              </li>
+              {SITE_CONTACT.phoneE164 && (
+                <li className="flex items-center gap-2 text-sm opacity-75">
+                  <Phone className="h-4 w-4 text-warka-accent" />
+                  <a href={`tel:${SITE_CONTACT.phoneE164}`} dir="ltr" className="hover:opacity-100">
+                    {SITE_CONTACT.phoneDisplay}
+                  </a>
+                </li>
+              )}
+              {SITE_CONTACT.email && (
+                <li className="flex items-center gap-2 text-sm opacity-75">
+                  <Mail className="h-4 w-4 text-warka-accent" />
+                  <a href={`mailto:${SITE_CONTACT.email}`} className="hover:opacity-100">
+                    {SITE_CONTACT.email}
+                  </a>
+                </li>
+              )}
               <li className="flex items-start gap-2 text-sm opacity-75">
                 <MapPin className="mt-0.5 h-4 w-4 text-warka-accent" />
                 <span>{t("address")}</span>

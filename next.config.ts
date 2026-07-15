@@ -64,6 +64,12 @@ const nextConfig: NextConfig = {
         destination: "/previews/warka-receipt-sample.html",
         permanent: false,
       },
+      // Backward-compat: old placeholder product slug -> production slug (both locales)
+      {
+        source: "/:locale(ar|en)/products/placeholder",
+        destination: "/:locale/products/graduation-sash",
+        permanent: true,
+      },
     ];
   },
   images: {

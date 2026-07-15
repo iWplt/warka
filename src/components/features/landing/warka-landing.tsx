@@ -204,7 +204,7 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
   const heroImage = heroImageUrl ?? LANDING_IMAGES.hero;
 
   return (
-    <div className="min-h-screen bg-warka-bg font-arabic">
+    <div className="min-h-dvh-safe bg-warka-bg font-arabic">
       <SeasonalBanner />
 
       <section id="home" className="relative overflow-hidden bg-warka-bg">
@@ -544,29 +544,33 @@ export function WarkaLanding({ prices, catalogProducts = [], bundles = [], profi
           <SectionHeading title={tContact("title")} subtitle={tContact("subtitle")} />
 
           <div className="mx-auto grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-6">
-            <ScrollReveal className="landing-contact-card flex flex-col items-center justify-center rounded-xl border border-warka-border p-3.5 text-center shadow-sm sm:min-h-[172px] sm:rounded-[14px] sm:p-6">
-              <div className="mx-auto mb-3 flex aspect-square h-12 w-12 items-center justify-center rounded-xl bg-warka-primary/10">
-                <Phone className="h-5 w-5 text-warka-primary" />
-              </div>
-              <h3 className="mb-1 text-sm font-semibold">{tContact("phone")}</h3>
-              <a
-                href={`tel:${SITE_CONTACT.phoneE164}`}
-                className="text-sm"
-                dir="ltr"
-              >
-                {SITE_CONTACT.phoneDisplay}
-              </a>
-            </ScrollReveal>
+            {SITE_CONTACT.phoneE164 && (
+              <ScrollReveal className="landing-contact-card flex flex-col items-center justify-center rounded-xl border border-warka-border p-3.5 text-center shadow-sm sm:min-h-[172px] sm:rounded-[14px] sm:p-6">
+                <div className="mx-auto mb-3 flex aspect-square h-12 w-12 items-center justify-center rounded-xl bg-warka-primary/10">
+                  <Phone className="h-5 w-5 text-warka-primary" />
+                </div>
+                <h3 className="mb-1 text-sm font-semibold">{tContact("phone")}</h3>
+                <a
+                  href={`tel:${SITE_CONTACT.phoneE164}`}
+                  className="text-sm"
+                  dir="ltr"
+                >
+                  {SITE_CONTACT.phoneDisplay}
+                </a>
+              </ScrollReveal>
+            )}
 
-            <ScrollReveal delay={0.09} className="landing-contact-card flex flex-col items-center justify-center rounded-xl border border-warka-border p-3.5 text-center shadow-sm sm:min-h-[172px] sm:rounded-[14px] sm:p-6">
-              <div className="mx-auto mb-3 flex aspect-square h-12 w-12 items-center justify-center rounded-xl bg-warka-primary/10">
-                <Mail className="h-5 w-5 text-warka-primary" />
-              </div>
-              <h3 className="mb-1 text-sm font-semibold">{tContact("email")}</h3>
-              <a href={`mailto:${SITE_CONTACT.email}`} className="text-sm">
-                {SITE_CONTACT.email}
-              </a>
-            </ScrollReveal>
+            {SITE_CONTACT.email && (
+              <ScrollReveal delay={0.09} className="landing-contact-card flex flex-col items-center justify-center rounded-xl border border-warka-border p-3.5 text-center shadow-sm sm:min-h-[172px] sm:rounded-[14px] sm:p-6">
+                <div className="mx-auto mb-3 flex aspect-square h-12 w-12 items-center justify-center rounded-xl bg-warka-primary/10">
+                  <Mail className="h-5 w-5 text-warka-primary" />
+                </div>
+                <h3 className="mb-1 text-sm font-semibold">{tContact("email")}</h3>
+                <a href={`mailto:${SITE_CONTACT.email}`} className="text-sm">
+                  {SITE_CONTACT.email}
+                </a>
+              </ScrollReveal>
+            )}
 
             <ScrollReveal delay={0.18} className="landing-contact-card flex flex-col items-center justify-center rounded-xl border border-warka-border p-3.5 text-center shadow-sm sm:min-h-[172px] sm:rounded-[14px] sm:p-6">
               <div className="mx-auto mb-3 flex aspect-square h-12 w-12 items-center justify-center rounded-xl bg-warka-primary/10">

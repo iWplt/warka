@@ -6,7 +6,7 @@ export default async function UnauthorizedPage() {
   const t = await getTranslations("common");
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-warka-bg p-4 font-arabic">
+    <div className="flex min-h-dvh-safe flex-col items-center justify-center gap-6 bg-warka-bg p-4 font-arabic">
       <BrandLockup layout="auth" />
       <h1 className="page-title text-center">{t("unauthorized")}</h1>
       <Link

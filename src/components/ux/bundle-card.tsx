@@ -66,6 +66,12 @@ type BundleCardProps = {
 
   className?: string;
 
+  /** Bundle cannot currently be turned into a valid cart (missing/inactive products). */
+  unavailable?: boolean;
+
+  /** Add-in-progress (persist + navigation) — disables the button and shows feedback. */
+  pending?: boolean;
+
 };
 
 
@@ -91,6 +97,10 @@ export function BundleCard({
   onAddBundle,
 
   className,
+
+  unavailable = false,
+
+  pending = false,
 
 }: BundleCardProps) {
 
@@ -334,21 +344,59 @@ export function BundleCard({
 
 
 
-          {onAddBundle && (
+          {unavailable ? (
 
             <button
 
               type="button"
 
-              onClick={onAddBundle}
+              disabled
 
-              className="mt-3 min-h-10 rounded-lg bg-warka-primary px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-warka-primary-dark"
+              aria-disabled="true"
+
+              className="mt-3 min-h-10 cursor-not-allowed rounded-lg border border-warka-border bg-warka-bg px-4 py-2 text-xs font-semibold text-warka-text-muted"
 
             >
 
-              {isAr ? "أضف الباقة" : "Add bundle"}
+              {isAr ? "قريباً" : "Coming soon"}
 
             </button>
+
+          ) : (
+
+            onAddBundle && (
+
+              <button
+
+                type="button"
+
+                onClick={onAddBundle}
+
+                disabled={pending}
+
+                aria-busy={pending}
+
+                className="mt-3 min-h-10 rounded-lg bg-warka-primary px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-warka-primary-dark disabled:opacity-60"
+
+              >
+
+                {pending
+
+                  ? isAr
+
+                    ? "جارٍ الإضافة…"
+
+                    : "Adding…"
+
+                  : isAr
+
+                    ? "أضف الباقة"
+
+                    : "Add bundle"}
+
+              </button>
+
+            )
 
           )}
 

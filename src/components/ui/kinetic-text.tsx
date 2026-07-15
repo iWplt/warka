@@ -27,8 +27,12 @@ export function KineticText({
 
   return (
     <Tag className={cn(className)}>
+      {/* Screen readers get the full, natural sentence with real spaces. */}
+      <span className="sr-only">{text}</span>
+      {/* The animated, per-word version is purely decorative for a11y. */}
       <motion.span
         className="inline"
+        aria-hidden="true"
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.4 }}

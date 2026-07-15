@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { TrustBadges } from "@/components/features/cart/trust-badges";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { dispatchCartPulse } from "@/lib/cart/cart-pulse";
-import { flushCartPersist } from "@/lib/cart/persist-flush";
+import { flushCartPersist, flushAndNavigate } from "@/lib/cart/persist-flush";
 import { useCartStore, type AddCartItemInput } from "@/stores/cart-store";
 import { cn } from "@/lib/utils";
 
@@ -62,37 +62,30 @@ export function AddToCartButtons({
       );
       return;
     }
+    if (adding) return; // guard against double-click / double-submit
     setAdding(true);
-    try {
-      addItem(item);
-      flushCartPersist(useCartStore.getState().items);
-      dispatchCartPulse();
-      if (!thenCheckout) {
-        setAddedFlash(true);
-        window.setTimeout(() => setAddedFlash(false), 1500);
-        toast.success(t("added"), {
-          action: {
-            label: t("viewCart"),
-            onClick: () => router.push("/cart"),
-          },
-        });
-        return;
-      }
+    addItem(item);
+    dispatchCartPulse();
 
-      const go = () => {
-        flushCartPersist(useCartStore.getState().items);
-        router.push("/checkout?from=cart");
-      };
-      if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
-        window.requestAnimationFrame(() => {
-          window.requestAnimationFrame(go);
-        });
-      } else {
-        window.setTimeout(go, 0);
-      }
-    } finally {
+    if (!thenCheckout) {
+      flushCartPersist(useCartStore.getState().items);
+      setAddedFlash(true);
+      window.setTimeout(() => setAddedFlash(false), 1500);
+      toast.success(t("added"), {
+        action: {
+          label: t("viewCart"),
+          onClick: () => router.push("/cart"),
+        },
+      });
       setAdding(false);
+      return;
     }
+
+    // Buy Now: persist + wait for the write to be observable before navigating.
+    flushAndNavigate(useCartStore.getState().items, () => {
+      router.push("/checkout?from=cart");
+      setAdding(false);
+    });
   };
 
   return (
