@@ -108,7 +108,7 @@ export function PaymentMethodsStep({
         </p>
       </div>
 
-      <div className="grid gap-3">
+      <div className="grid gap-2.5">
         {IRAQI_PAYMENT_METHODS.map((method) => {
           const selected = selectedMethod === method;
           return (
@@ -118,31 +118,33 @@ export function PaymentMethodsStep({
               disabled={disabled}
               onClick={() => onSelect(method)}
               className={cn(
-                "flex w-full items-center gap-3 rounded-2xl border-2 p-3 text-start transition-all touch-manipulation",
+                "flex w-full items-center gap-3.5 rounded-2xl border-2 p-3 text-start transition-all touch-manipulation sm:p-3.5",
                 selected
                   ? "border-warka-primary bg-warka-primary/5 shadow-sm"
                   : "border-warka-border bg-card hover:border-warka-primary/40",
                 disabled && "opacity-50"
               )}
             >
-              <PaymentMethodLogo method={method} />
-              <div className="min-w-0 flex-1">
+              <PaymentMethodLogo method={method} size="lg" />
+              <div className="min-w-0 flex-1 space-y-0.5">
                 <p className="text-sm font-bold leading-snug text-warka-text">
                   {iraqiPaymentLabel(method, isAr)}
                 </p>
-                <p className="mt-0.5 text-xs leading-relaxed text-warka-text-muted">
+                <p className="text-xs leading-relaxed text-warka-text-muted">
                   {isAr ? METHOD_HINT[method].ar : METHOD_HINT[method].en}
                 </p>
               </div>
               <span
                 className={cn(
-                  "size-4 shrink-0 rounded-full border-2",
+                  "flex size-5 shrink-0 items-center justify-center rounded-full border-2",
                   selected
                     ? "border-warka-primary bg-warka-primary"
                     : "border-warka-border bg-card"
                 )}
                 aria-hidden
-              />
+              >
+                {selected && <span className="size-1.5 rounded-full bg-white" />}
+              </span>
             </button>
           );
         })}
