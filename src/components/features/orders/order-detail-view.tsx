@@ -82,6 +82,7 @@ export function OrderDetailView({
 }: OrderDetailViewProps) {
   const t = useTranslations();
   const locale = useLocale() as "ar" | "en";
+  const statusT = useTranslations("orderStatus");
   const studentT = useTranslations("studentOrder");
   const router = useRouter();
   const [note, setNote] = useState("");
@@ -250,9 +251,13 @@ export function OrderDetailView({
         {!isStudentView && (
           <div className="rounded-2xl glass p-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">{t("common.status")}</p>
-                <p className="text-xl font-semibold">{statusT(order.status)}</p>
+              <div className="min-w-[12rem] flex-1">
+                <p className="mb-1.5 text-sm text-muted-foreground">{t("common.status")}</p>
+                {canManage ? (
+                  <OrderStatusSelect orderId={order.id} value={order.status} />
+                ) : (
+                  <p className="text-xl font-semibold">{statusT(order.status)}</p>
+                )}
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">{t("common.total")}</p>
