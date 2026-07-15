@@ -164,13 +164,17 @@ export async function approveOrderDeposit(orderId: string) {
       `/student/orders/${orderId}`
     );
 
-    // Deposit approval = order confirmed & locked. Dispatch the customer-facing
-    // "order_confirmed" WhatsApp message (which carries the tracking link).
+    // Deposit approval marks the deposit as paid and LOCKS the order, but the
+    // order status becomes `pending_review` — it is NOT yet confirmed for
+    // production. So the correct customer-facing event here is `deposit_paid`.
+    // `order_confirmed` is dispatched separately when the order actually
+    // transitions into the confirmed/production state (see updateOrderStatus →
+    // `ready_for_printing`), with its own independent idempotency guard.
     // Idempotent: a repeat approval returns early above (deposit_paid_at guard),
     // so this fires exactly once. Fire-and-forget: a WhatsApp provider outage is
     // logged in notifications_log and never rolls back the approved deposit.
     queueWhatsAppNotification({
-      eventType: "order_confirmed",
+      eventType: "deposit_paid",
       orderId,
       studentId: order.student_id,
       variables: {

@@ -117,3 +117,29 @@ export function queueWhatsAppNotification(input: QueueWhatsAppInput): void {
     console.error("[whatsapp] dispatch error", err);
   });
 }
+
+/**
+ * Per-event idempotency guard, independent from any order flag. Returns true when
+ * a WhatsApp message for (order, event) was already created/sent, so a caller can
+ * avoid re-dispatching the same customer-facing event (e.g. an order re-entering
+ * `ready_for_printing` after `needs_modification`). A previously *failed* attempt
+ * is not counted, so a genuine retry is still allowed.
+ */
+export async function hasSentWhatsAppEvent(
+  orderId: string,
+  eventType: WhatsAppEventType
+): Promise<boolean> {
+  const admin = createAdminClient();
+  if (!admin) return false;
+
+  const { data } = await admin
+    .from("notifications_log")
+    .select("id")
+    .eq("order_id", orderId)
+    .eq("event_type", eventType)
+    .in("status", ["pending", "sent"])
+    .limit(1)
+    .maybeSingle();
+
+  return Boolean(data?.id);
+}

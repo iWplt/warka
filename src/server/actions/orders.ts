@@ -40,7 +40,7 @@ import { resolveSizePoliciesForContext } from "@/lib/settings/resolve-size-polic
 import type { BatchSettings } from "@/lib/settings/types";
 import { calculateDeposit } from "@/lib/settings/deposit";
 import { sendNewOrderAdminEmail, sendOrderStatusEmail } from "@/lib/email/send";
-import { queueWhatsAppNotification } from "@/lib/messaging/dispatch";
+import { queueWhatsAppNotification, hasSentWhatsAppEvent } from "@/lib/messaging/dispatch";
 import type { OrderItemMedia } from "@/lib/orders/order-item-details";
 import type { OrderDetailStudent } from "@/lib/orders/parse-order-notes";
 import type { NotificationType, OrderStatus, ProductType, EmbroideryPosition } from "@/types/database";
@@ -770,6 +770,25 @@ export async function updateOrderStatus(
       "order",
       orderId
     );
+
+    // The order is now confirmed for production (design approved → printing).
+    // Dispatch the customer-facing `order_confirmed` WhatsApp exactly once, using
+    // a per-event idempotency guard so a re-entry (needs_modification → ready)
+    // never re-sends it. Independent of deposit_paid_at. Fire-and-forget.
+    if (order.student_id && order.status !== "ready_for_printing") {
+      const alreadySent = await hasSentWhatsAppEvent(orderId, "order_confirmed");
+      if (!alreadySent) {
+        queueWhatsAppNotification({
+          eventType: "order_confirmed",
+          orderId,
+          studentId: order.student_id,
+          variables: {
+            order_number: order.order_number,
+            order_link: `/student/orders/${orderId}`,
+          },
+        });
+      }
+    }
   }
 
   if (newStatus === "printing") {
