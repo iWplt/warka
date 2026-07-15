@@ -8,7 +8,7 @@ export default async function OfflinePage() {
   const isAr = locale === "ar";
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-warka-bg p-6 font-arabic text-center">
+    <div className="flex min-h-dvh-safe flex-col items-center justify-center gap-6 bg-warka-bg p-6 font-arabic text-center">
       <BrandLockup layout="auth" className="opacity-70" />
 
       <div className="flex size-14 items-center justify-center rounded-[var(--radius-card)] bg-[#FF9800]/10 sm:size-16">

@@ -10,6 +10,7 @@ import {
   logActivityInternal as logActivity,
   notifyAdminsAndEmployees,
 } from "@/lib/notifications/internal";
+import { queueWhatsAppNotification } from "@/lib/messaging/dispatch";
 import type { PaymentStatus } from "@/types/database";
 
 const paymentSchema = z.object({
@@ -162,6 +163,22 @@ export async function approveOrderDeposit(orderId: string) {
       String(amount),
       `/student/orders/${orderId}`
     );
+
+    // Deposit approval = order confirmed & locked. Dispatch the customer-facing
+    // "order_confirmed" WhatsApp message (which carries the tracking link).
+    // Idempotent: a repeat approval returns early above (deposit_paid_at guard),
+    // so this fires exactly once. Fire-and-forget: a WhatsApp provider outage is
+    // logged in notifications_log and never rolls back the approved deposit.
+    queueWhatsAppNotification({
+      eventType: "order_confirmed",
+      orderId,
+      studentId: order.student_id,
+      variables: {
+        order_number: order.order_number,
+        deposit_amount: String(amount),
+        order_link: `/student/orders/${orderId}`,
+      },
+    });
   }
 
   await logActivity(profile.id, "approve_deposit", "order", orderId, { amount });

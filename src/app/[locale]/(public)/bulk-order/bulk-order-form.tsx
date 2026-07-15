@@ -435,17 +435,23 @@ export function BulkOrderForm({ products }: BulkOrderFormProps) {
                   ? "إرسال الطلب"
                   : "Submit request"}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="min-h-[44px] gap-2 border-[#25D366] bg-card text-[#128C7E] hover:bg-[#25D366]/10"
-              asChild
-            >
-              <a href={buildWhatsAppUrl(buildWhatsAppMessage())} target="_blank" rel="noopener noreferrer">
-                <MessageCircle className="size-4" />
-                {isAr ? "أرسل عبر واتساب مباشرة" : "Send via WhatsApp"}
-              </a>
-            </Button>
+            {buildWhatsAppUrl(buildWhatsAppMessage()) && (
+              <Button
+                type="button"
+                variant="outline"
+                className="min-h-[44px] gap-2 border-[#25D366] bg-card text-[#128C7E] hover:bg-[#25D366]/10"
+                asChild
+              >
+                <a
+                  href={buildWhatsAppUrl(buildWhatsAppMessage()) ?? undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MessageCircle className="size-4" />
+                  {isAr ? "أرسل عبر واتساب مباشرة" : "Send via WhatsApp"}
+                </a>
+              </Button>
+            )}
           </div>
         </form>
       </WarkaCard>

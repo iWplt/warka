@@ -57,14 +57,19 @@ export default function ReferralPage() {
     ? `انضم إلى WARKA — متجر طباعة التخرج:\n${referralLink}`
     : `Join WARKA — graduation printing store:\n${referralLink}`;
 
+  const whatsappShareUrl = buildWhatsAppUrl(shareMessage);
   const shareTargets = [
-    {
-      id: "whatsapp",
-      label: "WhatsApp",
-      href: buildWhatsAppUrl(shareMessage),
-      className: "bg-[#25D366] hover:bg-[#20BD5A] text-white",
-      icon: MessageCircle,
-    },
+    ...(whatsappShareUrl
+      ? [
+          {
+            id: "whatsapp",
+            label: "WhatsApp",
+            href: whatsappShareUrl,
+            className: "bg-[#25D366] hover:bg-[#20BD5A] text-white",
+            icon: MessageCircle,
+          },
+        ]
+      : []),
     {
       id: "twitter",
       label: "X",
@@ -100,7 +105,7 @@ export default function ReferralPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-warka-bg font-arabic pb-16">
+    <div className="min-h-dvh-safe bg-warka-bg font-arabic pb-16">
       <header className="border-b border-warka-border bg-card">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
           <Link href="/">

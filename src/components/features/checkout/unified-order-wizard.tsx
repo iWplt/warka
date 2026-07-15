@@ -56,6 +56,7 @@ import { EmbroideryLivePreview } from "@/components/features/embroidery/embroide
 import { resolveEmbroideryDisplayName, type DiacriticsMode } from "@/lib/arabic/harakat";
 import { validateImageFile } from "@/lib/upload/validate";
 import { useCartStore, type CartLineItem } from "@/stores/cart-store";
+import { readCartHandoff } from "@/lib/cart/persist-flush";
 import { getProductCustomizationProfile } from "@/server/actions/customization";
 import {
   CustomizationStudioModal,
@@ -173,10 +174,16 @@ export function UnifiedOrderWizard({
   useEffect(() => {
     // Wait until cart rehydrates — empty-before-hydrate was ejecting iOS Buy Now to /products
     if (!cartHydrated) return;
-    if (items.length === 0) {
-      setStep(1);
-      router.replace("/products");
+    if (items.length > 0) return;
+    // Before redirecting, try to recover from the checkout handoff (Private Mode
+    // / WebKit soft-nav). Only eject to /products when the cart is genuinely empty.
+    const handoff = readCartHandoff();
+    if (handoff) {
+      useCartStore.getState().restoreItems(handoff.items);
+      return;
     }
+    setStep(1);
+    router.replace("/products");
   }, [cartHydrated, items.length, router, setStep]);
 
   useEffect(() => {

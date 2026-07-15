@@ -41,6 +41,7 @@ export function ProductCard({
   const isAr = locale === "ar";
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -50,7 +51,8 @@ export function ProductCard({
 
   const name = isAr ? product.name_ar : product.name_en;
   const isCustom = product.product_type === "custom";
-  const image = product.image ?? "/assets/landing/product-sash.jpg";
+  const FALLBACK_IMAGE = "/assets/landing/product-sash.jpg";
+  const image = imgFailed ? FALLBACK_IMAGE : product.image ?? FALLBACK_IMAGE;
   const href = detailHref ?? `/products/${product.id}`;
   const shortDesc = getShortDescription(product, locale);
   const fabricSummary = getFabricSummary(product, locale);
@@ -117,6 +119,7 @@ export function ProductCard({
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 sizes="(max-width: 640px) 50vw, 33vw"
+                onError={() => setImgFailed(true)}
               />
             </div>
           )}
@@ -161,10 +164,13 @@ export function ProductCard({
             </Link>
             <Link
               href={orderHref}
+              aria-label={
+                isAr ? `اختيار المنتج: ${name}` : `Choose product: ${name}`
+              }
               className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-warka-primary py-2.5 text-sm font-semibold text-white transition-colors hover:bg-warka-primary-dark"
             >
               <Zap className="size-4" />
-              {isAr ? "اطلب الآن" : "Order now"}
+              {isAr ? "اختيار المنتج" : "Choose product"}
             </Link>
           </div>
         </div>

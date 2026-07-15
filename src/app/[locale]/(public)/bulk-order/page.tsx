@@ -54,15 +54,17 @@ export default async function BulkOrderPage() {
                   : "Our team is on WhatsApp for bulk order inquiries."}
               </p>
             </div>
-            <a
-              href={buildWhatsAppUrl(whatsappMessage)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-[#25D366] px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-            >
-              <MessageCircle className="size-4" />
-              {isAr ? "واتساب WARKA" : "WARKA WhatsApp"}
-            </a>
+            {buildWhatsAppUrl(whatsappMessage) && (
+              <a
+                href={buildWhatsAppUrl(whatsappMessage) ?? undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-[#25D366] px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              >
+                <MessageCircle className="size-4" />
+                {isAr ? "واتساب WARKA" : "WARKA WhatsApp"}
+              </a>
+            )}
           </WarkaCard>
         </div>
 

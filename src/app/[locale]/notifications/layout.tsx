@@ -24,7 +24,7 @@ export default async function NotificationsLayout({
   const dashboardPath = getRedirectForRole(profile.role);
 
   return (
-    <div className="min-h-screen bg-warka-bg text-warka-text">
+    <div className="min-h-dvh-safe bg-warka-bg text-warka-text">
       <header className="border-b border-warka-border bg-card">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-4">
           <Link

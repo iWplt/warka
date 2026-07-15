@@ -13,7 +13,7 @@ export default function PublicLayout({
 }) {
   return (
     <GlobalUxShell>
-      <div className="min-h-screen bg-warka-bg font-arabic">
+      <div className="min-h-dvh-safe bg-warka-bg font-arabic">
         <Suspense fallback={<SiteHeader profile={null} />}>
           <PublicSiteHeader />
         </Suspense>

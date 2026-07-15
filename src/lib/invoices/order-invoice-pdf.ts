@@ -307,7 +307,9 @@ export async function buildOrderInvoicePdf(input: OrderInvoiceInput): Promise<Ar
       footerTop + 18
     );
   }
-  doc.text(`WhatsApp: +${WHATSAPP_NUMBER}`, footerX, footerTop + 24);
+  if (WHATSAPP_NUMBER) {
+    doc.text(`WhatsApp: +${WHATSAPP_NUMBER}`, footerX, footerTop + 24);
+  }
   doc.text(env.NEXT_PUBLIC_APP_URL.replace(/^https?:\/\//, ""), footerX, footerTop + 30);
 
   doc.setFillColor(...BRAND_PDF.darkOlive);

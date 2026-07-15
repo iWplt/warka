@@ -22,9 +22,9 @@ type DashboardShellProps = {
 
 export function DashboardShell({ profile, children }: DashboardShellProps) {
   return (
-    <div className="flex min-h-screen bg-warka-surface font-arabic">
+    <div className="flex min-h-dvh-safe bg-warka-surface font-arabic">
       <DashboardSidebar role={profile.role} profile={profile} />
-      <div className="relative flex min-h-screen min-w-0 flex-1 flex-col">
+      <div className="relative flex min-h-dvh-safe min-w-0 flex-1 flex-col">
 
         <div
 

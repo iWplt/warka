@@ -21,6 +21,9 @@ export function WhatsAppButton({ message, className }: WhatsAppButtonProps) {
   const href = buildWhatsAppUrl(message ?? defaultMessage);
   const label = locale === "ar" ? "تواصل عبر واتساب" : "Chat on WhatsApp";
 
+  // No configured business number → don't render a broken link.
+  if (!href) return null;
+
   return (
     <a
       href={href}

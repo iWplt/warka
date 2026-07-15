@@ -1,5 +1,6 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { computeUnitPrice, resolveFabricOptions } from "@/lib/products/variants";
@@ -86,6 +87,7 @@ type CartState = {
     }>
   ) => void;
   clearCart: () => void;
+  restoreItems: (items: CartLineItem[]) => void;
   itemCount: () => number;
   subtotal: () => number;
 };
@@ -197,6 +199,13 @@ export const useCartStore = create<CartState>()(
 
       clearCart: () => set({ items: [] }),
 
+      /** Restore items from a checkout handoff — only when the cart is empty,
+       *  so we never duplicate an already-hydrated cart. */
+      restoreItems: (items) => {
+        if (get().items.length > 0 || items.length === 0) return;
+        set({ items });
+      },
+
       itemCount: () => get().items.reduce((sum, line) => sum + line.quantity, 0),
 
       subtotal: () =>
@@ -205,3 +214,16 @@ export const useCartStore = create<CartState>()(
     { name: "warka-cart-v1" }
   )
 );
+
+/**
+ * Reliable hydration flag for the persisted cart. Returns false during SSR and
+ * until zustand finishes rehydrating from storage — use it to avoid rendering an
+ * empty-cart state before the real cart is known.
+ */
+export function useCartHasHydrated(): boolean {
+  return useSyncExternalStore(
+    useCartStore.persist.onFinishHydration,
+    () => useCartStore.persist.hasHydrated(),
+    () => false
+  );
+}
