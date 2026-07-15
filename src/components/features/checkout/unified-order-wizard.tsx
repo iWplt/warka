@@ -20,12 +20,16 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { WarkaCard, WarkaCardTitle } from "@/components/ui/warka-card";
 import { submitOrderWithDeposit } from "@/server/actions/orders";
-import { getDepositSettings } from "@/server/actions/settings";
+import { getDepositSettings, getPaymentMethodSettings } from "@/server/actions/settings";
 import {
   PaymentMethodsStep,
   type PaymentMethodId,
 } from "@/components/payment/payment-methods-step";
 import { toDbPaymentMethod, iraqiPaymentLabel } from "@/lib/payment/iraqi-methods";
+import {
+  DEFAULT_PAYMENT_METHOD_SETTINGS,
+  type PaymentMethodSettings,
+} from "@/lib/payment/payment-method-settings";
 import { DeliveryDetailsForm } from "@/components/features/delivery/delivery-details-form";
 import { formatDeliveryNote, isDeliveryComplete } from "@/lib/delivery/format-delivery-note";
 import { IRAQI_GOVERNORATES } from "@/lib/constants/iraq-market";
@@ -130,6 +134,9 @@ export function UnifiedOrderWizard({
   const [loading, setLoading] = useState(false);
   const [activeLineId, setActiveLineId] = useState<string | null>(items[0]?.id ?? null);
   const [depositSettings, setDepositSettings] = useState<DepositSettings | null>(null);
+  const [paymentMethodSettings, setPaymentMethodSettings] = useState<PaymentMethodSettings>(
+    DEFAULT_PAYMENT_METHOD_SETTINGS
+  );
   const [sizeGuideEntries, setSizeGuideEntries] = useState<
     Awaited<ReturnType<typeof import("@/server/actions/settings").getSizeGuideEntries>>
   >([]);
@@ -179,6 +186,7 @@ export function UnifiedOrderWizard({
 
   useEffect(() => {
     void getDepositSettings().then(setDepositSettings);
+    void getPaymentMethodSettings().then(setPaymentMethodSettings);
     void import("@/server/actions/settings").then(({ getSizeGuideEntries, getSizePoliciesForStudent }) => {
       getSizeGuideEntries().then(setSizeGuideEntries);
       getSizePoliciesForStudent().then((ctx) => {
@@ -570,6 +578,7 @@ export function UnifiedOrderWizard({
             onReceiptChange={setDepositReceiptDataUrl}
             onPaid={() => setDepositConfirmed(true)}
             total={depositAmount}
+            methodSettings={paymentMethodSettings}
           />
           {depositConfirmed && (
             <p className="flex items-center gap-2 rounded-xl border border-[#4CAF50]/30 bg-[#4CAF50]/10 px-3 py-2.5 text-sm font-medium text-[#2e7d32]">

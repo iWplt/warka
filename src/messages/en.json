@@ -42,6 +42,7 @@
     "printing": "Printing",
     "delivery": "Delivery",
     "payments": "Payments",
+    "paymentMethods": "Payment methods",
     "reports": "Reports",
     "users": "Users",
     "employees": "Employees",
@@ -728,7 +729,28 @@
     "noUnpaidOrdersHint": "All orders are fully paid or there are no open balances.",
     "totalRevenue": "Total Revenue",
     "unpaidTotal": "Unpaid Balance",
-    "partialCount": "Partially Paid Orders"
+    "partialCount": "Partially Paid Orders",
+    "manageMethods": "Manage payment methods",
+    "manageMethodsHint": "Set account numbers, phones, and which methods are active at checkout."
+  },
+  "adminPaymentMethods": {
+    "title": "Payment methods",
+    "subtitle": "Configure transfer details for each Iraqi payment method and turn methods on or off for checkout.",
+    "active": "Active",
+    "statusActive": "Shown at checkout",
+    "statusInactive": "Hidden from checkout",
+    "phone": "Phone number",
+    "phonePlaceholder": "e.g. 07xx xxx xxxx",
+    "accountNumber": "Account number",
+    "accountPlaceholder": "Wallet or bank account",
+    "cardNumber": "Card number",
+    "cardPlaceholder": "Optional card number",
+    "notes": "Notes for students",
+    "notesPlaceholder": "Extra transfer instructions…",
+    "save": "Save payment methods",
+    "saving": "Saving…",
+    "saved": "Payment methods saved",
+    "error": "Could not save payment methods"
   },
   "batches": {
     "title": "Graduation Batches",

@@ -20,6 +20,12 @@ import {
   parseSizePolicies,
   type ProductSizePolicy,
 } from "@/lib/settings/size-policies";
+import {
+  DEFAULT_PAYMENT_METHOD_SETTINGS,
+  parsePaymentMethodSettings,
+  type PaymentMethodSettings,
+} from "@/lib/payment/payment-method-settings";
+import { IRAQI_PAYMENT_METHODS } from "@/lib/payment/iraqi-methods";
 import type { ProductType } from "@/types/database";
 import {
   DEFAULT_PRODUCT_FIELD_PERMISSIONS,
@@ -89,6 +95,14 @@ export async function getDepositSettings(): Promise<DepositSettings> {
   return readSetting("deposit", DEFAULT_DEPOSIT_SETTINGS, parseDepositSettings);
 }
 
+export async function getPaymentMethodSettings(): Promise<PaymentMethodSettings> {
+  return readSetting(
+    "payment_methods",
+    DEFAULT_PAYMENT_METHOD_SETTINGS,
+    parsePaymentMethodSettings
+  );
+}
+
 export async function getBatchDefaultsSettings(): Promise<BatchDefaultsSettings> {
   return readSetting("batch_defaults", DEFAULT_BATCH_DEFAULTS, (raw) => {
     if (!raw || typeof raw !== "object") return DEFAULT_BATCH_DEFAULTS;
@@ -152,6 +166,54 @@ export async function updateDepositSettings(input: z.infer<typeof depositSchema>
 
   if (error) throw new Error(error.message);
   revalidatePath("/admin/settings");
+}
+
+const paymentMethodConfigSchema = z.object({
+  id: z.enum(["zain_cash", "super_qi", "fib", "asiapay", "cash"]),
+  is_active: z.boolean(),
+  phone: z.string().max(80).optional().default(""),
+  account_number: z.string().max(120).optional().default(""),
+  card_number: z.string().max(120).optional().default(""),
+  notes: z.string().max(500).optional().default(""),
+});
+
+const paymentMethodsSchema = z.object({
+  methods: z.array(paymentMethodConfigSchema).min(1),
+});
+
+export async function updatePaymentMethodSettings(
+  input: z.infer<typeof paymentMethodsSchema>
+) {
+  await requireRole(["admin"]);
+  const data = paymentMethodsSchema.parse(input);
+  const admin = createAdminClient();
+  if (!admin) throw new Error("Supabase not configured");
+
+  const byId = new Map(data.methods.map((m) => [m.id, m]));
+  const normalized: PaymentMethodSettings = {
+    methods: IRAQI_PAYMENT_METHODS.map((id) => {
+      const row = byId.get(id);
+      return {
+        id,
+        is_active: row?.is_active ?? true,
+        phone: (row?.phone ?? "").trim(),
+        account_number: (row?.account_number ?? "").trim(),
+        card_number: (row?.card_number ?? "").trim(),
+        notes: (row?.notes ?? "").trim(),
+      };
+    }),
+  };
+
+  const { error } = await admin.from("platform_settings").upsert({
+    key: "payment_methods",
+    value: normalized,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/payment-methods");
+  revalidatePath("/admin/payments");
+  revalidatePath("/checkout");
 }
 
 const sizeGuideSchema = z.object({

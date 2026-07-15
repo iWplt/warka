@@ -42,6 +42,7 @@
     "printing": "الطباعة",
     "delivery": "التسليم",
     "payments": "المدفوعات",
+    "paymentMethods": "طرق الدفع",
     "reports": "التقارير",
     "users": "المستخدمون",
     "employees": "الموظفون",
@@ -728,7 +729,28 @@
     "noUnpaidOrdersHint": "جميع الطلبات مدفوعة أو لا توجد أرصدة مفتوحة.",
     "totalRevenue": "إجمالي الإيرادات",
     "unpaidTotal": "المتبقي غير المدفوع",
-    "partialCount": "طلبات مدفوعة جزئياً"
+    "partialCount": "طلبات مدفوعة جزئياً",
+    "manageMethods": "إدارة طرق الدفع",
+    "manageMethodsHint": "حدّد أرقام الحسابات والهواتف وأي الطرق ظاهرة عند الدفع."
+  },
+  "adminPaymentMethods": {
+    "title": "طرق الدفع",
+    "subtitle": "اضبط بيانات التحويل لكل طريقة دفع عراقية وفعّلها أو عطّلها في صفحة الطلب.",
+    "active": "مفعّلة",
+    "statusActive": "تظهر للطالب عند الدفع",
+    "statusInactive": "مخفية عن الطالب",
+    "phone": "رقم الهاتف",
+    "phonePlaceholder": "مثال: 07xx xxx xxxx",
+    "accountNumber": "رقم الحساب",
+    "accountPlaceholder": "رقم المحفظة أو الحساب البنكي",
+    "cardNumber": "رقم البطاقة",
+    "cardPlaceholder": "اختياري",
+    "notes": "ملاحظات للطالب",
+    "notesPlaceholder": "تعليمات إضافية للتحويل…",
+    "save": "حفظ طرق الدفع",
+    "saving": "جارٍ الحفظ…",
+    "saved": "تم حفظ طرق الدفع",
+    "error": "تعذّر حفظ طرق الدفع"
   },
   "batches": {
     "title": "دفعات التخرج",

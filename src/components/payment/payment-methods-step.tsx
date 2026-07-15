@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo } from "react";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
 import { WarkaCard, WarkaCardTitle } from "@/components/ui/warka-card";
@@ -10,6 +11,12 @@ import {
   iraqiPaymentLabel,
   type IraqiPaymentMethodId,
 } from "@/lib/payment/iraqi-methods";
+import {
+  DEFAULT_PAYMENT_METHOD_SETTINGS,
+  paymentMethodHasDetails,
+  type PaymentMethodConfig,
+  type PaymentMethodSettings,
+} from "@/lib/payment/payment-method-settings";
 import { formatIqd } from "@/lib/format/currency";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +33,8 @@ export type PaymentMethodsStepProps = {
   onReceiptChange: (url: string | null) => void;
   className?: string;
   disabled?: boolean;
+  /** Admin-configured methods; inactive ones are hidden. */
+  methodSettings?: PaymentMethodSettings;
 };
 
 const METHOD_HINT: Record<IraqiPaymentMethodId, { ar: string; en: string }> = {
@@ -51,6 +60,57 @@ const METHOD_HINT: Record<IraqiPaymentMethodId, { ar: string; en: string }> = {
   },
 };
 
+function DetailRows({
+  config,
+  isAr,
+}: {
+  config: PaymentMethodConfig;
+  isAr: boolean;
+}) {
+  if (!paymentMethodHasDetails(config)) return null;
+
+  const rows: { label: string; value: string }[] = [];
+  if (config.phone) {
+    rows.push({ label: isAr ? "رقم الهاتف" : "Phone", value: config.phone });
+  }
+  if (config.account_number) {
+    rows.push({
+      label: isAr ? "رقم الحساب" : "Account number",
+      value: config.account_number,
+    });
+  }
+  if (config.card_number) {
+    rows.push({
+      label: isAr ? "رقم البطاقة" : "Card number",
+      value: config.card_number,
+    });
+  }
+
+  return (
+    <div className="rounded-xl border border-warka-border bg-card/80 p-3 space-y-2">
+      <p className="text-xs font-semibold text-warka-text">
+        {isAr ? "بيانات التحويل" : "Transfer details"}
+      </p>
+      {rows.map((row) => (
+        <div key={row.label} className="flex flex-wrap items-baseline justify-between gap-2">
+          <span className="text-xs text-warka-text-muted">{row.label}</span>
+          <span
+            dir="ltr"
+            className="font-mono text-sm font-semibold tracking-wide text-warka-text"
+          >
+            {row.value}
+          </span>
+        </div>
+      ))}
+      {config.notes ? (
+        <p className="border-t border-warka-border/60 pt-2 text-xs leading-relaxed text-warka-text-secondary">
+          {config.notes}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export function PaymentMethodsStep({
   locale,
   selectedMethod,
@@ -61,9 +121,36 @@ export function PaymentMethodsStep({
   onReceiptChange,
   className,
   disabled,
+  methodSettings = DEFAULT_PAYMENT_METHOD_SETTINGS,
 }: PaymentMethodsStepProps) {
   const isAr = locale === "ar";
   const needsReceipt = selectedMethod !== "cash";
+
+  const activeMethods = useMemo(() => {
+    const active = methodSettings.methods.filter((m) => m.is_active);
+    return active.length > 0
+      ? active
+      : IRAQI_PAYMENT_METHODS.map(
+          (id) =>
+            methodSettings.methods.find((m) => m.id === id) ?? {
+              id,
+              is_active: true,
+              phone: "",
+              account_number: "",
+              card_number: "",
+              notes: "",
+            }
+        );
+  }, [methodSettings]);
+
+  const selectedConfig =
+    activeMethods.find((m) => m.id === selectedMethod) ?? activeMethods[0];
+
+  useEffect(() => {
+    if (!activeMethods.some((m) => m.id === selectedMethod) && activeMethods[0]) {
+      onSelect(activeMethods[0].id);
+    }
+  }, [activeMethods, selectedMethod, onSelect]);
 
   const handleFile = (file: File | undefined) => {
     if (!file) return;
@@ -109,14 +196,14 @@ export function PaymentMethodsStep({
       </div>
 
       <div className="grid gap-2.5">
-        {IRAQI_PAYMENT_METHODS.map((method) => {
-          const selected = selectedMethod === method;
+        {activeMethods.map((method) => {
+          const selected = selectedMethod === method.id;
           return (
             <button
-              key={method}
+              key={method.id}
               type="button"
               disabled={disabled}
-              onClick={() => onSelect(method)}
+              onClick={() => onSelect(method.id)}
               className={cn(
                 "flex w-full items-center gap-3.5 rounded-2xl border-2 p-3 text-start transition-all touch-manipulation sm:p-3.5",
                 selected
@@ -125,13 +212,13 @@ export function PaymentMethodsStep({
                 disabled && "opacity-50"
               )}
             >
-              <PaymentMethodLogo method={method} size="lg" />
+              <PaymentMethodLogo method={method.id} size="lg" />
               <div className="min-w-0 flex-1 space-y-0.5">
                 <p className="text-sm font-bold leading-snug text-warka-text">
-                  {iraqiPaymentLabel(method, isAr)}
+                  {iraqiPaymentLabel(method.id, isAr)}
                 </p>
                 <p className="text-xs leading-relaxed text-warka-text-muted">
-                  {isAr ? METHOD_HINT[method].ar : METHOD_HINT[method].en}
+                  {isAr ? METHOD_HINT[method.id].ar : METHOD_HINT[method.id].en}
                 </p>
               </div>
               <span
@@ -149,6 +236,8 @@ export function PaymentMethodsStep({
           );
         })}
       </div>
+
+      {selectedConfig ? <DetailRows config={selectedConfig} isAr={isAr} /> : null}
 
       <div className="rounded-xl border border-warka-primary/20 bg-warka-primary/5 p-4">
         <p className="text-xs text-warka-text-muted">{isAr ? "مبلغ العربون" : "Deposit amount"}</p>

@@ -22,6 +22,11 @@ import {
   PaymentMethodsStep,
   type PaymentMethodId,
 } from "@/components/payment/payment-methods-step";
+import { getPaymentMethodSettings } from "@/server/actions/settings";
+import {
+  DEFAULT_PAYMENT_METHOD_SETTINGS,
+  type PaymentMethodSettings,
+} from "@/lib/payment/payment-method-settings";
 import { IRAQI_GOVERNORATES } from "@/lib/constants/iraq-market";
 import { formatIqd } from "@/lib/format/currency";
 import { getSizeOptions, productNeedsSize } from "@/lib/cart/sizes";
@@ -81,6 +86,13 @@ export function CartCheckoutWizard({ profile }: CartCheckoutWizardProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodId>("zain_cash");
   const [paymentReceipt, setPaymentReceipt] = useState<string | null>(null);
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const [paymentMethodSettings, setPaymentMethodSettings] = useState<PaymentMethodSettings>(
+    DEFAULT_PAYMENT_METHOD_SETTINGS
+  );
+
+  useEffect(() => {
+    void getPaymentMethodSettings().then(setPaymentMethodSettings);
+  }, []);
 
   useEffect(() => {
     if (items.length === 0) {
@@ -443,6 +455,7 @@ export function CartCheckoutWizard({ profile }: CartCheckoutWizardProps) {
           onReceiptChange={setPaymentReceipt}
           onPaid={() => setPaymentConfirmed(true)}
           total={totalWithCod}
+          methodSettings={paymentMethodSettings}
         />
       )}
 

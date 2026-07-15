@@ -2,9 +2,9 @@
 
 import { useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { CreditCard } from "lucide-react";
+import { CreditCard, Wallet } from "lucide-react";
 import { toast } from "sonner";
-import { useRouter } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -77,6 +77,21 @@ export function PaymentsView({ payments, unpaidOrders }: PaymentsViewProps) {
 
   return (
     <div className="space-y-8">
+      <div className="rounded-[var(--radius-card)] border border-warka-primary/20 bg-warka-primary/5 p-4 sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="section-title flex items-center gap-2">
+              <Wallet className="size-5 text-warka-primary" />
+              {t("payments.manageMethods")}
+            </h2>
+            <p className="page-description mt-1">{t("payments.manageMethodsHint")}</p>
+          </div>
+          <Button asChild variant="accent">
+            <Link href="/admin/payment-methods">{t("payments.manageMethods")}</Link>
+          </Button>
+        </div>
+      </div>
+
       <PaymentsSummary {...summary} />
 
       <div className="grid gap-8 lg:grid-cols-2">
